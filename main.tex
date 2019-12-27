@@ -1,77 +1,11 @@
-%% For double-blind review submission, w/o CCS and ACM Reference (max submission space)
 \documentclass[sigplan,review,anonymous]{acmart}\settopmatter{printfolios=true,printccs=false,printacmref=false}
-%% For double-blind review submission, w/ CCS and ACM Reference
-%\documentclass[sigplan,review,anonymous]{acmart}\settopmatter{printfolios=true}
-%% For single-blind review submission, w/o CCS and ACM Reference (max submission space)
-%\documentclass[sigplan,review]{acmart}\settopmatter{printfolios=true,printccs=false,printacmref=false}
-%% For single-blind review submission, w/ CCS and ACM Reference
-%\documentclass[sigplan,review]{acmart}\settopmatter{printfolios=true}
-%% For final camera-ready submission, w/ required CCS and ACM Reference
-%\documentclass[sigplan]{acmart}\settopmatter{}
 
-
-%% Conference information
-%% Supplied to authors by publisher for camera-ready submission;
-%% use defaults for review submission.
-\acmConference[PL'18]{ACM SIGPLAN Conference on Programming Languages}{January 01--03, 2018}{New York, NY, USA}
-\acmYear{2018}
-\acmISBN{} % \acmISBN{978-x-xxxx-xxxx-x/YY/MM}
-\acmDOI{} % \acmDOI{10.1145/nnnnnnn.nnnnnnn}
-\startPage{1}
-
-%% Copyright information
-%% Supplied to authors (based on authors' rights management selection;
-%% see authors.acm.org) by publisher for camera-ready submission;
-%% use 'none' for review submission.
-\setcopyright{none}
-%\setcopyright{acmcopyright}
-%\setcopyright{acmlicensed}
-%\setcopyright{rightsretained}
-%\copyrightyear{2018}           %% If different from \acmYear
-
-%% Bibliography style
-\bibliographystyle{ACM-Reference-Format}
-%% Citation style
-%\citestyle{acmauthoryear}  %% For author/year citations
-%\citestyle{acmnumeric}     %% For numeric citations
-%\setcitestyle{nosort}      %% With 'acmnumeric', to disable automatic
-                            %% sorting of references within a single citation;
-                            %% e.g., \cite{Smith99,Carpenter05,Baker12}
-                            %% rendered as [14,5,2] rather than [2,5,14].
-%\setcitesyle{nocompress}   %% With 'acmnumeric', to disable automatic
-                            %% compression of sequential references within a
-                            %% single citation;
-                            %% e.g., \cite{Baker12,Baker14,Baker16}
-                            %% rendered as [2,3,4] rather than [2-4].
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Note: Authors migrating a paper from traditional SIGPLAN
-%% proceedings format to PACMPL format must update the
-%% '\documentclass' and topmatter commands above; see
-%% 'acmart-pacmpl-template.tex'.
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
-
-\usepackage{booktabs}
-\usepackage{subcaption}
-\usepackage{listings}
-\usepackage{graphicx}
-\usepackage[ruled,linesnumbered]{algorithm2e}
-\usepackage{url}
-\usepackage{enumerate}
-\usepackage{amsmath}
-\usepackage{multirow}
-\usepackage{makecell,rotating}
+\input{preamble}
 
 \begin{document}
-
-%% Title information
-\title{Memory Transaction Optimization for Convolution Operations on GPU}
+\title{Optimizing GPU Memory Transactions for Convolution Operations}
 
 \author{Weizhe Zhang}
-
 \affiliation{
   \department{Computer Science and Technology}
   \institution{Harbin Institute of Technology}
@@ -80,7 +14,6 @@
 \email{wzzhang@hit.edu.cn}
 
 \author{Gangzhao Lu}
-
 \affiliation{
   \department{Computer Science and Technology}              %% \department is recommended
   \institution{Harbin Institute of Technology}            %% \institution is required
@@ -88,90 +21,21 @@
 }
 \email{lugangzhao@hit.edu.cn}
 
-\begin{abstract}
-Convolution computation is a common operation in deep neural networks (DNNs) and is often responsible for the performance bottleneck during model training and inferencing. Existing approaches for accelerating convolution operations aim to reduce the computational complexity. However, such strategies often increase the memory footprint with extra memory accesses, leaving much room for performance optimization when training and running DNNs on GPUs. 
+\author{Zheng Wang}
+\affiliation{
+  \department{School of Computing}              %% \department is recommended
+  \institution{University of Leeds}            %% \institution is required
+  \country{U. K.}                    %% \country is recommended
+} \email{zwang5@leeds.ac.uk}
 
-This paper presents a novel approach for optimizing memory accessing of convolution operations, specifically targeting GPU execution. Our approach leverages two optimization techniques to reduce the number of memory transactions. First, we use CUDA shuffle instructions to exchange overlapped columns of input when sliding a filter over an input along the width dimension. Second, we multiply each overlapped row of an input with multiple rows of a filter when sliding the filter along the height dimension. We apply our approach to both 2D and 3D convolutions and evaluate it on NVIDIA Tesla K40 GPU and NVIDIA RTX 2080 Ti. For 2D convolution, our approach delivers over 2X faster performance than the state-of-the-art image processing libraries. For 3D convolution with one and three input channels, we obtain up to 2.5x speedups over the fastest algorithm of cuDNN.
-\end{abstract}
-
-%% 2012 ACM Computing Classification System (CSS) concepts
-%% Generate at 'http://dl.acm.org/ccs/ccs.cfm'.
-\begin{CCSXML}
-<ccs2012>
-<concept>
-<concept_id>10011007.10011006.10011008</concept_id>
-<concept_desc>Software and its engineering~General programming languages</concept_desc>
-<concept_significance>500</concept_significance>
-</concept>
-<concept>
-<concept_id>10003456.10003457.10003521.10003525</concept_id>
-<concept_desc>Social and professional topics~History of programming languages</concept_desc>
-<concept_significance>300</concept_significance>
-</concept>
-</ccs2012>
-\end{CCSXML}
-
-\ccsdesc[500]{Software and its engineering~General programming languages}
-\ccsdesc[300]{Social and professional topics~History of programming languages}
-%% End of generated code
-
-
-\keywords{Convolution, Memory Optimization, GPU, shuffle}
+\input{sections/abstract}
 
 \maketitle
 
+\input{sections/intro}
+\input{sections/background}
+\input{sections/relatedwork}
 
-\section{Introduction}
-Convolution is a fundamental operation for image processing, video processing and machine learning. Specifically, 2D convolution has been widely used in the filed of image filtering and frame interpolation \cite{Perrot2014Fine} \cite{Ma2014Optimized} \cite{Rudi2015Image} \cite{Niklaus2017Video}, 3D convolution is the core operation of Convolutional Neural Networks (CNNs) which is extensively used in image classification, object detection, etc. However, convolution is both computate- and memory-intensive \cite{cavigelli2015accelerating}, it accounts for nearly 90\% of overall runtime \cite{Li2016Performance} in the field of image processing and machine learning. 
-
-Many algorithms \cite{Iandola2014Communication} \cite{vasilache2014fast} \cite{lavin2016fast} \cite{cho2017mec} \cite{Zhen2018Optimizing} \cite{Vasudevan2017Parallel} \cite{Chellapilla2006High} have been proposed to optimize convolution operations. Among these algorithms, GEMM-based \cite{Vasudevan2017Parallel} \cite{Chellapilla2006High}, FFT-based \cite{vasilache2014fast} and Winograd-based convolutions \cite{lavin2016fast} are broadly adopted convolution algorithms. All three types of convolution algorithms follow a very similar process: (1) transform the input and filter into two matrices (different algorithms use different methods to perform the transformation); (2) perform matrix multiplication on two matrices; (3) transform the result of matrix multiplication into the output. These three types of algorithms suffer from high memory-overhead, because they need to transform the input, filter and output into the desired shape before and after performing matrix multiplication. 
-
-We examine the process of convolution and propose two optimization algorithms which can improve the performance of convolution by reducing the number of memory transactions without incurring any additional memory storage. Our optimization algorithms are designed specifically for NVIDIA GPUs. First, we utilize CUDA shuffle instructions to exchange elements between threads of the same warp. In this way, we can avoid reloading the same elements which are shared among different threads. We further extend the shuffle instruction to support dynamic indexing which is not supported in the previous study \cite{vasilache2014fast}. We call this the column reuse algorithm. Second, we try to make full use of rows of the input since each row of the input can be used to generate multiple output elements. We call this the row reuse algorithm.
-
-We employ both algorithms on direct convolution. Experiments show that our optimization algorithms can significantly reduce the number of memory transactions and improve the performance of direct convolution. 
-
-The main contributions of our work are as follows:
-\begin{itemize}
-  \item we design a column reuse algorithm. This algorithm utilizes CUDA shuffle instructions to exchange columns within a warp. Compared with previous study \cite{vasilache2014fast}, our column reuse algorithm can be applied in more situations.
-  \item we design a row reuse algorithm. This algorithm loads each row of input once and then multiply it with multiple rows of a filter to calculate multiple output elements. 
-  \item we propose a method for transforming dynamic indexing into static indexing. This method can move arrays with dynamic indexing from local memory into registers, which greatly improves the performance.
-  \item we implement a 2D convolution and 3D convolutions with one and three input channels. The experiments show that our 2D and 3D convolutions are fast and memory efficient compared with state-of-the-art convolution libraries, including ArrayFire, NPP and cuDNN.
-\end{itemize}
-
-\section{Background \& Motivation}
-Before proceeding, we first introduce notations used throughout this paper. $I$, $F$ and $O$ denote 4-dimension Input, Filter and Output tensors respectively. And each tensor is indexed by $N$ (batch size), $C$ (channels), $H$ (height) and $W$ (width). For example, $I_N$, $I_C$, $I_H$ and $I_W$ represent the batch size, the number of channels, width and height of the input.
-
-The convolution operation is commonly used to extract various features from input feature maps via convolutional filters. The computation in the convolution stage takes a batch of $I_N$ 2D multi-channel feature maps of size $I_C \times I_H \times I_W$ and a bank of $F_N$ 2D multi-channel filters of size $F_C \times F_H \times F_W$ ($F_C = I_C$) as inputs. The result of convolution is a batch of $O_N$ ($O_N=I_N$) 2D multi-channel output feature maps of size $O_C \times O_H \times O_W$ ($O_C=F_N$). To generate one output feature map, all filters are used to convolve with the same input feature map. Each filter slides over the input feature map and performs an elementwise multiplication with the part of input it is currently on, and then summing up the results over all channels.
-
-\begin{figure}
-\centering
-  \includegraphics[width=0.75\columnwidth,height=6cm]{./figure/convlowering.eps}
-  \caption{An illustration of how to convert a simple convolution into a matrix multiplication. Two filters are used to convolve with a 3-channel input.}
-  \label{fig:convlowering}
-\end{figure}
-
-Many algorithms like FFT-based and Winograd-based convolutions have been proposed to optimize convolution operation, but they all need to transform 4D tensors into the desired matrix, which incurs high memory overhead. Figure \ref{fig:convlowering}, which is taken from \cite{ChetlurWVCTCS14}, illustrates how to convert a simple convolution into a matrix multiplication. We can see that there are many duplicate elements in Input Matrix, which can increase the memory overhead and offset some performance gains brought by the reduction in computation complexity. 
-
-We examine the process of convolution and propose two optimization algorithms to reduce memory overhead. We use a simple 2D convolution as a motivating example to demonstrate how our algorithms work. Figure \ref{fig:twostrategies} illustrates a simple 2D convolution on GPU. We slide a $5 \times 5$ filter over a $6 \times 11$ image to produce a $2 \times 7$ output. Each CUDA thread calculates one column of output. Thread 0 and thread 1 demonstrate the process of sliding the filter along the width dimension. We can see that thread 0 and thread 1 load two overlapped regions from the input image, which generates four duplicate columns. Thread 6 demonstrates the process of sliding the filter along the height dimension. We can see that thread 6 loads two overlapped regions and generates four duplicate rows.
-
-Our optimization algorithms can eliminate two types of duplication and thus reduce the number of memory transactions. (1) Column reuse algorithm, we let each thread load the first and last columns it needs and retrieve rest columns from other threads through CUDA shuffle instructions. The difference in the usage of CUDA shuffle instructions between our algorithms and the previous study \cite{vasilache2014fast} will be detailed in section \ref{sec:strategies}. (2) Row reuse algorithm, we let each CUDA thread load overlapped rows only once and multiply each row with multiple rows of a filter to calculate multiple output elements. A major performance issue encountered in our implementation is that thread local arrays with dynamic indexing will be put into the local memory which has the same access latency as the global memory. To solve this problem, we use $pack$ and $unpack$ instructions provided by CUDA PTX assembly language to transform dynamic indexing into static indexing. 
-
-\begin{figure}
-\centering
-  \includegraphics[width=\columnwidth,height=6cm]{./figure/twostrategies.eps}
-  \caption{An illustration of how to perform 2D convolution on GPU. Filter size is $5 \times 5$, input image size is $6 \times 11$ and output size is $2 \times 7$. Each CUDA thread calculates one column of the output. Threads 0 and 1 load needed regions from input image with four duplicate columns. Thread 6 loads two overlapped regions from input image and generates four duplicate rows. Numbers in the square denote the index of input elements.}
-  \label{fig:twostrategies}
-\end{figure}
-
-
-\section{Related Work}
-Over the past few years, many efforts have been made on optimizing convolution operations. Nowadays, GEMM-based, FFT-based and Winograd-based convolutions are broadly adopted convolution algorithms.
-
-GEMM-based convolution is the first attempt to optimize convolution. Chellapilla et al. \cite{Chellapilla2006High} developed an unrolling convolution algorithm which is also called im2col convolution algorithm. They lower the convolutions into a matrix multiplication which is highly optimized on GPU. Though there are some duplicate input elements involved in the computation, the performance gain is still impressive. Chetlur et al. \cite{ChetlurWVCTCS14} at NVIDIA integrated the unrolling convolution algorithm into cuDNN.
-
-As general matrix multiplication has been well optimized, researchers shift the focus from GEMM-based convolution to FFT-based and Winograd-based convolutions. Both FFT-based and Winograd-based convolutions can reduce the computational complexity and improve the performance of convolution. Mathieu et al. \cite{mathieu2013fast} proposed FFT-based convolution, they compute convolutions as pointwise products in the Fourier domain and reusing transformed input data many times which significantly reduce the complexity of convolution. This method greatly improves the performance of convolution compared with GEMM-based implementation. However, FFT-based convolution is more suitable for large filters, because they need to pad filters to the same size as input data and small filters like $3 \times 3$ need more memory than large filters. To overcome this drawback, Lavin et al. \cite{lavin2016fast} used Winograd’s minimal filtering algorithm to accelerate convolution on GPU. Their algorithm can reduce the arithmetic complexity of convolution by up to a factor of 4 compared with direct convolution. But Winograd algorithm is suitable for small filters due to its numerical instability. \cite{Zhen2018Optimizing} extends Winograd algorithm to any filter sizes. However, both Winograd-based algorithms need to transform the input and filter before performing matrix multiplication, and need more operations than FFT algorithm. 
-
-All abovementioned convolutions need to transform the input and filter before performing matrix multiplication, this will incur much memory overhead and offset some performance gains brought by the reduction in computational complexity. Recent studies mainly focus on how to reduce the memory overhead of transformation phases. \cite{cho2017mec} reduces the memory overhead of GEMM-based convolution. They use a compact lowering scheme to reduce the redundancy in the lowered matrix and then do multiple small matrix multiplications in parallel. However, their algorithm still needs to transform the input and filter tensors into lowered matrixes to compute convolution. \cite{Iandola2014Communication} reduces memory  communication of 2D convolution on GPU. They prefetch image regions to registers, and let each  thread do more work with fewer threads. Their method just uses registers to accelerate convolution and does not reduce the number of memory accesses. Different from \cite{Iandola2014Communication}, we further optimize the usage of registers and significantly reduce the number of memory accesses.
 
 %In contrast, our convolution algorithm does not need to do any transformations and reduce memory operations through shuffle instruction.
 
@@ -247,9 +111,9 @@ However, the instruction $shfl\_xor(iTemp[i],2)$ significantly degrades the perf
 	\label{algo:basic}
 \end{algorithm}
 
-To convert dynamic indexing into static indexing, we design Algorithm \ref{algo:basic} for step 3 in Figure \ref{fig:optalgo1} and Algorithm \ref{algo:basic2} for step 4 and 5 in Figure \ref{fig:optalgo2}. Both algorithms use the same method but deal with different situations. Both algorithms can change dynamic indexing into static indexing and reduce the number of memory accesses. We use Algorithm \ref{algo:basic} as an example to illustrate how to eliminate dynamic indexing. 
+To convert dynamic indexing into static indexing, we design Algorithm \ref{algo:basic} for step 3 in Figure \ref{fig:optalgo1} and Algorithm \ref{algo:basic2} for step 4 and 5 in Figure \ref{fig:optalgo2}. Both algorithms use the same method but deal with different situations. Both algorithms can change dynamic indexing into static indexing and reduce the number of memory accesses. We use Algorithm \ref{algo:basic} as an example to illustrate how to eliminate dynamic indexing.
 
-Figure \ref{fig:exchange} illustrates the process of Line 4-7 of Algorithm \ref{algo:basic}. Each thread loads the first and fifth corresponding input elements into thread local array $iTemp$ (Line 2-3). Then, pack both 32-bit elements into a 64-bit variable $exchange$ where $iTemp[4]$ is the high 32 bits and $iTemp[0]$ is the low 32 bits (Line 4). As threads $t0$ and $t1$ need to provide the their fifth elements which are high 32 bits of $exchange$, we right shift $exchange$ by 32 to put $iTemp[4]$ in low 32 bits. For threads $t2$ and $t3$, both need to provide their first elements which are already low 32 bits of $exchange$. therefore we right shift $exchange$ in threads $t2$ and $t3$ by 0. Shift amounts of each thread is calculated based on the thread id (Line 5). Afterwards, unpack $exchange$ into $iTemp[2]$ (high 32 bits) and $iTemp[1]$ (low 32 bits) (Line 7). And $iTemp[1]$ is the element that each thread needs to provide. Finally, using shuffle instruction to exchange elements between threads (Line 8). 
+Figure \ref{fig:exchange} illustrates the process of Line 4-7 of Algorithm \ref{algo:basic}. Each thread loads the first and fifth corresponding input elements into thread local array $iTemp$ (Line 2-3). Then, pack both 32-bit elements into a 64-bit variable $exchange$ where $iTemp[4]$ is the high 32 bits and $iTemp[0]$ is the low 32 bits (Line 4). As threads $t0$ and $t1$ need to provide the their fifth elements which are high 32 bits of $exchange$, we right shift $exchange$ by 32 to put $iTemp[4]$ in low 32 bits. For threads $t2$ and $t3$, both need to provide their first elements which are already low 32 bits of $exchange$. therefore we right shift $exchange$ in threads $t2$ and $t3$ by 0. Shift amounts of each thread is calculated based on the thread id (Line 5). Afterwards, unpack $exchange$ into $iTemp[2]$ (high 32 bits) and $iTemp[1]$ (low 32 bits) (Line 7). And $iTemp[1]$ is the element that each thread needs to provide. Finally, using shuffle instruction to exchange elements between threads (Line 8).
 
 Compared with the previous usage of shuffle instruction \cite{vasilache2014fast}, Algorithm \ref{algo:basic} successfully replace dynamic indexing $i$ in $shfl\_xor(iTemp[i],2)$ with static indexing $1$ in $shfl\_xor(iTemp[1],2)$.
 Algorithm \ref{algo:basic} successfully eliminates dynamic indexing and therefore all thread local variables can be put in registers, which significantly improve the performance of convolution.
@@ -267,7 +131,7 @@ Algorithm \ref{algo:basic} successfully eliminates dynamic indexing and therefor
 
 Step 4 and step 5 in Figure \ref{fig:optalgo2} have similar procedure as step 3 in Figure \ref{fig:optalgo1}. Thus, we slightly modify Algorithm \ref{algo:basic} to obtain Algorithm \ref{algo:basic2}. The main distinction is that four threads are involved to exchange elements in Figure \ref{fig:optalgo1} while only two adjacent threads are involved in Figure \ref{fig:optalgo2}. Accordingly, we need to recalculate shift amounts for each thread (Line 3) and change arguments of the shuffle instruction (Line 6).
 
-In summary, with Algorithm \ref{algo:basic} and \ref{algo:basic2}, we can reduce the number of memory transactions from 5 to 2 when loading 5 input elements and from 25 to 10 when loading 25 input elements. This reduction in the number of memory transactions brings a significant performance improvements for convolution. 
+In summary, with Algorithm \ref{algo:basic} and \ref{algo:basic2}, we can reduce the number of memory transactions from 5 to 2 when loading 5 input elements and from 25 to 10 when loading 25 input elements. This reduction in the number of memory transactions brings a significant performance improvements for convolution.
 
 \subsection{Row Reuse}
 \begin{figure}
@@ -332,7 +196,7 @@ We can see from above equations that only 5 rows are loaded to calculate output 
 \end{algorithm}
 
 In summary, Algorithm \ref{algo:rowreuse} eliminates row duplications when sliding a filter over input along height dimension. The algorithm loads each row of input exactly once and thus greatly reduces the number of memory transactions.
- 
+
 \section{Memory Efficient Convolutions}
 \begin{figure}
 	\centering
@@ -374,21 +238,21 @@ Figure \ref{fig:overalldesign} is an illustration of how to map CUDA threads ont
 
 We demonstrate how to deal with inner elements in this paper and we calculate edge elements with a similar method as inner elements. In Figure \ref{fig:overalldesign}, we assume that each warp contains 4 threads. We can see that the inner elements are divided into two sub-blocks. Sub-block 0 contains 4 columns which is exactly the warp size. Sub-block 1 contains only 2 columns, to make full use of threads within a warp, we divide the last two columns evenly among 4 threads. A generalized overall design is shown in Algorithm \ref{algo:overalldesign}.
 
-In Algorithm \ref{algo:overalldesign}, we first load the filter into shared memory (Line 1-2). Then we process sub-blocks with exact 32 columns in Line 3-13 and the last sub-block in Line 14-17. Each thread calculates one column of output elements as follows: First, each thread calculates the address of the first input element it needs (Line 4-6); Second, each thread uses Algorithm \ref{algo:basic} and Algorithm \ref{algo:basic2} to fulfill the vector $row$ which contains a row of the sub-block (Line 8); Third, each thread passes the vector $row$ to Algorithm \ref{algo:rowreuse} to calculate multiple output elements and store results in register array $sum$ (Line 9); Last, each thread writes the result array $sum$ into global memory (Line 12). 
+In Algorithm \ref{algo:overalldesign}, we first load the filter into shared memory (Line 1-2). Then we process sub-blocks with exact 32 columns in Line 3-13 and the last sub-block in Line 14-17. Each thread calculates one column of output elements as follows: First, each thread calculates the address of the first input element it needs (Line 4-6); Second, each thread uses Algorithm \ref{algo:basic} and Algorithm \ref{algo:basic2} to fulfill the vector $row$ which contains a row of the sub-block (Line 8); Third, each thread passes the vector $row$ to Algorithm \ref{algo:rowreuse} to calculate multiple output elements and store results in register array $sum$ (Line 9); Last, each thread writes the result array $sum$ into global memory (Line 12).
 
 \section{Evalution}
 We evaluate our implementations of convolution on two platforms: (a) NVIDIA Tesla K40m facilitates 2880 FP32 cores with 64KB L1 cache and shared memory. The host machine has a 2.40GHz Intel Xeon E5-2620 CPU with 128GB memory and Linux kernel v4.19.85. (b) NVIDIA RTX 2080 Ti facilitates 4350 FP32 cores and 4350 INT32 cores with 96KB L1 cache and shared memory. The host machine has a 2.30GHz Intel Xeon E5-2697 CPU with 252GB memory and Linux kernel v4.15.0. Both platforms are shipped with the CUDA Toolkit v10.1. We use following state-of-the-art convolution libraries as a comparison on both platforms:
 \begin{itemize}
   \item cuDNN, version 7.6. cuDNN is the state-of-art convolution implementation. It supports both 2D and 3D convolutions on GPU. Moreover, cuDNN implements GEMM-based, FFT-based and Winograd-based convolutions.
-  \item GEMM-im2col and GEMM-im2row (im2col and im2row for short). Both are GEMM-based convolutions and support 2D and 3D convolutions. We extract the implementations of im2col and im2row from Caffe \cite{jia2014caffe} and MatConvNet \cite{vedaldi15matconvnet} respectively. 
+  \item GEMM-im2col and GEMM-im2row (im2col and im2row for short). Both are GEMM-based convolutions and support 2D and 3D convolutions. We extract the implementations of im2col and im2row from Caffe \cite{jia2014caffe} and MatConvNet \cite{vedaldi15matconvnet} respectively.
   \item ArrayFire \cite{Yalamanchili2015}, version 3.6.4. ArrayFire is a popular image and signal processing library. It implements 2D convolution on GPU and can be easily invoked through an api. The semantics of 3D convolution of ArrayFire is not compatible with 3D convolutions in CNNs. Therefore we use ArrayFire only for 2D convolution. ArrayFire uses Just In Time (JIT) compiling for standard arithmetic operations, which means that the first run of an ArrayFire application will take a much longer time than the second run. Thus, we run ArrayFire twice in each test and take the second runtime.
   \item NVIDIA Performance Primitives (NPP), version 10.1. NPP is an image and signal processing library. We do not find functions for performing 3D convolution like cuDNN. Therefore we use NPP only for 2D convolution.
- 
+
 \end{itemize}
 
 After years of updating, cuDNN has integrated seven widely used convolution algorithms. Therefore, cuDNN provides an option that uses heuristics to find the most suitable algorithm for a convolution. We set the option to $PREFER\_FASTEST$ (the exact option can be found at \cite{CUDAtoolkit}) meaning that we want to use the fastest algorithm without regarding the memory capacity. However, the algorithm selected by the heuristic is not always the fastest. Therefore, we use two types of runtime for cuDNN. One is the real fastest runtime among seven algorithms and the other is heuristically fastest. For 2D convolution, we use the real fastest runtime since two types of runtime are the same.
 
-%Our implementations of convolution use only a small part of shared memory and mainly relay on GPU L1 cache. Therefore we employ $cudaDeviceSetCacheConfig$ function to set GPU cache policy with arguments $cudaFuncCachePreferL1$ for our convolutions. 
+%Our implementations of convolution use only a small part of shared memory and mainly relay on GPU L1 cache. Therefore we employ $cudaDeviceSetCacheConfig$ function to set GPU cache policy with arguments $cudaFuncCachePreferL1$ for our convolutions.
 All experiments use 32-bit float data type and use the average runtime of 10 iterations. All data are 4-dimension tensors $(N,C,H,W)$. For now, we implement a 2D convolution and 3D convolutions with one and three input channels for filters of size $3 \times 3$ and $5 \times 5$, since small filters are commonly used in applications. We first present results for 2D convolution and then 3D convolution.
 
 \subsection{2D Convolution}
@@ -443,7 +307,7 @@ In this section, we report the performance of 2D convolution obtained from six i
 
 It is apparent from Figure \ref{fig:2druntime} that cuDNN, im2col and im2row are not suitable for 2D convolution while ArrayFire, NPP and our implementation are well optimized for 2D convolution. Our implementation exhibits superior performance over cuDNN, im2col and im2row on two platforms with an average of 5.9$\times$, 5.9$\times$ and 5.8$\times$ speedups respectively.
 
-Figure \ref{fig:2druntimef3c1} and \ref{fig:2druntimef5c1} show speedups on Tesla K40m,  we can see that our implementation achieves the best results in nine cases out of ten. Our implementation is only slower than NPP when performing $3 \times 3$ convolution on a $256 \times 256$ image. The average speedups of our implementation over ArrayFire and NPP on Tesla K40m are 2.1$\times$ and 2.9$\times$ respectively. Figure \ref{fig:2druntimef3c12080} and \ref{fig:2druntimef5c12080} show speedups on RTX 2080 Ti, our implementation achieves the best results in six cases out of ten. We can see that NPP achieves the best results on small image sizes while our implementation achieves the best results on large image sizes. The average speedups of our implementation over ArrayFire and NPP on RTX 2080 Ti are 3.1$\times$ and 1.3$\times$ respectively. 
+Figure \ref{fig:2druntimef3c1} and \ref{fig:2druntimef5c1} show speedups on Tesla K40m,  we can see that our implementation achieves the best results in nine cases out of ten. Our implementation is only slower than NPP when performing $3 \times 3$ convolution on a $256 \times 256$ image. The average speedups of our implementation over ArrayFire and NPP on Tesla K40m are 2.1$\times$ and 2.9$\times$ respectively. Figure \ref{fig:2druntimef3c12080} and \ref{fig:2druntimef5c12080} show speedups on RTX 2080 Ti, our implementation achieves the best results in six cases out of ten. We can see that NPP achieves the best results on small image sizes while our implementation achieves the best results on large image sizes. The average speedups of our implementation over ArrayFire and NPP on RTX 2080 Ti are 3.1$\times$ and 1.3$\times$ respectively.
 
 Our implementation of 2D convolution is derived from direct convolution. We employ only two optimization algorithms, column reuse (Algorithm \ref{algo:basic}, Algorithm \ref{algo:basic2}) and row reuse (Algorithm \ref{algo:rowreuse}) on direct convolution, therefore performance gains are mainly attributed to the reduction on the number of memory transactions. We use \emph{nvprof} provided by CUDA Toolkit to collect the number of memory transactions for different type of memories. GPU global memory is used to store input data in im2col, im2row, ArrayFire and our implementation. NPP and cuDNN use texture memory to store input data. Shared memory is normally used to store filter data. Therefore we sum up the number of read transactions of these three memory types and report the results in Table \ref{tab:2dmemtrans}. To save space, we only show the result of memory transactions collected on Tesla K40m, the result on RTX 2080 Ti exhibits the similar trend.
 
@@ -461,7 +325,7 @@ From Table \ref{tab:2dmemtrans} we can see that our optimization algorithms sign
 %\hline
 %\multicolumn{1}{c}{}&\multicolumn{5}{c}{$F_H*F_W= 3*3$} &\multicolumn{5}{c}{$F_H*F_W= 5*5$}\\
 %\hline
-%           & 256*256&512*512&1K*1K&2K*2K&4K*4K&256*256&512*512&1K*1K&2K*2K&4K*4K\\ 
+%           & 256*256&512*512&1K*1K&2K*2K&4K*4K&256*256&512*512&1K*1K&2K*2K&4K*4K\\
 %\hline
 %cuDNN      & 1.91 & 3.74 & 5.69 & 8.07 & 7.72     & 2.86 & 4.86 & 6.08 & 7.40 & 9.20  \\
 %im2col     & 1.52 & 3.25 & 5.25 & 7.56 & 7.24     & 2.34 & 4.20 & 5.37 & 6.88 & 8.38  \\
@@ -503,7 +367,7 @@ CONV11 & 128  & 1,3       & 224*224     & 64   & 3*3      \\
 		 %\includegraphics[width=18cm,height=5cm]{./figure/3d_norm_c1.eps}
 		 %\caption{Normalized runtime of five implementations for 3D convolution. Left and right parts of the figure is for 3D convolutions with one and three input channels.}
 		 %\label{fig:3druntime}
-		 
+		
 	\begin{subfigure}{18cm}
 		\centering
 		 \includegraphics[width=18cm,height=5.7cm]{./figure/3d_norm_c1.eps}
@@ -588,14 +452,14 @@ We test all 3D convolution implementations on two platforms, speedups of our imp
 
 Different from 2D convolution, the performance gains of 3D convolution are obtained from two aspects, reduction on memory transactions of input data and filters. Once we load a filter into shared memory, we try to use it to slide over as many images as possible. In this way we do not need to load the same filter for each input. In Table \ref{tab:3dtrans}, we show the number of memory transactions for four implementations on Tesla K40m. We use the same method as 2D convolution to collect the number of memory transactions. Our approach achieves the minimum transaction counts in all tested cases and can averagely reduce the number of memory transactions by a factor of 6.1 and 4.4 with respect to \emph{cuDNN fastest} for one and three input channels respectively. Compared with transaction counts in 2D convolution (Table \ref{tab:2dmemtrans}), transaction counts in 3D convolution have a lower ratio with respect to other implementations. The reason is that in 3D convolution, each filter needs to slide over all inputs and thus we need to load the same filter multiple times. Though we have optimized the usage of filters, we still need to load the filters multiple times since the capacity of shared memory can not fit the whole filters. As a consequence, the number of memory transactions increases.
 
-For 3D convolution, memory usage is also important for the scarce memory storage in GPU. We use \emph{nvidia-smi} command provided by NVIDIA CUDA Toolkit to record the peak GPU device memory usage when the application is running. We report global memory usage only for convolutions with one input channel. The reason is that output data consumes most memory storage compared with input and filter data, changing the number of input channels alone does not change the size of output data. Therefore memory usage has little change when we change the number of input channels alone. 
+For 3D convolution, memory usage is also important for the scarce memory storage in GPU. We use \emph{nvidia-smi} command provided by NVIDIA CUDA Toolkit to record the peak GPU device memory usage when the application is running. We report global memory usage only for convolutions with one input channel. The reason is that output data consumes most memory storage compared with input and filter data, changing the number of input channels alone does not change the size of output data. Therefore memory usage has little change when we change the number of input channels alone.
 
 Figure \ref{fig:3dmem} demonstrates the memory usage of four implementations on two platforms. Our implementation is derived from direct convolution which does not require extra memory, thus our implementation consumes the minimum memory storage. GEMM based implementations (im2col and im2row) first transform filters into a large matrix and then transform one input into a matrix each time they perform a matrix multiplication. Therefore, they only need extra memory to store transformed filters and one transformed input. The most memory consuming implementation is cuDNN. Since cuDNN is closed source, we could only guess that it improve the performance at a cost of memory usage. The memory consumption of our implementation is reduced by 335MB on average, 384MB  for maximum compared with cuDNN fastest. The commonly used cuDNN heuristic consumes even more memory than cuDNN fastest. Compared with cuDNN heuristic, our implementation reduces the memory consumption by 442MB on average and the maximum reduction can be up to 876MB.
 
-In summary, our optimization algorithms successfully reduce the number of memory transactions and improve the performance of 3D convolution on two platforms. Our implementation does not need any extra memory while cuDNN consumes a large amount of memory to accelerate convolution operation, especially for cuDNN heuristic. 
+In summary, our optimization algorithms successfully reduce the number of memory transactions and improve the performance of 3D convolution on two platforms. Our implementation does not need any extra memory while cuDNN consumes a large amount of memory to accelerate convolution operation, especially for cuDNN heuristic.
 %From Table \ref{tab:3dspeedup} we can see that as the channel number increases, the speedup of cuDNN, im2col and im2row decrease obviously. We analyze the algorithms of im2col and im2row. Both transform the channels into a large matrix and the use the highly optimized gemm library to do the real work. When we increase the number of channels, the size of the transformed matrix also increases. But the gemm library can distribute the work among gpu cores very well, which brings little overhead on each gpu core. Though without the source code of cuDNN, we use $nvprof$ to analyze cuDNN and find that cuDNN also utilizes gemm library to do the real work. Therefore the reason also holds for cuDNN. In our implementation, we loop over each channel to calculate the final result. As the channel number increases, out implementation shows a linear scale as channel number. Therefore, as the channel number increases, the speed up of our implementation over cuDNN, im2col and im2row decreases. ArrayFire uses a similar method as our implementation, the speedup over ArrayFire is not decreased. Further optimization on channel number will be explored in the future. In this work, we mainly focus on the effectiveness of our two reuse algorithms not the implementation of the convolution.
 
-%Second, compare through 3*3 and 5*5, we can find that for cudnn im2col im2row npp 's sppedup keep same across different filter size, but ArrayFire decreasees, the reason is that when compailing for filter 5, we have to reduce the number of each thread. or it will generate 
+%Second, compare through 3*3 and 5*5, we can find that for cudnn im2col im2row npp 's sppedup keep same across different filter size, but ArrayFire decreasees, the reason is that when compailing for filter 5, we have to reduce the number of each thread. or it will generate
 
 \section{Conclusion}
 In this work we propose two reuse algorithms which can significantly reduce the number of memory transactions. We use CUDA shuffle instructions to eliminate column duplications and row reuse to eliminate row duplications. To convert dynamic indexing into static indexing, we design a method with $pack$ and $unpack$ instructions provided by CUDA Toolkit. Experiments on 2D and 3D convolutions show that our reuse algorithms significantly improve the performance compared with state-of-the-art libraries. Furthermore, our implementation is derived from direct convolution, which means that we improve the performance without incurs extra memory storage.

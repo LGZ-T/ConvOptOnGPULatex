@@ -1,0 +1,43 @@
+\section{Introduction}
+Convolution is a computational building block for many application tasks like image and video processing and machine learning
+models\FIXME{\cite{}}. Convolution can be performed on multiple dimensions, but 2D and 3D convolutions are among the most frequently used
+convolution operations. For examples, 2D convolution is often used in image filtering and frame
+interpolation~\cite{Perrot2014Fine,Ma2014Optimized,Rudi2015Image,Niklaus2017Video}, while 3D convolution is at the core of Convolutional
+Neural Networks (CNNs). While important, convolution operations are both compute- and memory-intensive \cite{cavigelli2015accelerating},
+and can account for nearly 90\% of overall runtime \cite{Li2016Performance} for representative image and machine learning processing tasks.
+Therefore, there is a critical need for accelerating convolution operations.
+
+
+ Many algorithms \cite{Iandola2014Communication}
+\cite{vasilache2014fast} \cite{lavin2016fast} \cite{cho2017mec} \cite{Zhen2018Optimizing} \cite{Vasudevan2017Parallel}
+\cite{Chellapilla2006High} have been proposed to optimize convolution operations. Among these algorithms, GEMM-based
+\cite{Vasudevan2017Parallel} \cite{Chellapilla2006High}, FFT-based \cite{vasilache2014fast} and Winograd-based convolutions
+\cite{lavin2016fast} are broadly adopted convolution algorithms. All three types of convolution algorithms follow a very similar process:
+(1) transform the input and filter into two matrices (different algorithms use different methods to perform the transformation); (2)
+perform matrix multiplication on two matrices; (3) transform the result of matrix multiplication into the output. These three types of
+algorithms suffer from high memory-overhead, because they need to transform the input, filter and output into the desired shape before and
+after performing matrix multiplication.
+
+We examine the process of convolution and propose two optimization algorithms which can improve the performance of convolution by reducing
+the number of memory transactions without incurring any additional memory storage. Our optimization algorithms are designed specifically
+for NVIDIA GPUs. First, we utilize CUDA shuffle instructions to exchange elements between threads of the same warp. In this way, we can
+avoid reloading the same elements which are shared among different threads. We further extend the shuffle instruction to support dynamic
+indexing which is not supported in the previous study \cite{vasilache2014fast}. We call this the column reuse algorithm. Second, we try to
+make full use of rows of the input since each row of the input can be used to generate multiple output elements. We call this the row reuse
+algorithm.
+
+We employ both algorithms on direct convolution. Experiments show that our optimization algorithms can significantly reduce the number of
+memory transactions and improve the performance of direct convolution.
+
+The main contributions of our work are as follows:
+\begin{itemize}
+  \item we design a column reuse algorithm. This algorithm utilizes CUDA shuffle instructions to exchange columns within a warp. Compared
+      with previous study \cite{vasilache2014fast}, our column reuse algorithm can be applied in more situations.
+  \item we design a row reuse algorithm. This algorithm loads each row of input once and then multiply it with multiple rows of a filter
+      to calculate multiple output elements.
+  \item we propose a method for transforming dynamic indexing into static indexing. This method can move arrays with dynamic indexing
+      from local memory into registers, which greatly improves the performance.
+  \item we implement a 2D convolution and 3D convolutions with one and three input channels. The experiments show that our 2D and 3D
+      convolutions are fast and memory efficient compared with state-of-the-art convolution libraries, including ArrayFire, NPP and
+      cuDNN.
+\end{itemize}
