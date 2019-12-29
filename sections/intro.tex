@@ -1,9 +1,9 @@
 \section{Introduction}
 Convolution is a fundamental building block for many application tasks, including image and video processing and machine learning
-models\FIXME{\cite{}}. Convolution can be performed on multiple dimensions, but 2D and 3D convolutions are among the most frequently used
+models \cite{Perrot2014Fine,Ma2014Optimized,Rudi2015Image,Niklaus2017Video,Krizhevsky2012ImageNet,SimonyanZ14a,HeZRS16,SzegedyLJSRAEVR15}. Convolution can be performed on multiple dimensions, but 2D and 3D convolutions are among the most frequently used
 application scenarios. For examples, 2D convolution is often used in image filtering and frame
 interpolation~\cite{Perrot2014Fine,Ma2014Optimized,Rudi2015Image,Niklaus2017Video}, while 3D convolution is at the core of Convolutional
-Neural Networks (CNNs). While important, convolution operations are both compute- and memory-intensive \cite{cavigelli2015accelerating},
+Neural Networks (CNNs) \cite{Krizhevsky2012ImageNet,SimonyanZ14a,HeZRS16,SzegedyLJSRAEVR15}. While important, convolution operations are both compute- and memory-intensive \cite{cavigelli2015accelerating},
 and can account for nearly 90\% of overall runtime \cite{Li2016Performance} for representative image and machine learning processing tasks.
 Therefore, there is a critical need for accelerating convolution operations.
 
@@ -18,8 +18,7 @@ the two matrices before converting the result into the output. Unfortunately, al
 because they need to transform the input, filter and output into the desired shape before and after performing matrix multiplication.
 
 We examine the process of convolution and propose two optimization algorithms which can improve the performance of convolution by reducing
-the number of memory transactions without incurring any additional memory storage. Our optimization algorithms are designed specifically
-for NVIDIA GPUs. First, we utilize CUDA shuffle instructions to exchange elements between threads of the same warp. In this way, we can
+the number of memory transactions without incurring any additional memory storage. First, we utilize shuffle instructions to exchange elements between threads of the same warp. In this way, we can
 avoid reloading the same elements which are shared among different threads. We further extend the shuffle instruction to support dynamic
 indexing which is not supported in the previous study \cite{vasilache2014fast}. We call this the column reuse algorithm. Second, we try to
 make full use of rows of the input since each row of the input can be used to generate multiple output elements. We call this the row reuse
@@ -30,13 +29,11 @@ memory transactions and improve the performance of direct convolution.
 
 The main contributions of our work are as follows:
 \begin{itemize}
-  \item we design a column reuse algorithm. This algorithm utilizes CUDA shuffle instructions to exchange columns within a warp. Compared
+  \item we design a column reuse algorithm. This algorithm utilizes shuffle instructions to exchange columns among different threads. Compared
       with previous study \cite{vasilache2014fast}, our column reuse algorithm can be applied in more situations.
   \item we design a row reuse algorithm. This algorithm loads each row of input once and then multiply it with multiple rows of a filter
       to calculate multiple output elements.
   \item we propose a method for transforming dynamic indexing into static indexing. This method can move arrays with dynamic indexing
       from local memory into registers, which greatly improves the performance.
-  \item we implement a 2D convolution and 3D convolutions with one and three input channels. The experiments show that our 2D and 3D
-      convolutions are fast and memory efficient compared with state-of-the-art convolution libraries, including ArrayFire, NPP and
-      cuDNN.
+  %\item we implement a 2D convolution and 3D convolutions with one and three input channels. The experiments show that our 2D and 3D convolutions are fast and memory efficient compared with state-of-the-art convolution libraries, including ArrayFire, NPP and cuDNN.
 \end{itemize}

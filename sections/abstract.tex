@@ -4,9 +4,9 @@ training and inferencing.  Existing approaches for accelerating convolution oper
 such strategies often increase the memory footprint with extra memory accesses, leaving much room for performance optimization.
 
 This paper presents a novel approach for optimizing memory accessing for the convolution operation, specifically targeting GPU execution.
-Our approach works for convolution operations performed on the width and height dimensions. When sliding a filter on the width dimension,
-we shuffle instructions to exchange overlapped columns of input to \FIXME{reduce/improve???}. When sliding a filter on the height
-dimension, we multiply each overlapped row of input with multiple rows of a filter to \FIXME{reduce/improve????}.
+When sliding a filter on the width dimension,
+we use shuffle instructions to exchange overlapped columns of input to reduce the number of memory transactions. When sliding a filter on the height
+dimension, we multiply each overlapped row of input with multiple rows of a filter to calculate multiple output elements.
 
 
 We apply our approach to both 2D and 3D convolutions and evaluate it on two NVIDIA GPU architectures (K40 and 2080Ti). For 2D

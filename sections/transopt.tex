@@ -37,13 +37,13 @@ In this section, we demonstrate how to perform column reuse to eliminate duplica
 \begin{figure}
 	\centering
 	\includegraphics[width=\columnwidth,height=4.5cm]{./figure/exchange.eps}
-\caption{Convert the dynamic indexing of array $iTemp$ into static indexing. Therefore, CUDA compiler can put $iTemp$ into registers instead of local memory.}
+\caption{Convert the dynamic indexing of array $iTemp$ into static indexing. Therefore, The compiler can put $iTemp$ into registers instead of local memory.}
 \label{fig:exchange}
 \end{figure}
 
 
-In step 1 of Figure \ref{fig:directalgo}, threads of the first warp load the first corresponding input elements from global memory. Because
-addresses of these elements are contiguous (0, 1, 2, 3), the warp can coalesce these accesses into one memory transaction. Therefore, 5
+In step 1 of Figure \ref{fig:directalgo}, each thread loads the first corresponding input elements from global memory. Because
+addresses of these elements are contiguous (0, 1, 2, 3), the memory controler can coalesce these accesses into one memory transaction. Therefore, 5
 memory transactions are required for step 1-5 of Figure \ref{fig:directalgo}. Each pair of adjacent threads have four duplicate input
 elements, which corresponds to duplicate columns in Figure \ref{fig:twostrategies}. Next, we details how to eliminate this type of
 duplication.
@@ -52,13 +52,13 @@ As we can see from Figure \ref{fig:directalgo}, input elements 1, 2, 3 loaded in
 step 1. Therefore, we can retrieve input elements 1, 2, 3 from thread $t1$, $t2$, $t3$ instead of loading them from global memory (or L1
 cache). This kind of duplication also occurs in step 3, 4, 5.
 
-To eliminate redundant loads, we use CUDA shuffle instructions to exchange input elements between threads within the same warp. In step 1
+To eliminate redundant loads, we use shuffle instructions to exchange input elements among different threads. In step 1
 and step 2 of Figure \ref{fig:optalgo1}, each thread loads its first and the fifth input elements from global memory. In step 3, each
 thread utilizes shuffle instruction to retrieve its third element from another thread. Threads $t0$ and $t1$ retrieve their third elements
 from threads $t2$ and $t3$ respectively, and also provide their fifth elements (shown as dashed square in step 2) for thread $t2$ and $t3$.
 In the meantime, threads $t2$ and $t3$ retrieve their third elements from threads $t0$ and $t1$ respectively, and also provide their first
 elements (shown as dashed square in step 1) for threads $t0$ and $t1$. This exchange process can be implemented using the instruction
-$shfl\_xor(iTemp[i],2)$ (the exact form of shuffle instructions can be found at \cite{CUDAtoolkit}), where $iTemp$ is the thread local
+$shfl\_xor(iTemp[i],2)$ (we take CUDA shuffle as an example, the exact form of shuffle instructions can be found at \cite{CUDAtoolkit}), where $iTemp$ is the thread local
 array used to store five input elements and $i$ indexes which element to provide. For threads $t0$ and $t1$, both need to provide the fifth
 elements, therefore $i=4$. For threads $t2$ and $t3$, both need to provide the first elements, therefore $i=0$. Figure \ref{fig:optalgo2}
 has the similar procedure as Figure \ref{fig:optalgo1}, the difference is that each thread in Figure \ref{fig:optalgo2} retrieve its second
@@ -66,7 +66,7 @@ and fourth elements from its neighboring threads.
 
 
 However, the instruction $shfl\_xor(iTemp[i],2)$ significantly degrades the performance of convolution. Because $iTemp$ is an array with
-dynamic indexing, which means that CUDA compiler can not decide which element to provide at compile time. Therefore CUDA compiler will
+dynamic indexing, which means that the compiler can not decide which element to provide at compile time. Therefore the compiler will
 place array $iTemp$ in local memory which has the same access latency as global memory, instead of registers. This will significantly
 increase the memory access time and degrade the performance of convolution.
 
@@ -127,12 +127,12 @@ performance improvements for convolution.
 \begin{figure}
 	\centering
 	\includegraphics[width=\columnwidth,height=3.7cm]{./figure/rowreuse.eps}
-\caption{A $3 \times 3$ filter is used to slide over the input image along height dimension and produce a column of output elements. One CUDA thread is used to calculate this column of output elements.}
+\caption{A $3 \times 3$ filter is used to slide over the input image along height dimension and produce a column of output elements. One thread is used to calculate this column of output elements.}
 \label{fig:rowreuse}
 \end{figure}
 
 When sliding the filter over the input image along height dimension, we can get a column of output elements, as shown in Figure
-\ref{fig:rowreuse}. In our design, we use one CUDA thread to calculate one column of output elements. Based on Figure \ref{fig:rowreuse},
+\ref{fig:rowreuse}. In our design, we use one thread to calculate one column of output elements. Based on Figure \ref{fig:rowreuse},
 we can perform convolution as follows:
 
 \begin{gather*}

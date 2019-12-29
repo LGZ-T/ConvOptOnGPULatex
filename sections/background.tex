@@ -26,23 +26,22 @@ computation complexity.
 
 We examine the process of convolution and propose two optimization algorithms to reduce memory overhead. We use a simple 2D convolution as
 a motivating example to demonstrate how our algorithms work. Figure \ref{fig:twostrategies} illustrates a simple 2D convolution on GPU. We
-slide a $5 \times 5$ filter over a $6 \times 11$ image to produce a $2 \times 7$ output. Each CUDA thread calculates one column of output.
+slide a $5 \times 5$ filter over a $6 \times 11$ image to produce a $2 \times 7$ output. Each thread calculates one column of output.
 Thread 0 and thread 1 demonstrate the process of sliding the filter along the width dimension. We can see that thread 0 and thread 1 load
 two overlapped regions from the input image, which generates four duplicate columns. Thread 6 demonstrates the process of sliding the
 filter along the height dimension. We can see that thread 6 loads two overlapped regions and generates four duplicate rows.
 
 Our optimization algorithms can eliminate two types of duplication and thus reduce the number of memory transactions. (1) Column reuse
-algorithm, we let each thread load the first and last columns it needs and retrieve rest columns from other threads through CUDA shuffle
-instructions. The difference in the usage of CUDA shuffle instructions between our algorithms and the previous study
-\cite{vasilache2014fast} will be detailed in section \ref{sec:strategies}. (2) Row reuse algorithm, we let each CUDA thread load overlapped
+algorithm, we let each thread load the first and last columns it needs and retrieve rest columns from other threads through shuffle
+instructions. The difference in the usage of shuffle instructions between our algorithms and the previous study
+\cite{vasilache2014fast} will be detailed in section \ref{sec:strategies}. (2) Row reuse algorithm, we let each thread load overlapped
 rows only once and multiply each row with multiple rows of a filter to calculate multiple output elements. A major performance issue
 encountered in our implementation is that thread local arrays with dynamic indexing will be put into the local memory which has the same
-access latency as the global memory. To solve this problem, we use $pack$ and $unpack$ instructions provided by CUDA PTX assembly language
-to transform dynamic indexing into static indexing.
+access latency as the global memory. To solve this problem, we use pack and unpack operations to transform dynamic indexing into static indexing.
 
 \begin{figure}
 \centering
   \includegraphics[width=\columnwidth,height=6cm]{./figure/twostrategies.eps}
-  \caption{An illustration of how to perform 2D convolution on GPU. Filter size is $5 \times 5$, input image size is $6 \times 11$ and output size is $2 \times 7$. Each CUDA thread calculates one column of the output. Threads 0 and 1 load needed regions from input image with four duplicate columns. Thread 6 loads two overlapped regions from input image and generates four duplicate rows. Numbers in the square denote the index of input elements.}
+  \caption{An illustration of how to perform 2D convolution on GPU. Filter size is $5 \times 5$, input image size is $6 \times 11$ and output size is $2 \times 7$. Each thread calculates one column of the output. Threads 0 and 1 load needed regions from input image with four duplicate columns. Thread 6 loads two overlapped regions from input image and generates four duplicate rows. Numbers in the square denote the index of input elements.}
   \label{fig:twostrategies}
 \end{figure}
