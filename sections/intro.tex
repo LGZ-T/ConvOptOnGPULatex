@@ -10,19 +10,26 @@ Therefore, there is a critical need for accelerating convolution operations.
 
 A wide range of techniques have been proposed to accelerate convolution
 operations~\cite{Iandola2014Communication,vasilache2014fast,lavin2016fast,cho2017mec,Zhen2018Optimizing,Vasudevan2017Parallel,Chellapilla2006High}.
- Among these, GEMM-based
-\cite{Vasudevan2017Parallel} \cite{Chellapilla2006High}, FFT-based \cite{vasilache2014fast} and Winograd-based convolutions
-\cite{lavin2016fast} are broadly adopted algorithms. All three types of convolution algorithms follow a three-step processing pipeline. The
-algorithm first transforms the input and a filter (that applies on the input) into two matrices. Next, it performs matrix multiplication on
-the two matrices before converting the result into the output. Unfortunately, all these algorithms suffer from high memory overhead,
-because they need to transform the input, filter and output into the desired shape before and after performing matrix multiplication.
+ Among these, convulsions based GEMM
+\cite{Vasudevan2017Parallel,Chellapilla2006High}, FFT~\cite{vasilache2014fast} and Winograd~\cite{lavin2016fast} methods are broadly
+adopted. All three types of convolution algorithms follow a three-step processing pipeline. The algorithm first transforms the input and a
+filter (that applies on the input) into two matrices. Next, it performs matrix multiplication on the two matrices before converting the
+result into the output. Unfortunately, all these algorithms suffer from high memory overhead (with up to \FIXME{xx\%} increase on the
+number of memory transactions), because they need to transform the input, filter and output into the desired shape before and after
+performing matrix multiplication. \FIXME{Explain why they will incur significant memory transactions.} This is a serious problem for
+distributed memory architecture, a commonly used design for high-end GPUs, where memory accessing is often a performance bottleneck. As a
+result, prior optimization techniques leave much room for improvement when executing convolution operations on GPUs.
 
-We examine the process of convolution and propose two optimization algorithms which can improve the performance of convolution by reducing
-the number of memory transactions without incurring any additional memory storage. First, we utilize shuffle instructions to exchange elements between threads of the same warp. In this way, we can
-avoid reloading the same elements which are shared among different threads. We further extend the shuffle instruction to support dynamic
-indexing which is not supported in the previous study \cite{vasilache2014fast}. We call this the column reuse algorithm. Second, we try to
-make full use of rows of the input since each row of the input can be used to generate multiple output elements. We call this the row reuse
-algorithm.
+%We examine the process of convolution and propose two optimization algorithms which can improve the performance of convolution by reducing
+%the number of memory transactions without incurring any additional memory storage. First, we utilize shuffle instructions to exchange elements between threads of the same warp.
+This paper aims to optimizing memory transactions for executing convolution operations on GPUs. Doing so can significantly improve the
+performance for convolution operations by reducing the number of memory access. Our technique is complementary to convolution optimization
+techniques based on GEMM, FFT and Winograd, and can be integrated with these techniques. To this end, this paper presents two novel
+optimization algorithms. Our first optimization techniques utilizes shuffle instructions (that supported by CUDA and OpenCL) to exchange
+elements among threads within the same GPU warp (or working group). In this way, we can avoid reloading the same elements which are shared
+among different threads. We further extend the shuffle instruction to support dynamic indexing which is not supported in the previous study
+\cite{vasilache2014fast}. We call this the column reuse algorithm. Second, we try to make full use of rows of the input since each row of
+the input can be used to generate multiple output elements. We call this the row reuse algorithm.
 
 We employ both algorithms on direct convolution. Experiments show that our optimization algorithms can significantly reduce the number of
 memory transactions and improve the performance of direct convolution.
