@@ -93,7 +93,7 @@ Figure \ref{fig:exchange} illustrates the process of Line 4-7 of Algorithm \ref{
 corresponding input elements into thread local array $iTemp$ (Line 2-3). Then, pack both 32-bit elements into a 64-bit variable $exchange$
 where $iTemp[4]$ is the high 32 bits and $iTemp[0]$ is the low 32 bits (Line 4). As threads $t0$ and $t1$ need to provide the their fifth
 elements which are high 32 bits of $exchange$, we right shift $exchange$ by 32 to put $iTemp[4]$ in low 32 bits. For threads $t2$ and $t3$,
-both need to provide their first elements which are already low 32 bits of $exchange$. therefore we right shift $exchange$ in threads $t2$
+both need to provide their first elements which are already low 32 bits of $exchange$. Therefore we right shift $exchange$ in threads $t2$
 and $t3$ by 0. Shift amounts of each thread is calculated based on the thread id (Line 5). Afterwards, unpack $exchange$ into $iTemp[2]$
 (high 32 bits) and $iTemp[1]$ (low 32 bits) (Line 7). And $iTemp[1]$ is the element that each thread needs to provide. Finally, using
 shuffle instruction to exchange elements between threads (Line 8).
@@ -169,7 +169,7 @@ load\ row_{i5}:
 
 We can see from above equations that only 5 rows are loaded to calculate output elements. A more generalized description of the method is
 shown in Algorithm \ref{algo:rowreuse}, $row$ denotes the row loaded from the input, $index$ denotes the index of $row$, $filter$ denotes
-the vector of filter rows. Line 1-5 deals with the first $F_H-1$ rows ($row_{i1}$ and $row_{i2}$ in Figure \ref{algo:rowreuse}), these rows
+the vector of filter rows and $filter[i]$ means the $i$th row of the filter. Line 1-5 deals with the first $F_H-1$ rows ($row_{i1}$ and $row_{i2}$ in Figure \ref{algo:rowreuse}), these rows
 are needed by less than $F_H$ output elements. Line 6-11 deals with rows that are needed by exactly $F_H$ output elements ($row_{i3}$ in
 Figure \ref{algo:rowreuse}). Line 12-17 deals with last $F_H-1$ rows, these rows are needed by less than $F_H$ output elements ($row_{i4}$
 and $row_{i5}$ in Figure \ref{algo:rowreuse}).

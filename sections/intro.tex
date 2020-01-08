@@ -16,6 +16,7 @@ operations~\cite{Iandola2014Communication,vasilache2014fast,lavin2016fast,cho201
 algorithm first transforms the input and a filter (that applies on the input) into two matrices. Next, it performs matrix multiplication on
 the two matrices before converting the result into the output. Unfortunately, all these algorithms suffer from high memory overhead,
 because they need to transform the input, filter and output into the desired shape before and after performing matrix multiplication.
+{\color{red}Experiments show that the fastest algorithm of cuDNN consumes more than 92.72\% (up to 185.52\%) global memory in 3D convolution compared to our implementation.}
 
 We examine the process of convolution and propose two optimization algorithms which can improve the performance of convolution by reducing
 the number of memory transactions without incurring any additional memory storage. First, we utilize shuffle instructions to exchange elements between threads of the same warp. In this way, we can
