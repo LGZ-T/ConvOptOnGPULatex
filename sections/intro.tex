@@ -14,12 +14,12 @@ Among these, convulsions based GEMM \cite{Vasudevan2017Parallel,Chellapilla2006H
 Winograd~\cite{lavin2016fast} methods are broadly adopted. All three types of convolution algorithms follow a
 three-step processing pipeline. The algorithm first transforms the input and a filter (that applies on the input) into
 two matrices. Next, it performs matrix multiplication on the two matrices before converting the result in the output.
-Unfortunately, such as processing pipeline can incur a large number of memory transactions during the transformation
-phase due to the involvement of matrix multiplications and duplicate elements of the transformed matrices. Such
-overhead can be significant – for example, we observe the number of memory transactions can be increased by 90\% for
-the popular 3D convolution (Section\FIXME{\ref{}}). This is a serious problem for distributed memory architecture, a
-commonly used design for high-end GPUs, where memory accessing is often a performance bottleneck. As a result, prior
-optimization techniques leave much room for improvement when executing convolution operations on GPUs.
+Unfortunately, such as processing pipeline can incur a large number of memory transactions (accesses) during the
+transformation phase due to the involvement of matrix multiplications and duplicate elements of the transformed
+matrices. Such overhead can be significant – for example, we observe the number of memory transactions can be increased
+by 90\% for the popular 3D convolution (Section\FIXME{\ref{}}). This is a serious problem for distributed memory
+architecture, a commonly used design for high-end GPUs, where memory accessing is often a performance bottleneck. As a
+result, prior optimization techniques leave much room for improvement when executing convolution operations on GPUs.
 
 
 %%We examine the process of convolution and propose two optimization algorithms which can improve the performance of convolution by reducing
@@ -42,28 +42,28 @@ directions. Our first optimization technique exploits column resue. It achieves 
 (supported by CUDA and OpenCL) to exchange elements among threads within the same GPU warp (or working group). In this
 way, we can avoid reloading the same elements shared among different threads. We further extend the shuffle instruction
 to support dynamic indexing which is not supported in the previous study \cite{vasilache2014fast}.  Our second
-optimization targets row reuse, by multiplying one input row with multiple rows of a convolutional kernel to compute
-multiple output elements.
+optimization targets row reuse, by multiplying one input row with multiple rows of a convolutional kernel (or filter)
+to compute multiple output elements. This strategy improves the data locality of elements within a row, leading to a
+fewer number of memory transactions compared to existing convolution processing pipeline and hence improving the
+computation performance.
+
+
 
 %Our technique is complementary to convolution optimization techniques based on GEMM, FFT and Winograd, and can be
 %integrated with these techniques.
-
-
 
 We apply our optimization techniques to direct convolution operations and evaluate them on an NVIDIA K40 GPU platform.
 We compare with highly optimized DNN libraries, including cuDNN. Experimental results show that our approach delivers
 over 2$\times$ faster performance over the best-performing competitive strategy, by significantly reduce the number of
 memory transactions for convolution operations.
 
-
-
-The main contributions of our work are as follows:
+This paper makes the following technical contributions:
 \begin{itemize}
-  \item we design a column reuse algorithm. This algorithm utilizes shuffle instructions to exchange columns among different threads. Compared
-      with previous study \cite{vasilache2014fast}, our column reuse algorithm can be applied in more situations.
-  \item we design a row reuse algorithm. This algorithm loads each row of input once and then multiply it with multiple rows of a filter
-      to calculate multiple output elements.
-  \item we propose a method for transforming dynamic indexing into static indexing. This method can move arrays with dynamic indexing
-      from local memory into registers, which greatly improves the performance.
+  \item It presents a novel algorithm for column reuse (Section~\ref{sec:creuse}), which has a better generalization
+      ability over prior work.
+  \item It presents a novel row reuse algorithm to improve the data locality and reduce the number of memory accesses
+      when performing convolution in the row direction (Section~\ref {sec:rowreuse}).
+  \item It describes a novel method for transforming dynamic indices into static indices. Our approach enables better
+      register promotion, leading to better performance (Section\FIXME{\ref{}}).
   %\item we implement a 2D convolution and 3D convolutions with one and three input channels. The experiments show that our 2D and 3D convolutions are fast and memory efficient compared with state-of-the-art convolution libraries, including ArrayFire, NPP and cuDNN.
 \end{itemize}
