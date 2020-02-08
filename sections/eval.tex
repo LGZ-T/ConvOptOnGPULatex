@@ -1,4 +1,5 @@
 \section{Evalution}
+\label{exp}
 We evaluate our implementations of convolution on two platforms: (a) NVIDIA Tesla K40m facilitates 2880 FP32 cores with 64KB L1 cache and
 shared memory. The host machine has a 2.40GHz Intel Xeon E5-2620 CPU with 128GB memory and Linux kernel v4.19.85. (b) NVIDIA RTX 2080 Ti
 facilitates 4350 FP32 cores and 4350 INT32 cores with 96KB L1 cache and shared memory. The host machine has a 2.30GHz Intel Xeon E5-2697
@@ -138,7 +139,7 @@ convolution. Compared with state-of-the-art image processing libraries, ArrayFir
 2.1$\times$ and 2.9$\times$ on Tesla K40m, 1.3$\times$ and 3.1$\times$ on RTX 2080 Ti.
 
 \subsection{3D Convolution}
-
+\label{3dconvexp}
 \begin{table}[]
 \caption{Configurations of 3D convolution}
 \label{tab:3dconvconfigs}

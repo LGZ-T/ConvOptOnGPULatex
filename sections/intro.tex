@@ -17,7 +17,7 @@ two matrices. Next, it performs matrix multiplication on the two matrices before
 Unfortunately, such as processing pipeline can incur a large number of memory transactions (accesses) during the
 transformation phase due to the involvement of matrix multiplications and duplicate elements of the transformed
 matrices. Such overhead can be significant – for example, we observe the number of memory transactions can be increased
-by 90\% for the popular 3D convolution (Section\FIXME{\ref{}}). This is a serious problem for distributed memory
+by 90\% for the popular 3D convolution (Section \ref{3dconvexp}). This is a serious problem for distributed memory
 architecture, a commonly used design for high-end GPUs, where memory accessing is often a performance bottleneck. As a
 result, prior optimization techniques leave much room for improvement when executing convolution operations on GPUs.
 
@@ -64,6 +64,6 @@ This paper makes the following technical contributions:
   \item It presents a novel row reuse algorithm to improve the data locality and reduce the number of memory accesses
       when performing convolution in the row direction (Section~\ref {sec:rowreuse}).
   \item It describes a novel method for transforming dynamic indices into static indices. Our approach enables better
-      register promotion, leading to better performance (Section\FIXME{\ref{}}).
+      register promotion, leading to better performance (Section \ref{exp}).
   %\item we implement a 2D convolution and 3D convolutions with one and three input channels. The experiments show that our 2D and 3D convolutions are fast and memory efficient compared with state-of-the-art convolution libraries, including ArrayFire, NPP and cuDNN.
 \end{itemize}
