@@ -7,16 +7,15 @@
 \end{figure}
 
 
-In this section, we demonstrate how to employ our two reuse algorithms on 2D and 3D convolutions. The main difference between
-implementations of 2D and 3D convolutions is how to load filters. For 2D convolution, we focus on the scenario where a filter is used to
-slide over a large image. Therefore, we can load the entire filter into shared memory and one thread block only needs to load the
-filter once. For 3D convolution, we focus on the scenario where many filters are used to slide over a batch of images. This is often the
-first layer of CNNs. The entire filters normally can not fit into the shared memory, thus we need to load filters multiple times.
+This section demonstrates the implementation of the two proposed reuse algorithms on 2D and 3D convolutions. The main difference between the 
+implementations in the 2D and 3D convolutions lies in the loading of filters. For the former, we focus on the scenario where a filter is used to
+slide over a large image. Therefore, we can load the entire filter into a shared memory, and only one thread block needs to load the
+filter once. For the latter, we focus on the scenario where many filters are used to slide over a batch of images, which are often the
+first layers of CNNs. All filters cannot fit into the shared memory; hence, we need to load the filters multiple times.
 
-To make this easily understood, we use 2D convolution {\color{red}running at NVIDIA GPU} as an example for illustration. In our implementation, we first divide the output
-into sub-blocks and each sub-block contains exactly 32 ({\color{red}warp size}) columns except for the last sub-block which may contain less columns.
-Each {\color{red}thread block} processes one or more sub-blocks and each warp process one sub-block. Threads within the same warp process adjacent
-columns of one sub-block.
+To simplify the discussion, we use a 2D convolution running at an NVIDIA GPU as an example. We first divide the output
+into sub-blocks, which contain exactly 32 (warp size) columns each, except for the last sub-block, which may contain less than 32 columns.
+Each thread block processes one or more sub-blocks, and each warp processes one sub-block. The threads within the same warp process the adjacent columns of one sub-block.
 \begin{algorithm}
 	\KwIn{$I$, $F$, $O$, $subBlockHeight$}
 	\KwOut{$O$}
@@ -42,20 +41,11 @@ columns of one sub-block.
 	\label{algo:overalldesign}
 \end{algorithm}
 
-Figure \ref{fig:overalldesign} is an illustration of how to map threads onto output elements. Since 2D convolution normally produces
-an output image of the same size as the input image, therefore we need to pad the input image. But we do not actually allocate memory on
-GPU, instead we use different methods to calculate edge and inner elements of the output image. In Figure \ref{fig:overalldesign}, edge
-elements and inner elements are denoted as shaded squares and dashed squares respectively.
+Figure \ref{fig:overalldesign} shows the mapping process of the threads onto the output elements. Given that 2D convolutions normally produce an output image that has the same size as the input image, the latter should be padded. But we do not actually allocate memory on the GPU. We use different methods to calculate the edge and inner elements of the output image. The edge and inner elements are represented by the shaded and dashed squares in Figure \ref{fig:overalldesign}, respectively.
 
-We demonstrate how to deal with inner elements in this paper and we calculate edge elements with a similar method as inner elements. In
-Figure \ref{fig:overalldesign}, we assume that each {\color{red}warp} contains 4 threads. We can see that the inner elements are divided into two
-sub-blocks. Sub-block 0 contains 4 columns which is exactly the {\color{red}warp size}. Sub-block 1 contains only 2 columns, to make full use of threads
-within a {\color{red}warp}, we divide the last two columns evenly among 4 threads. A generalized overall design is shown in Algorithm
-\ref{algo:overalldesign}.
+We also demonstrate how to deal with the inner elements and how to  calculate the edge elements using the same method for the inner elements. Each warp is assumed to contain four threads (Figure \ref{fig:overalldesign}). The inner elements are divided into two
+sub-blocks. Sub-block 0 contains four columns, which represent the warp size, whereas sub-block 1 contains only two columns. To utilize the threads within a warp, we divide the last two columns evenly among the four threads. A generalized overall design is shown in Algorithm \ref{algo:overalldesign}.
 
-In Algorithm \ref{algo:overalldesign}, we first load the filter into shared memory (Line 1-2). Then we process sub-blocks with exact 32
-columns in Line 3-13 and the last sub-block in Line 14-17. Each thread calculates one column of output elements as follows: First, each
-thread calculates the address of the first input element it needs (Line 4-6); Second, each thread uses Algorithm \ref{algo:basic} and
-Algorithm \ref{algo:basic2} to fulfill the vector $row$ which contains a row of the sub-block (Line 8); Third, each thread passes the
-vector $row$ to Algorithm \ref{algo:rowreuse} to calculate multiple output elements and store results in register array $sum$ (Line 9);
-Last, each thread writes the result array $sum$ into global memory (Line 12).
+In the first two lines of Algorithm \ref{algo:overalldesign}, we first load the filter into the shared memory. Then, we process the sub-blocks with exactly 32 columns and the last sub-block in Lines 3-13 and 14-17, respectively. Each thread calculates one column of the output elements. First, each thread calculates the address of the first input element it needs (Lines 4-6). Second, each thread uses Algorithms \ref{algo:basic} and \ref{algo:basic2} to fulfill the vector $row$, which contains a row of the sub-block (Line 8). Third, each thread passes the
+vector $row$ to Algorithm \ref{algo:rowreuse} to calculate multiple output elements and store results in register array $sum$ (Line 9).
+Lastly, each thread writes the result array $sum$ into the global memory (Line 12).

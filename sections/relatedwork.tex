@@ -1,30 +1,25 @@
 \section{Related Work}
-Over the past few years, many efforts have been made on optimizing convolution operations. Nowadays, GEMM-based, FFT-based and
+Numerous efforts have been dedicated to optimizing convolution operations. As previously mentioned, GEMM-, FFT- and
 Winograd-based convolutions are broadly adopted convolution algorithms.
 
 GEMM-based convolution is the first attempt to optimize convolution. Chellapilla et al. \cite{Chellapilla2006High} developed an unrolling
-convolution algorithm which is also called im2col convolution algorithm. They lower the convolutions into a matrix multiplication which is
-highly optimized on GPU. Though there are some duplicate input elements involved in the computation, the performance gain is still
-impressive. Chetlur et al. \cite{ChetlurWVCTCS14} at NVIDIA integrated the unrolling convolution algorithm into cuDNN.
+convolution algorithm  called the im2col convolution algorithm. They lowered the convolutions into a matrix multiplication, which is
+highly optimized on the GPU. Despite some duplicate input elements involved in the computation, the performance gain of this algorithm is impressive. Chetlur et al. \cite{ChetlurWVCTCS14}, who worked for NVIDIA, integrated the unrolling convolution algorithm into cuDNN.
 
-As general matrix multiplication has been well optimized, researchers shift the focus from GEMM-based convolution to FFT-based and
-Winograd-based convolutions. Both FFT-based and Winograd-based convolutions can reduce the computational complexity and improve the
-performance of convolution. Mathieu et al. \cite{mathieu2013fast} proposed FFT-based convolution, they compute convolutions as pointwise
-products in the Fourier domain and reusing transformed input data many times which significantly reduce the complexity of convolution. This
-method greatly improves the performance of convolution compared with GEMM-based implementation. However, FFT-based convolution is more
-suitable for large filters, because they need to pad filters to the same size as input data and small filters like $3 \times 3$ need more
-memory than large filters. To overcome this drawback, Lavin et al. \cite{lavin2016fast} used Winograd’s minimal filtering algorithm to
-accelerate convolution on GPU. Their algorithm can reduce the arithmetic complexity of convolution by up to a factor of 4 compared with
-direct convolution. But Winograd algorithm is suitable for small filters due to its numerical instability. \cite{Zhen2018Optimizing}
-extends Winograd algorithm to any filter sizes. However, both Winograd-based algorithms need to transform the input and filter before
-performing matrix multiplication, and need more operations than FFT algorithm.
+After obtaining the satisfactory optimization of GEMM, researchers shifted their focus from GEMM-based convolution to FFT- and
+Winograd-based ones. Both convolutions can reduce computational complexity and improve convolution performance. Mathieu et al. \cite{mathieu2013fast} proposed an FFT-based convolution to compute convolutions as pointwise
+products in the Fourier domain and reuse the transformed input data, which significantly reduce the complexity of the convolution, many times. This
+method greatly improved the performance of convolution compared with GEMM-based implementation. However, FFT-based convolution is more suitable for large filters than for small ones because padding the filters to the same size as the input data is necessary, and  the latter (e.g., 3 × 3 filters) needs more memory than the former. To overcome this drawback, Lavin et al. \cite{lavin2016fast} used Winograd’s minimal filtering algorithm to
+accelerate the convolution on GPU. This algorithm can reduce the arithmetic complexity of a convolution by up to four times compared with
+direct convolution. However, Winograd's algorithm is only suitable for small filters due to its numerical instability. \cite{Zhen2018Optimizing}
+extended Winograd's algorithm to support any filter size. However, the traditional and extended Winograd-based algorithms need to transform the input and filter before
+performing matrix multiplication, and both require more operations compared with the FFT algorithm.
 
-All abovementioned convolutions need to transform the input and filter before performing matrix multiplication, this will incur much memory
-overhead and offset some performance gains brought by the reduction in computational complexity. Recent studies mainly focus on how to
-reduce the memory overhead of transformation phases. \cite{cho2017mec} reduces the memory overhead of GEMM-based convolution. They use a
-compact lowering scheme to reduce the redundancy in the lowered matrix and then do multiple small matrix multiplications in parallel.
-However, their algorithm still needs to transform the input and filter tensors into lowered matrixes to compute convolution.
-\cite{Iandola2014Communication} reduces memory  communication of 2D convolution on GPU. They prefetch image regions to registers, and let
-each  thread do more work with fewer threads. Their method just uses registers to accelerate convolution and does not reduce the number of
-memory accesses. Different from \cite{Iandola2014Communication}, we further optimize the usage of registers and significantly reduce the
+The transformation of the input and filter before performing matrix multiplication incurs a large memory
+overhead and offset some performance gains caused by the reduction in computational complexity. Therefore, recent studies have mainly focused on reduction of the the memory overhead of the transformation phases. \cite{cho2017mec} reduced the memory overhead of GEMM-based convolutions using a
+compact lowering scheme to reduce the redundancy in the lowered matrix and then performed multiple small matrix multiplications in parallel.
+However, this algorithm still needs to transform the input and filter tensors into lowered matrixes to compute the convolution.
+\cite{Iandola2014Communication} reduced memory communication of 2D convolutions on GPU. They also prefetched the image regions to the registers, and let
+each  thread execute substantial work with few threads. This method uses the registers to accelerate the convolution and does not reduce the number of
+memory accesses. Different from \cite{Iandola2014Communication}, we further optimize the use of registers and significantly reduce the
 number of memory accesses.

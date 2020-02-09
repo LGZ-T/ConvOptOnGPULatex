@@ -1,10 +1,6 @@
 \section{Conclusion}
-In this work we propose two reuse algorithms which can significantly reduce the number of memory transactions. We use CUDA shuffle
-instructions to eliminate column duplications and row reuse to eliminate row duplications. To convert dynamic indexing into static
-indexing, we design a method with $pack$ and $unpack$ instructions provided by CUDA Toolkit. Experiments on 2D and 3D convolutions show
-that our reuse algorithms significantly improve the performance compared with state-of-the-art libraries. Furthermore, our implementation
-is derived from direct convolution, which means that we improve the performance without incurs extra memory storage.
-%% Acknowledgmentsc
+In this study, we proposed two reuse algorithms that can significantly reduce the number of memory transactions. We used CUDA shuffle
+instructions and row reuse to eliminate column and row duplications , respectively. We also designed a method with pack and unpack instructions from the CUDA Toolkit to convert dynamic indexing into static indexing. The experiments applied on 2D and 3D convolutions confirmed that the proposed reuse algorithms  significantly improve the performance compared with other state-of-the-art libraries. Furthermore, the implementation of the proposed algorithms was derived from direct convolution, indicating that the performance was improved without incurring extra memory storage.%% Acknowledgmentsc
 \begin{acks}                            %% acks environment is optional
                                         %% contents suppressed with 'anonymous'
   %% Commands \grantsponsor{<sponsorID>}{<name>}{<url>} and
