@@ -1,9 +1,16 @@
-\documentclass[sigplan,review,anonymous]{acmart}\settopmatter{printfolios=true,printccs=false,printacmref=false}
+\documentclass[sigconf,review,anonymous]{acmart}\settopmatter{printfolios=false,printccs=true,printacmref=false}
 
 \input{preamble}
 
 \begin{document}
-\title{Optimizing GPU Memory Transactions for Convolution Operations}
+\title{Optimizing GPU Memory Transactions for Convolution Operations-full paper only}
+
+\author{Gangzhao Lu}
+\affiliation{
+  \department{Computer Science and Technology}                \institution{Harbin Institute of Technology}
+    \country{China}                   
+}
+\email{lugangzhao@hit.edu.cn}
 
 \author{Weizhe Zhang}
 \affiliation{
@@ -13,25 +20,16 @@
 }
 \email{wzzhang@hit.edu.cn}
 
-\author{Gangzhao Lu}
-\affiliation{
-  \department{Computer Science and Technology}              %% \department is recommended
-  \institution{Harbin Institute of Technology}            %% \institution is required
-  \country{China}                    %% \country is recommended
-}
-\email{lugangzhao@hit.edu.cn}
-
 \author{Zheng Wang}
 \affiliation{
-  \department{School of Computing}              %% \department is recommended
-  \institution{University of Leeds}            %% \institution is required
-  \country{U. K.}                    %% \country is recommended
+  \department{School of Computing}                \institution{University of Leeds}
+    \country{U. K.}                   
 } \email{zwang5@leeds.ac.uk}
 
 \input{sections/abstract}
 
 \maketitle
-
+\clearpage
 \input{sections/intro}
 \input{sections/background}
 \input{sections/relatedwork}

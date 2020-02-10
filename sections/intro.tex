@@ -8,12 +8,7 @@ and account for nearly 90\% of the overall runtime \cite{Li2016Performance} for 
 Therefore, there is a critical need for accelerating convolution operations.
 
 
-A wide range of techniques have been proposed to accelerate convolution
-operations~\cite{Iandola2014Communication,vasilache2014fast,lavin2016fast,cho2017mec,Zhen2018Optimizing,Vasudevan2017Parallel,Chellapilla2006High}.
-Among these methods, convulsion-based general matrix multiplication (GEMM) \cite{Vasudevan2017Parallel,Chellapilla2006High}, fast fourier transform (FFT)~\cite{vasilache2014fast} and
-Winograd~\cite{lavin2016fast} methods are the broadly adopted ones;  all of which follow a
-three-step processing pipeline. The algorithm first transforms the input and a filter (which is applied on the input) into
-two matrices. Then, matrix multiplication is performed on the two matrices before finally converting the result into the output.
+A wide range of techniques have been proposed to accelerate convolution operations \cite{Iandola2014Communication,vasilache2014fast,lavin2016fast,cho2017mec,Zhen2018Optimizing,Vasudevan2017Parallel,Chellapilla2006High,zhang2015dwarfcode}. Among these methods, convulsion-based general matrix multiplication (GEMM) \cite{Vasudevan2017Parallel,Chellapilla2006High}, fast fourier transform (FFT) \cite{vasilache2014fast} and Winograd \cite{lavin2016fast} methods are the broadly adopted ones;  all of which follow a three-step processing pipeline. The algorithm first transforms the input and a filter (which is applied on the input) into two matrices. Then, fast matrix multiplication algorithms \cite{karstadt2017matrix,scott2015matrix} are performed on the two matrices before finally converting the result into the output.
 However, this processing pipeline can incur many memory transactions (accesses) during the
 transformation phase due to the involvement of matrix multiplications and duplicate elements of the transformed
 matrices. Such overhead can be significant; for example, the number of memory transactions increases 
