@@ -1,11 +1,9 @@
 \section{Memory Transaction Optimization}
-\label{sec:strategies} In this section, we elaborate the details of  our optimization algorithms. The key idea is to reduce the  number of memory
-transactions to improve the performance. The two reuse algorithms, which are proposed to reduce the number of memory transactions, are illustrated in Figure \ref{fig:twostrategies}.
-
+\label{sec:strategies} Our approach optimizes convolution operations on GPUs by reusing column and row elements.
 
 \subsection{Column Reuse}
 \label{sec:creuse}
-\begin{figure*}
+\begin{figure*}[t!]
 	\begin{subfigure}{0.33\textwidth}
 		\centering
 		\captionsetup{width=0.9\textwidth}
@@ -32,23 +30,18 @@ transactions to improve the performance. The two reuse algorithms, which are pro
    \label{fig:corealgo}
 \end{figure*}
 
-This section elaborates how to perform column reuse to eliminate duplicate columns. The process of column reuse is presented in Figure \ref{fig:corealgo}.%Each thread loads the first 5 corresponding input elements (each thread needs to load $F_H \times F_W \times F_C = 5 \times 5 \times 1 = 25$ input elements in total) to calculate the convolution of one output element.
-
-\begin{figure}
-	\centering
-	\includegraphics[width=\columnwidth,height=4.5cm]{./figure/exchange.eps}
-\caption{Convert the dynamic indexing of array $iTemp$ into static indexing. Therefore, The compiler can put $iTemp$ into registers instead of local memory.}
-\label{fig:exchange}
-\end{figure}
 
 
-In step 1 of Figure \ref{fig:directalgo}, each thread loads the first corresponding input elements from the global memory. Given that the addresses of these elements are contiguous (0, 1, 2, 3), the memory controller can coalesce the accesses into one memory transaction. Therefore, five
-memory transactions are required for steps 1-5 of. Each pair of adjacent threads have four duplicate input
-elements, which corresponds to the duplicate columns in Figure \ref{fig:twostrategies}.
+Figure \ref{fig:corealgo} depicts our column reuse algorithm, which consists of a number of step.
 
-The input elements 1, 2 and 3 loaded in step 2 are already loaded by threads $t1$, $t2$ and $t3$ in
-step 1 (Figure \ref{fig:directalgo}). Therefore, we can retrieve the input elements 1, 2 and 3 from the threads $t1$, $t2$ and $t3$ instead of loading them from the global memory (or L1
-cache). This kind of duplication also occurs in steps 3, 4 and 5.
+ In step 1 of Figure \ref{fig:directalgo}, each thread loads the first corresponding input elements from the
+global memory. Given that the addresses of these elements are contiguous (0, 1, 2, 3), the memory controller can coalesce the accesses into
+one memory transaction. Therefore, five memory transactions are required for steps 1-5 of. Each pair of adjacent threads have four
+duplicate input elements, which corresponds to the duplicate columns in Figure \ref{fig:twostrategies}.
+
+The input elements 1, 2 and 3 loaded in step 2 would have already been loaded by threads $t1$, $t2$ and $t3$ in step 1 (Figure
+\ref{fig:directalgo}). Therefore, we can retrieve the input elements 1, 2 and 3 from the threads $t1$, $t2$ and $t3$ instead of loading
+them from the global memory (or L1 cache). This kind of duplication also occurs in steps 3, 4 and 5.
 
 To eliminate the redundant loads, we use the shuffle instructions to exchange input elements among different threads. In steps 1
 and 2 of Figure \ref{fig:optalgo1}, each thread loads the corresponding first and fifth input elements from the global memory. In step 3, each
@@ -63,6 +56,14 @@ elements, thus $i=4$. For threads $t2$ and $t3$, both need to provide the first 
 However, the instruction $shfl\_xor(iTemp[i],2)$ significantly degrades the performance of the convolution because $iTemp$ is an array with
 dynamic indexing, which means that the compiler cannot decide which element to provide at the compile time. Therefore, the compiler
 places array $iTemp$ in the local memory, which possesses the same access latency as the global memory, instead of the registers. This process significantly increases the memory access time and degrades the performance of the convolution.
+
+\begin{figure}
+	\centering
+	\includegraphics[width=\columnwidth,height=4.5cm]{./figure/exchange.eps}
+\caption{Convert the dynamic indexing of array $iTemp$ into static indexing. Therefore, The compiler can put $iTemp$ into registers instead of local memory.}
+\label{fig:exchange}
+\end{figure}
+
 
 \begin{algorithm}
 	$tid \gets threadIdx.x$\;
