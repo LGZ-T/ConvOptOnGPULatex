@@ -27,11 +27,11 @@ transform 4D tensors into the desired matrix, thus incurring high memory overhea
 
 \subsection{Motivation Example}
 
-As a motivation, consider Figure \ref{fig:twostrategies} that shows a simple 2D convolution executing on a GPU. Here, we slide a $5 \times
-5$ filter over a $6 \times 11$ image to produce a $2 \times 7$ output. Each thread calculates one column of the output. Threads 0 and 1
-demonstrate the process of sliding the filter along the width dimension. Both threads load two overlapped regions from the input image,
-thereby generating four duplicate columns. Thread 6 demonstrates the process of sliding the filter along the height dimension; it loads two
-overlapped regions and generates four duplicate rows.
+As a motivation example, consider Figure \ref{fig:twostrategies} that shows a simple 2D convolution executing on a GPU. Here, we slide a $5
+\times 5$ filter over a $6 \times 11$ image to produce a $2 \times 7$ output. Each thread calculates one column of the output. Threads 0
+and 1 demonstrate the process of sliding the filter along the width dimension. Both threads load two overlapped regions from the input
+image, thereby generating four duplicate columns. Thread 6 demonstrates the process of sliding the filter along the height dimension; it
+loads two overlapped regions and generates four duplicate rows.
 
 Our optimization algorithms can eliminate two types of duplication and thus reduce the number of memory transactions. In the proposed column reuse algorithm, we let each thread load the necessary first and last columns and retrieve the remaining from other threads through shuffle
 instructions. The difference in the usage of shuffle instructions between our algorithms and the previous study
