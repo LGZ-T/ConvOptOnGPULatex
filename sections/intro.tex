@@ -11,7 +11,7 @@ Therefore, there is a critical need for accelerating convolution operations.
 A wide range of techniques have been proposed to accelerate convolution operations \cite{Iandola2014Communication,vasilache2014fast,lavin2016fast,cho2017mec,Zhen2018Optimizing,Vasudevan2017Parallel,Chellapilla2006High,zhang2015dwarfcode}. Among these methods, convulsion-based general matrix multiplication (GEMM) \cite{Vasudevan2017Parallel,Chellapilla2006High}, fast fourier transform (FFT) \cite{vasilache2014fast} and Winograd \cite{lavin2016fast} methods are the broadly adopted ones;  all of which follow a three-step processing pipeline. The algorithm first transforms the input and a filter (which is applied on the input) into two matrices. Then, fast matrix multiplication algorithms \cite{karstadt2017matrix,scott2015matrix} are performed on the two matrices before finally converting the result into the output.
 However, this processing pipeline can incur many memory transactions (accesses) during the
 transformation phase due to the involvement of matrix multiplications and duplicate elements of the transformed
-matrices. Such overhead can be significant; for example, the number of memory transactions increases 
+matrices. Such overhead can be significant; for example, the number of memory transactions increases
 by 90\% for the popular 3D convolution (Section \ref{3dconvexp}). This phenomenon is a serious problem for distributed memory
 architecture, which is a commonly used design for high-end GPUs, where memory access often becomes a performance bottleneck. As a
 result, prior optimization techniques leave a large room for improvement when executing convolution operations on GPUs.
@@ -30,12 +30,15 @@ result, prior optimization techniques leave a large room for improvement when ex
 %input since each row of the input can be used to generate multiple output elements. We call this the row reuse
 %algorithm.
 
-This study aims to optimize the memory transactions involved when executing convolution operations on GPUs. In this manner, the performance of convolution operations can be substantially improved by reducing the number of memory access. We introduce two novel optimization techniques for operations performed on  columns and rows. The first technique exploits column reuse by utilizing shuffle instructions
-(supported by CUDA and OpenCL) to exchange elements among threads within the same GPU warp (or working group). In this
-way, we can avoid reloading the same elements shared among different threads. We further extend the shuffle instructions
-to facilitate dynamic indexing, which is not supported in the previous study \cite{vasilache2014fast}. The second
-technique targets row reuse by multiplying one input row with multiple rows of a convolutional kernel (or filter)
-to compute multiple output elements. This strategy improves the data locality of elements within a row, thereby reducing the number of memory transactions in comparison with that of the existing convolution processing pipeline. Consequently, computation performance is improved.
+This study aims to optimize the memory transactions involved when executing convolution operations on GPUs. By reducing the number of
+memory access, we can significantly improve the performance of convolution operations. To this end, we introduce two novel optimization
+techniques for operations performed on columns and rows. The first technique exploits column reuse by utilizing shuffle instructions
+(supported by CUDA and OpenCL) to exchange elements among threads within the same GPU warp (or working group). In this way, we can avoid
+reloading the same elements shared among different threads. We further extend the shuffle instructions to facilitate dynamic indexing,
+which is not supported in the previous study \cite{vasilache2014fast}. The second technique targets row reuse by multiplying one input row
+with multiple rows of a convolutional kernel (or filter) to compute multiple output elements. This strategy improves the data locality of
+elements within a row, thereby reducing the number of memory transactions in comparison with that of the existing convolution processing
+pipeline. Consequently, computation performance is improved.
 
 
 
