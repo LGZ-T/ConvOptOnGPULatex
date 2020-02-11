@@ -45,10 +45,10 @@ pipeline. Consequently, computation performance is improved.
 %Our technique is complementary to convolution optimization techniques based on GEMM, FFT and Winograd, and can be
 %integrated with these techniques.
 
-We apply our optimization techniques to direct convolution operations and evaluate them on an NVIDIA K40 GPU platform.
-We then compare the findings with highly optimized DNN libraries, including cuDNN. Experimental results show that our approach delivers
-over 2$\times$ faster performance over the best-performing competitive strategy, by significantly reduce the number of
-memory transactions for convolution operations.
+We apply our optimization techniques to direct convolution operations and evaluate them on two NVIDIA GPU platforms (K40 and 2080Ti). We
+then compare the findings with highly optimized DNN libraries, including cuDNN. Experimental results show that our approach delivers over
+2$\times$ faster performance over the best-performing competitive strategy, by significantly reduce the number of memory transactions for
+convolution operations.
 
 This paper makes the following technical contributions:
 \begin{itemize}

@@ -1,14 +1,15 @@
 \begin{abstract}
 Convolution computation is a common operation in deep neural networks (DNNs) and is often responsible for performance bottlenecks during
 training and inferencing.  Existing approaches for accelerating convolution operations aim to reduce computational complexity. However,
-these strategies often increase the memory footprint with extra memory access, thereby leaving an opportunity for performance optimization.
-
-This study presents a novel approach to optimize memory access for  convolution operations, specifically targeting GPU execution.
-When sliding a filter on the width dimension,
-we use shuffle instructions to exchange the overlapped columns of the input and reduce the number of memory transactions. When sliding a filter on the height
-dimension, we multiply each overlapped row of the input with multiple rows of a filter to calculate multiple output elements.
-
-
+these strategies often increase the memory footprint with extra memory access, thereby leaving much room for performance improvement.
+%
+This paper presents a novel approach to optimize memory access for convolution operations, specifically targeting GPU execution. Our
+approach leverages two optimization techniques to reduce the number of memory transactions for convolution operations performed on the
+width and the hight dimensions. For convolution computation on the width dimension, we exploit shuffle instructions to exchange the
+overlapped columns of the input for reducing the number of memory transactions. For convolution operations on the height dimension, we
+multiply each overlapped row of the input with multiple rows of a filter to compute multiple output elements to improve the data locality
+of row elements. Our approach is simple yet effective and can work on existing CUDA and OpenCL standards without hardware modification.
+%
 We apply our approach to 2D and 3D convolutions and evaluate it on two NVIDIA GPU architectures (K40 and 2080Ti). For the 2D
 convolution, our approach delivers over 2x faster performance than the state-of-the-art image processing libraries. For the 3D convolution,
 we obtain up to 2.5x speedups over the fastest algorithm of cuDNN.
