@@ -7,13 +7,17 @@ convolution algorithm  called the im2col convolution algorithm. They lowered the
 highly optimized on the GPU. Despite some duplicate input elements involved in the computation, the performance gain of this algorithm is impressive. Chetlur et al. \cite{ChetlurWVCTCS14}, who worked for NVIDIA, integrated the unrolling convolution algorithm into cuDNN.
 
 After obtaining the satisfactory optimization of GEMM, researchers shifted their focus from GEMM-based convolution to FFT- and
-Winograd-based ones. Both convolutions can reduce computational complexity and improve convolution performance. Mathieu et al. \cite{mathieu2013fast} proposed an FFT-based convolution to compute convolutions as pointwise
-products in the Fourier domain and reuse the transformed input data, which significantly reduce the complexity of the convolution, many times. This
-method greatly improved the performance of convolution compared with GEMM-based implementation. However, FFT-based convolution is more suitable for large filters than for small ones because padding the filters to the same size as the input data is necessary, and  the latter (e.g., 3 × 3 filters) needs more memory than the former. To overcome this drawback, Lavin et al. \cite{lavin2016fast} used Winograd’s minimal filtering algorithm to
+Winograd-based ones. Both convolutions can reduce computational complexity and improve convolution performance. Mathieu et al.
+\cite{mathieu2013fast} proposed an FFT-based convolution to compute convolutions as pointwise products in the Fourier domain and reuse the
+transformed input data, which significantly reduce the complexity of the convolution, many times. This method greatly improved the
+performance of convolution compared with GEMM-based implementation. However, FFT-based convolution is more suitable for large filters than
+for small ones because padding the filters to the same size as the input data is necessary, and  the latter (e.g., 3 × 3 filters) needs
+more memory than the former. To overcome this drawback, Lavin et al. \cite{lavin2016fast} used Winograd's minimal filtering algorithm to
 accelerate the convolution on GPU. This algorithm can reduce the arithmetic complexity of a convolution by up to four times compared with
-direct convolution. However, Winograd's algorithm is only suitable for small filters due to its numerical instability. \cite{Zhen2018Optimizing}
-extended Winograd's algorithm to support any filter size. However, the traditional and extended Winograd-based algorithms need to transform the input and filter before
-performing matrix multiplication, and both require more operations compared with the FFT algorithm.
+direct convolution. However, Winograd's algorithm is only suitable for small filters due to its numerical instability.
+\cite{Zhen2018Optimizing} extended Winograd's algorithm to support any filter size. However, the traditional and extended Winograd-based
+algorithms need to transform the input and filter before performing matrix multiplication, and both require more operations compared with
+the FFT algorithm.
 
 The transformation of the input and filter before performing matrix multiplication incurs a large memory
 overhead and offset some performance gains caused by the reduction in computational complexity. Therefore, recent studies have mainly focused on reduction of the the memory overhead of the transformation phases. \cite{cho2017mec} reduced the memory overhead of GEMM-based convolutions using a
