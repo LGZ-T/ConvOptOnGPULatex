@@ -1,8 +1,10 @@
 
-\section{Background \& Motivation}
-For easy reference, we introduce the notations used throughout this paper. $I$, $F$ and $O$ denote 4D input, filter and output
-tensors respectively. Each tensor is indexed in accordance with batch size ($N$), channel ($C$), height ($H$) and width ($W$). For example, $I_N$,
-$I_C$, $I_H$ and $I_W$ represent the batch size, number of channels, width and height of the input.
+\section{Background and Motivation}
+
+\subsection{Convolution Operation}
+We use the following notations throughout this paper. We use $I$, $F$ and $O$ to denote an input, a filter and an output tensor
+respectively. Each tensor is indexed according to its batch size ($N$), channel ($C$), height ($H$) and width ($W$). For example, $I_N$,
+$I_C$, $I_H$ and $I_W$ represent the batch size, number of channels, width and height of an input.
 
 The convolution operation is commonly used to extract various features from the input feature maps via convolutional filters. The computation
 in the convolution stage takes a batch of $I_N$ 2D multi-channel feature maps of size $I_C \times I_H \times I_W$ and a bank of $F_N$ 2D
@@ -22,12 +24,14 @@ Many algorithms, such as FFT-based and Winograd-based convolutions have been uti
 transform 4D tensors into the desired matrix, thus incurring high memory overhead. Figure \ref{fig:convlowering}, which is taken from
 \cite{ChetlurWVCTCS14}, illustrates how to convert a simple convolution into a matrix multiplication. Numerous duplicate elements, which can increase the memory overhead and offset some performance gains caused by the reduction in computation complexity, are present in the input matrix.
 
-We then examine the convolution process and propose two optimization algorithms to reduce the memory overhead. We use a simple 2D convolution as
-a motivating example to demonstrate how our algorithms work. Figure \ref{fig:twostrategies} shows a simple 2D convolution on GPU. We
-slide a $5 \times 5$ filter over a $6 \times 11$ image to produce a $2 \times 7$ output. Each thread calculates one column of the output.
-Threads 0 and 1 demonstrate the process of sliding the filter along the width dimension. Both threads load
-two overlapped regions from the input image, thereby generating four duplicate columns. Thread 6 demonstrates the process of sliding the
-filter along the height dimension; it loads two overlapped regions and generates four duplicate rows.
+
+\subsection{Motivation Example}
+
+As a motivation, consider Figure \ref{fig:twostrategies} that shows a simple 2D convolution executing on a GPU. Here, we slide a $5 \times
+5$ filter over a $6 \times 11$ image to produce a $2 \times 7$ output. Each thread calculates one column of the output. Threads 0 and 1
+demonstrate the process of sliding the filter along the width dimension. Both threads load two overlapped regions from the input image,
+thereby generating four duplicate columns. Thread 6 demonstrates the process of sliding the filter along the height dimension; it loads two
+overlapped regions and generates four duplicate rows.
 
 Our optimization algorithms can eliminate two types of duplication and thus reduce the number of memory transactions. In the proposed column reuse algorithm, we let each thread load the necessary first and last columns and retrieve the remaining from other threads through shuffle
 instructions. The difference in the usage of shuffle instructions between our algorithms and the previous study

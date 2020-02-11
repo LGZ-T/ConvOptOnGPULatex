@@ -44,7 +44,7 @@ This section elaborates how to perform column reuse to eliminate duplicate colum
 
 In step 1 of Figure \ref{fig:directalgo}, each thread loads the first corresponding input elements from the global memory. Given that the addresses of these elements are contiguous (0, 1, 2, 3), the memory controller can coalesce the accesses into one memory transaction. Therefore, five
 memory transactions are required for steps 1-5 of. Each pair of adjacent threads have four duplicate input
-elements, which corresponds to the duplicate columns in Figure \ref{fig:twostrategies}. 
+elements, which corresponds to the duplicate columns in Figure \ref{fig:twostrategies}.
 
 The input elements 1, 2 and 3 loaded in step 2 are already loaded by threads $t1$, $t2$ and $t3$ in
 step 1 (Figure \ref{fig:directalgo}). Therefore, we can retrieve the input elements 1, 2 and 3 from the threads $t1$, $t2$ and $t3$ instead of loading them from the global memory (or L1
@@ -61,7 +61,7 @@ array used to store the five input elements, and $i$ indexes which element to pr
 elements, thus $i=4$. For threads $t2$ and $t3$, both need to provide the first elements, thus $i=0$. The procedure presented in Figure  \ref{fig:optalgo2} is the same as that in Figure \ref{fig:optalgo1}, except that each thread in Figure 3c retrieve itsthe former retrieves the second and fourth elements from its neighboring threads.
 
 However, the instruction $shfl\_xor(iTemp[i],2)$ significantly degrades the performance of the convolution because $iTemp$ is an array with
-dynamic indexing, which means that the compiler cannot decide which element to provide at the compile time. Therefore, the compiler 
+dynamic indexing, which means that the compiler cannot decide which element to provide at the compile time. Therefore, the compiler
 places array $iTemp$ in the local memory, which possesses the same access latency as the global memory, instead of the registers. This process significantly increases the memory access time and degrades the performance of the convolution.
 
 \begin{algorithm}
@@ -93,7 +93,7 @@ indexing $i$ in $shfl\_xor(iTemp[i],2)$ with static indexing $1$ in $shfl\_xor(i
 eliminates dynamic indexing and therefore all thread local variables can be put in registers, which significantly improve the performance
 of convolution.
 
-\begin{algorithm}
+\begin{algorithm}[t!]
 	$tid \gets threadIdx.x$\;
 	$mov\ exchange, \{iTemp[0], iTemp[2]\}$\;
 	$shift \gets ((tid+1)\&1)<<5$\;
@@ -105,7 +105,7 @@ of convolution.
 \end{algorithm}
 
 Steps 4 and 5 in Figure \ref{fig:optalgo2} have similar procedure as step 3 in Figure \ref{fig:optalgo1}. Thus, we slightly modify
-Algorithm \ref{algo:basic} to obtain Algorithm \ref{algo:basic2}. The main distinction between the two algorithms is that four threads are involved to exchange the 
+Algorithm \ref{algo:basic} to obtain Algorithm \ref{algo:basic2}. The main distinction between the two algorithms is that four threads are involved to exchange the
 elements in Figure \ref{fig:optalgo1}, whereas only two adjacent threads are involved in Figure \ref{fig:optalgo2}. Therefore, the shift amounts for each thread (Line 3) should be recalculated, and the arguments of the shuffle instruction (Line 6) should be changed.
 
 In summary, Algorithms \ref{algo:basic} and \ref{algo:basic2} can reduce the number of memory transactions from 5 to 2 and 25 to 10 when 5 and 25 input elements are loaded, respectively. This reduction greatly improves the performance of the convolution.
