@@ -1,5 +1,26 @@
 \section{Memory Transaction Optimization}
-\label{sec:strategies} Our approach optimizes convolution operations on GPUs by reusing column and row elements.
+\label{sec:strategies} 
+{\color{red}We take the 2D convolution shown in Figure \ref{fig:twostrategies} as an example to demonstrate how to optimize convolution operations.}
+%As a motivation example, consider Figure \ref{fig:twostrategies} that shows a simple 2D convolution executing on a GPU. 
+Here, we slide a $5 \times 5$ filter over a $6 \times 11$ image to produce a $2 \times 7$ output. In this example, each thread calculates one column of the output. For example, threads 0 and 1 could execute code to slide the filter along the width dimension. Both threads load two overlapped regions from the input image, thereby generating four duplicate columns. Assume thread 6 demonstrates the process of sliding the filter along the height dimension. It loads two overlapped regions and generates four duplicate rows.
+
+%Our approach can eliminate redundant elements on the column and the width dimensions to reduce the number of memory accesses.  In the proposed column reuse algorithm, we let each thread load the required first and last columns and retrieve the remaining from other threads through shuffle instructions. The difference in the usage of shuffle instructions between our algorithms and the previous study \cite{vasilache2014fast} is discussed in Section \ref{sec:strategies}. In the proposed row reuse algorithm, we let each thread load overlapped rows only once and multiply each row with multiple rows of a filter to calculate multiple output elements. A major performance issue encountered in our implementation is that the thread local arrays with dynamic indexing are placed in the local memory, which possesses the same access latency as the global memory. To solve this problem, we use pack and unpack operations to transform dynamic indexing into static indexing.
+
+Our approach optimizes convolution operations on GPUs by reusing column and row elements. Before getting to details, we first give the notations used in the remaining chapters in Table \ref{tab:notations}.
+
+\begin{table}[H]
+\caption{Notations for the convolution operation.}
+	\begin{tabular}{c|c}
+	\hline
+		$I$, $F$, $O$ & Input, Filter, Output \\
+		\hline
+		$N$, $C$, $H$, $W$ & batch size, channel, height, width\\
+		\hline
+	\end{tabular}
+	\label{tab:notations}
+\end{table}
+
+%In this paper, we use $I$, $F$ and $O$ to denote an input, a filter and an output tensor respectively. Each tensor is indexed according to its batch size ($N$), channel ($C$), height ($H$) and width ($W$). For example, $I_N$, $I_C$, $I_H$ and $I_W$ represent the batch size, number of channels, width and height of an input, $I$.
 
 \subsection{Column Reuse}
 \label{sec:creuse}

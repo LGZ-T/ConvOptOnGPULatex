@@ -2,16 +2,8 @@
 \section{Background}
 
 \subsection{Convolution Operations}
-In this paper, we use $I$, $F$ and $O$ to denote an input, a filter and an output tensor respectively. Each tensor is indexed according to
-its batch size ($N$), channel ($C$), height ($H$) and width ($W$). For example, $I_N$, $I_C$, $I_H$ and $I_W$ represent the batch size,
-number of channels, width and height of an input, $I$.
 
-At the convolutional stage, the computational kernel takes as input a batch ($I_N$) of 2D feature maps of size $I_C \times I_H \times I_W$
-and a bank ($F_N$) of  2D multi-channel filters of size $F_C \times F_H \times F_W$ ($F_C = I_C$). The computation produces a batch of
-$O_N$ (where $O_N=I_N$) 2D multi-channel output feature maps of size $O_C \times O_H \times O_W$ ($O_C=F_N$). To compute one output feature
-map, all filters are used to convolve with the same input feature map. Specifically, each filter slides over the input feature map to
-perform an elementwise multiplication with the part of input where it is currently located and then sums up the results across all
-channels.
+At the convolutional stage, {\color{red}the computational kernel takes as input a batch of 2D multi-channel feature maps of size and a bank of  2D multi-channel filters. The computation produces a batch of 2D multi-channel output feature maps with the same batch size as input.} To compute one output feature map, all filters are used to convolve with the same input feature map. Specifically, each filter slides over the input feature map to perform an elementwise multiplication with the part of input where it is currently located and then sums up the results across all channels.
 
 \begin{figure}
 \centering
@@ -20,13 +12,9 @@ channels.
   \label{fig:convlowering}
 \end{figure}
 
-Several algorithms, including FFT-based and Winograd-based convolutions, have been proposed to optimize the convolution operation. All
-these approaches require to transform 4D tensors into the desired matrix, thus incurring high memory overhead. For example, Figure
-\ref{fig:convlowering} illustrates how to translate a simple convolution into matrix multiplications. This process introduces numerous
-duplicate elements. The redundant elements increase the memory footprint which can outweigh the performance gain by reducing the
-computation complexity.
+{\color{red}Several algorithms, including FFT-based and Winograd-based convolutions, have been proposed to optimize the convolution operation. All these approaches require to transform 4D tensors into the desired matrix, thus incurring high memory overhead. For example, Figure \ref{fig:convlowering} illustrates how to translate a simple convolution into matrix multiplications. The filter data dimension is (2, 3, 2, 2). Ordering is batch, channel, height and width unless specified otherwise. We can see that the transformed filter matrix has the same number of elements as the filter data. The input data dimension is (1, 3, 3, 3) and 27 elements in total, whereas the input matrix has 48 elements and 44\% of which are redundant elements. This can incur numberous memory transactions. The experiments (Table \ref{tab:3dtrans}) show that our approach reduce the number of memory transactions by a factor of 4.4 compared with GEMM-based 3D convolution.}
 
-\subsection{Overview of Our Approach}
+%\subsection{Overview of Our Approach}
 \begin{figure}[t!]
 \centering
   \includegraphics[width=\columnwidth,height=6cm]{./figure/twostrategies.eps}
@@ -36,17 +24,3 @@ computation complexity.
   the square denote the index of input elements.}
   \label{fig:twostrategies}
 \end{figure}
-As a motivation example, consider Figure \ref{fig:twostrategies} that shows a simple 2D convolution executing on a GPU. Here, we slide a $5
-\times 5$ filter over a $6 \times 11$ image to produce a $2 \times 7$ output. In this example, each parallel GPU thread calculates one
-column of the output. For example, threads 0 and 1 could execute code to slide the filter along the width dimension. Both threads load two
-overlapped regions from the input image, thereby generating four duplicate columns. Assume thread 6 demonstrates the process of sliding the
-filter along the height dimension. It loads two overlapped regions and generates four duplicate rows.
-
-Our approach can eliminate redundant elements on the column and the width dimensions to reduce the number of memory accesses.  In the
-proposed column reuse algorithm, we let each thread load the required first and last columns and retrieve the remaining from other threads
-through shuffle instructions. The difference in the usage of shuffle instructions between our algorithms and the previous study
-\cite{vasilache2014fast} is discussed in Section \ref{sec:strategies}. In the proposed row reuse algorithm, we let each thread load
-overlapped rows only once and multiply each row with multiple rows of a filter to calculate multiple output elements. A major performance
-issue encountered in our implementation is that the thread local arrays with dynamic indexing are placed in the local memory, which
-possesses the same access latency as the global memory. To solve this problem, we use pack and unpack operations to transform dynamic
-indexing into static indexing.
