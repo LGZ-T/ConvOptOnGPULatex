@@ -16,14 +16,11 @@ results across all channels.
   \label{fig:convlowering}
 \end{figure}
 
-{\color{red} Several algorithms, including FFT-based and Winograd-based convolutions, have been proposed to optimize the convolution
-operation. All these approaches require to transform 4D tensors into the desired matrix, thus incurring high memory overhead. Figure
-\ref{fig:convlowering} illustrates how to translate a simple convolution into matrix multiplications. A filter is typically organised as
-4-element tuple, $(batch\_size, chanel\_size, height, width)$. For example, the data dimension of the filter in Figure
+{\color{red} Several algorithms, including GEMM-, FFT- and Winograd-based convolutions, have been proposed to optimize the convolution operation. All these approaches require to transform 4D tensors into the desired matrix, thus incurring high memory overhead. Figure
+\ref{fig:convlowering} illustrates the process of GEMM-based convolution where two filters are used to convolve with a 3-channel input. All data are organized as
+4-element tuple, $(batch\_size, channel\_size, height, width)$. The dimension of the filter data in Figure
 \ref{fig:convlowering} is $(2, 3, 2, 2)$. We can see that the transformed filter matrix has the same number of elements as the filter data.
-The input data dimension is (1, 3, 3, 3) and 27 elements in total, whereas the input matrix has 48 elements and 44\% of which are redundant
-elements. This can incur numberous memory transactions. The experiments (Table \ref{tab:3dtrans}) show that our approach reduce the number
-of memory transactions by a factor of 4.4 compared with GEMM-based 3D convolution.}
+The input data dimension is $(1, 3, 3, 3)$ and 27 elements in total, whereas the input matrix has 48 elements and 44\% of which are redundant elements. This can incur numberous memory transactions. The experiments (Table \ref{tab:3dtrans}) show that our approach reduce the number of memory transactions by a factor of 4.4 compared with GEMM-based 3D convolution.}
 
 
 %\subsection{Overview of Our Approach}
