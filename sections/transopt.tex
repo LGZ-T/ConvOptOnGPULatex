@@ -1,14 +1,14 @@
 \section{Memory Transaction Optimization}
-\label{sec:strategies} 
+\label{sec:strategies}
 {\color{red}We take the 2D convolution shown in Figure \ref{fig:twostrategies} as an example to demonstrate how to optimize convolution operations.}
-%As a motivation example, consider Figure \ref{fig:twostrategies} that shows a simple 2D convolution executing on a GPU. 
+%As a motivation example, consider Figure \ref{fig:twostrategies} that shows a simple 2D convolution executing on a GPU.
 Here, we slide a $5 \times 5$ filter over a $6 \times 11$ image to produce a $2 \times 7$ output. In this example, each thread calculates one column of the output. For example, threads 0 and 1 could execute code to slide the filter along the width dimension. Both threads load two overlapped regions from the input image, thereby generating four duplicate columns. Assume thread 6 demonstrates the process of sliding the filter along the height dimension. It loads two overlapped regions and generates four duplicate rows.
 
 %Our approach can eliminate redundant elements on the column and the width dimensions to reduce the number of memory accesses.  In the proposed column reuse algorithm, we let each thread load the required first and last columns and retrieve the remaining from other threads through shuffle instructions. The difference in the usage of shuffle instructions between our algorithms and the previous study \cite{vasilache2014fast} is discussed in Section \ref{sec:strategies}. In the proposed row reuse algorithm, we let each thread load overlapped rows only once and multiply each row with multiple rows of a filter to calculate multiple output elements. A major performance issue encountered in our implementation is that the thread local arrays with dynamic indexing are placed in the local memory, which possesses the same access latency as the global memory. To solve this problem, we use pack and unpack operations to transform dynamic indexing into static indexing.
 
 Our approach optimizes convolution operations on GPUs by reusing column and row elements. Before getting to details, we first give the notations used in the remaining chapters in Table \ref{tab:notations}.
 
-\begin{table}[H]
+\begin{table}[t!]
 \caption{Notations for the convolution operation.}
 	\begin{tabular}{c|c}
 	\hline
@@ -78,7 +78,7 @@ However, the instruction $shfl\_xor(iTemp[i],2)$ significantly degrades the perf
 dynamic indexing, which means that the compiler cannot decide which element to provide at the compile time. Therefore, the compiler
 places array $iTemp$ in the local memory, which possesses the same access latency as the global memory, instead of the registers. This process significantly increases the memory access time and degrades the performance of the convolution.
 
-\begin{figure}
+\begin{figure}[t!]
 	\centering
 	\includegraphics[width=\columnwidth,height=4.5cm]{./figure/exchange.eps}
 \caption{Convert the dynamic indexing of array $iTemp$ into static indexing. Therefore, The compiler can put $iTemp$ into registers instead of local memory.}
@@ -86,7 +86,7 @@ places array $iTemp$ in the local memory, which possesses the same access latenc
 \end{figure}
 
 
-\begin{algorithm}
+\begin{algorithm}[t!]
 	$tid \gets threadIdx.x$\;
 	$iTemp[0] \gets iData[iIndex]$\;
 	$iTemp[4] \gets iData[iIndex+4]$\;
