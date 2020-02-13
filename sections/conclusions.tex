@@ -1,18 +1,24 @@
 \section{Conclusion}
-In this study, we proposed two reuse algorithms that can significantly reduce the number of memory transactions. We used CUDA shuffle
-instructions and row reuse to eliminate column and row duplications , respectively. We also designed a method with pack and unpack instructions from the CUDA Toolkit to convert dynamic indexing into static indexing. The experiments applied on 2D and 3D convolutions confirmed that the proposed reuse algorithms  significantly improve the performance compared with other state-of-the-art libraries. Furthermore, the implementation of the proposed algorithms was derived from direct convolution, indicating that the performance was improved without incurring extra memory storage.%% Acknowledgmentsc
-\begin{acks}                            %% acks environment is optional
-                                        %% contents suppressed with 'anonymous'
-  %% Commands \grantsponsor{<sponsorID>}{<name>}{<url>} and
-  %% \grantnum[<url>]{<sponsorID>}{<number>} should be used to
-  %% acknowledge financial support and will be used by metadata
-  %% extraction tools.
-  This material is based upon work supported by the
-  \grantsponsor{GS100000001}{National Science
-    Foundation}{http://dx.doi.org/10.13039/100000001} under Grant
-  No.~\grantnum{GS100000001}{nnnnnnn} and Grant
-  No.~\grantnum{GS100000001}{mmmmmmm}.  Any opinions, findings, and
-  conclusions or recommendations expressed in this material are those
-  of the author and do not necessarily reflect the views of the
-  National Science Foundation.
-\end{acks}
+We have presented a novel approach to optimize the memory access for convolution computation on GPUs. Our approach improves the data
+locality for convolutional operations performed on the row and column directions to reduce the memory access. Our techniques utilize the
+GPU operations supported by CUDA and OpenCL and do not require hardware modifications. We evaluate our approach by applying it to 2D and 3D
+convolutions and evaluate it on two NVIDIA GPU platforms. For the 2D convolution, our approach doubles the performance of the
+state-of-the-art image processing libraries. For the 3D convolution, our techniques deliver up to 2.5x speedups over the fastest algorithm
+of cuDNN.
+
+
+%\begin{acks}                            %% acks environment is optional
+%                                        %% contents suppressed with 'anonymous'
+%  %% Commands \grantsponsor{<sponsorID>}{<name>}{<url>} and
+%  %% \grantnum[<url>]{<sponsorID>}{<number>} should be used to
+%  %% acknowledge financial support and will be used by metadata
+%  %% extraction tools.
+%  This material is based upon work supported by the
+%  \grantsponsor{GS100000001}{National Science
+%    Foundation}{http://dx.doi.org/10.13039/100000001} under Grant
+%  No.~\grantnum{GS100000001}{nnnnnnn} and Grant
+%  No.~\grantnum{GS100000001}{mmmmmmm}.  Any opinions, findings, and
+%  conclusions or recommendations expressed in this material are those
+%  of the author and do not necessarily reflect the views of the
+%  National Science Foundation.
+%\end{acks}
