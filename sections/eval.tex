@@ -4,14 +4,12 @@ We evaluate the implementations on two platforms. The first is the  NVIDIA Tesla
 shared memory. The host machine has a 2.40GHz Intel Xeon E5-2620 CPU with 128GB memory and Linux kernel v4.19.85. The second platform is the NVIDIA RTX 2080 Ti, which facilitates 4350 FP32 cores and 4350 INT32 cores with a 96KB L1 cache and shared memory. The host machine has a 2.30GHz Intel Xeon E5-2697
 CPU with 252GB memory and Linux kernel v4.15.0. Both platforms are shipped with the CUDA Toolkit v10.1. We use the following state-of-the-art convolution libraries for comparison on both platforms:
 \begin{itemize}
-  \item cuDNN, version 7.6. cuDNN is a state-of-art convolution implementation that supports 2D and 3D convolutions on GPU.
+  \item cuDNN, version 7.6. cuDNN is a state-of-the-art convolution implementation that supports 2D and 3D convolutions on GPU.
       Moreover, cuDNN can execute GEMM-, FFT- and Winograd-based convolutions.
   \item GEMM-im2col (im2col) and GEMM-im2row (im2row). Both are GEMM-based convolutions and support 2D and 3D convolutions.
       We extract the implementations of the im2col and im2row from Caffe \cite{jia2014caffe} and MatConvNet \cite{vedaldi15matconvnet}, respectively.
-  \item ArrayFire \cite{Yalamanchili2015}, version 3.6.4. ArrayFire is a popular image and signal processing library. This library implements 2D
-      convolutions on GPU and can be easily invoked through API. The semantics of the 3D convolution in ArrayFire is not compatible with the 3D
-      convolutions in CNNs. Therefore, we use ArrayFire for 2D convolution only. ArrayFire uses Just In Time compiling for standard
-      arithmetic operations; thus, the first run of an ArrayFire application takes longer than the second run.
+  \item ArrayFire \cite{Yalamanchili2015}, version 3.6.4. ArrayFire is a popular image and signal processing library. This library implements 2D convolutions on GPU. The semantics of the 3D convolution in ArrayFire is not compatible with the 3D
+      convolutions in CNNs. Therefore, we use ArrayFire for 2D convolution only. ArrayFire uses Just In Time compiling for standard arithmetic operations; thus, the first run of an ArrayFire application takes longer than the second run.
       In the experiment, we run ArrayFire twice in each test and record the second runtime.
   \item NVIDIA Performance Primitives (NPP), version 10.1. NPP is an image and signal processing library. We use NPP for 2D convolutions only because we cannot find functions for performing 3D convolution.
 

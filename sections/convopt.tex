@@ -9,7 +9,7 @@
 
 This section demonstrates the implementation of the two proposed reuse algorithms on 2D and 3D convolutions. The main difference between the 
 implementations in the 2D and 3D convolutions lies in the loading of filters. For the former, we focus on the scenario where a filter is used to
-slide over a large image. Therefore, we can load the entire filter into a shared memory, and only one thread block needs to load the
+slide over a large image. Therefore, we can load the entire filter into the shared memory, and only one thread block needs to load the
 filter once. For the latter, we focus on the scenario where many filters are used to slide over a batch of images, which are often the
 first layers of CNNs. All filters cannot fit into the shared memory; hence, we need to load the filters multiple times.
 
