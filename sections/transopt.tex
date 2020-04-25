@@ -1,7 +1,7 @@
 \section{Memory Transaction Optimization}
 \label{sec:strategies}
 
-\paragraph{Working example.} We take the 2D convolution example shown in Figure \ref{fig:twostrategies} as a work example to explain out approach Here, we slide a $5
+\paragraph{Working example.} We take the 2D convolution example shown in Figure \ref{fig:twostrategies} as a work example to explain out approach. Here, we slide a $5
 \times 5$ filter over a $6 \times 11$ image to produce a $2 \times 7$ output. In this example, each thread calculates one column of the
 output. For example, threads 0 and 1 could execute code to slide the filter along the width dimension. Both threads load two overlapped
 regions from the input image, thereby generating four duplicate columns. Assume thread 6 demonstrates the process of sliding the filter
