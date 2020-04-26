@@ -27,34 +27,21 @@ now, we implement the 2D and 3D convolutions with one and three input channels f
 
 \subsection{2D Convolution}
 \begin{figure*}
-\begin{subfigure}{\columnwidth}
-		\centering
-		 \includegraphics[width=\columnwidth,height=6cm]{./figure/2d_norm_f3.pdf}
-		 \caption{Speedups for the filter of size $3 \times 3$ on Tesla K40m.}
-		 \label{fig:2druntimef3c1}
-	\end{subfigure}
-	\begin{subfigure}{\columnwidth}
-		\centering
-		 \includegraphics[width=\columnwidth,height=6cm]{./figure/2d_norm_f5.pdf}
-		 \caption{Speedups for the filter of size $5 \times 5$ on Tesla K40m.}
-		 \label{fig:2druntimef5c1}
-	\end{subfigure}
+\centering
+\subfloat[Speedups for the filter of size $3 \times 3$ on Tesla K40m.]{\includegraphics[width=\columnwidth,height=6cm]{./figure/2d_norm_f3.eps}
+	\label{fig:2druntimef3c1}}
+\hspace{0em}
+\subfloat[Speedups for the filter of size $5 \times 5$ on Tesla K40m.]{\includegraphics[width=\columnwidth,height=6cm]{./figure/2d_norm_f5.eps}
+	\label{fig:2druntimef5c1}}
+
+\subfloat[Speedups for the filter of size $3 \times 3$ on RTX 2080 Ti.]{\includegraphics[width=\columnwidth,height=6cm]{./figure/2d_norm_f3_rtx2080.eps}
+	\label{fig:2druntimef3c12080}}
+\hspace{0em}
+\subfloat[Speedups for the filter of size $5 \times 5$ on RTX 2080 Ti.]{\includegraphics[width=\columnwidth,height=6cm]{./figure/2d_norm_f5_rtx2080.eps}
+	\label{fig:2druntimef5c12080}}
 	
-	\begin{subfigure}{\columnwidth}
-		\centering
-		 \includegraphics[width=\columnwidth,height=6cm]{./figure/2d_norm_f3_rtx2080.pdf}
-		 \caption{Speedups for the filter of size $3 \times 3$ on RTX 2080 Ti.}
-		 \label{fig:2druntimef3c12080}
-	\end{subfigure}
-	\begin{subfigure}{\columnwidth}
-		\centering
-		 \includegraphics[width=\columnwidth,height=6cm]{./figure/2d_norm_f5_rtx2080.pdf}
-		 \caption{Speedups for the filter of size $5 \times 5$ on RTX 2080 Ti.}
-		 \label{fig:2druntimef5c12080}
-	\end{subfigure}
-	
-	\caption{Speedups of our implementation over the other five 2D convolution implementations on two platforms.}
-   \label{fig:2druntime}
+\caption{Speedups of our implementation over the other five 2D convolution implementations on two platforms.}
+\label{fig:2druntime}
 \end{figure*}
 
 \begin{table*}[]
@@ -62,7 +49,7 @@ now, we implement the 2D and 3D convolutions with one and three input channels f
 \label{tab:2dmemtrans}
 \begin{tabular}{c|ccccc|ccccc}
 \hline
-\multicolumn{1}{l|}{}                                  & \multicolumn{5}{c|}{Filter size $3 \times 3$}                                                & \multicolumn{5}{c}{Filter size $5 \times 5$}                                                \\ \hline
+\multicolumn{1}{l|}{}                & \multicolumn{5}{c|}{Filter size $3 \times 3$}                                                & \multicolumn{5}{c}{Filter size $5 \times 5$}                                                \\ \hline
                                                        & $256 * 256$      & $512 * 512$      & $1K * 1K$        & $2K * 2K$        & $4K * 4K$        & $256 * 256$      & $512 * 512$      & $1K * 1K$        & $2K * 2K$        & $4K * 4K$        \\ \hline
 cuDNN                                                  & 6.0E+05          & 2.4E+06          & 9.7E+06          & 3.9E+07          & 1.5E+08          & 1.4E+06          & 5.6E+06          & 2.2E+07          & 8.9E+07          & 3.6E+08          \\
  im2col & 1.1E+05          & 4.4E+05          & 4.4E+05          & 7.0E+06          & 2.8E+07          & 2.3E+05          & 9.3E+05          & 3.7E+06          & 1.5E+07          & 6.0E+07          \\
@@ -140,28 +127,20 @@ CONV11 & 128  & 1,3       & 224*224     & 64   & 3*3      \\
 \end{table}
 
 \begin{figure*}
-	
+\centering
 		%\centering
 		 %\includegraphics[width=18cm,height=5cm]{./figure/3d_norm_c1.eps}
 		 %\caption{Normalized runtime of five implementations for 3D convolution. Left and right parts of the figure is for 3D convolutions with one and three input channels.}
 		 %\label{fig:3druntime}
 		
-	\begin{subfigure}{18cm}
-		\centering
-		 \includegraphics[width=18cm,height=5.7cm]{./figure/3d_norm_c1.pdf}
-		 \caption{Speedups on Tesla K40m, left is for one channel and right is for three channels.}
-		 \label{fig:3druntimeK40}
-	\end{subfigure}
+\subfloat[Speedups on Tesla K40m, left is for one channel and right is for three channels.]{\includegraphics[width=18cm,height=5.7cm]{./figure/3d_norm_c1.eps}
+	\label{fig:3druntimeK40}}
 	
-	\begin{subfigure}{18cm}
-		\centering
-		 \includegraphics[width=18cm,height=5.7cm]{./figure/3d_norm_c1_rtx2080.pdf}
-		 \caption{Speedups on RTX 2080 Ti, left is for one channel and right is for three channels.}
-		 \label{fig:3druntime2080}
-	\end{subfigure}
+\subfloat[Speedups on RTX 2080 Ti, left is for one channel and right is for three channels.]{\includegraphics[width=18cm,height=5.7cm]{./figure/3d_norm_c1_rtx2080.eps}
+	\label{fig:3druntime2080}}
 	
-	\caption{Speedups of our implementation over the other four implementations for 3D convolution with one and three input channels.}
-	\label{fig:3druntime}
+\caption{Speedups of our implementation over the other four implementations for 3D convolution with one and three input channels.}
+\label{fig:3druntime}
 \end{figure*}
 %\begin{figure*}
 %	\begin{subfigure}{\columnwidth}
@@ -182,6 +161,7 @@ CONV11 & 128  & 1,3       & 224*224     & 64   & 3*3      \\
 %\end{figure*}
 
 \begin{table*}[]
+\centering
 \caption{The number of memory transactions for 3D convolution. Data is collected on Tesla K40m.}
 \label{tab:3dtrans}
 \begin{tabular}{c|ccccc|ccccc}
@@ -213,21 +193,15 @@ heuristic}. The heuristic runtime is obtained because popular machine learning f
 use cuDNN with  the heuristic method in their implementations. PyThorch also uses the fastest algorithm of cuDNN in some cases.
 
 \begin{figure*}
-	
-	\begin{subfigure}{\columnwidth}
-		\centering
-		 \includegraphics[width=\columnwidth,height=6cm]{./figure/mem3d_1.pdf}
-		 %\caption{Global memory usage for five implementations on Tesla K40m.}
-		 \label{fig:3dmemk40m}
-	\end{subfigure}
-	\begin{subfigure}{\columnwidth}
-		\centering
-		 \includegraphics[width=\columnwidth,height=6cm]{./figure/mem3d_1_rtx2080.pdf}
-		 %\caption{Global memory usage for five implementations on RTX 2080 Ti.}
-		 \label{fig:3dmemrtx2080}
-	\end{subfigure}
-	\caption{Global memory usage for five implementations. Left figure demonstrates the result on Tesla K40m and right figure demonstrates the result on RTX 2080 Ti.}
-	\label{fig:3dmem}
+\centering
+\subfloat[]{\includegraphics[width=\columnwidth,height=6cm]{./figure/mem3d_1.eps}
+	\label{fig:3dmemk40m}}
+\hspace{0em}
+\subfloat[]{\includegraphics[width=\columnwidth,height=6cm]{./figure/mem3d_1_rtx2080.eps}
+	\label{fig:3dmemrtx2080}}
+
+\caption{Global memory usage for five implementations. Left figure demonstrates the result on Tesla K40m and right figure demonstrates the result on RTX 2080 Ti.}
+\label{fig:3dmem}
 \end{figure*}
 
 We collect the configurations of the convolutional layers using $3 \times 3$ and $5 \times 5$ filers from four popular CNN models,

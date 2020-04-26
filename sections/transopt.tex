@@ -13,6 +13,7 @@ along the height dimension. It loads two overlapped regions and generates four d
 \ref{tab:notations} throughout the paper.
 
 \begin{table}[t!]
+\centering
 \caption{Notations for the convolution operation.}
 	\begin{tabular}{c|c}
 	\hline
@@ -28,31 +29,20 @@ along the height dimension. It loads two overlapped regions and generates four d
 
 \subsection{Column Reuse}
 \label{sec:creuse}
-\begin{figure*}[t!]
-	\begin{subfigure}{0.33\textwidth}
-		\centering
-		\captionsetup{width=0.9\textwidth}
-		 \includegraphics[width=0.98\textwidth,height=4.5cm]{./figure/directconv.eps}
-		 \caption{Direct convolution: Each thread loads 5 input elements from global memory.}
-		 \label{fig:directalgo}
-	\end{subfigure}
-	\begin{subfigure}{0.3\textwidth}
-		\centering
-		\captionsetup{width=0.9\textwidth}
-		 \includegraphics[width=\textwidth,height=4.5cm]{./figure/optalgo1.eps}
-		 \caption{Optimized convolution: each thread retrieve its third element from the corresponding thread.}
-		 \label{fig:optalgo1}
-	\end{subfigure}
-	\begin{subfigure}{0.3\textwidth}
-		\centering
-		\captionsetup{width=0.9\textwidth}
 
-		 \includegraphics[width=0.96\textwidth,height=4.5cm]{./figure/optalgo2.eps}
-		 \caption{Optimized convolution: each thread retrieve its second and fourth elements from corresponding threads.}
-		 \label{fig:optalgo2}
-	\end{subfigure}
-  \caption{Illustration of direct and optimized convolution. We use a $5 \times 5$ filter  and each thread calculate convolution for one output element. Here we demonstrate how each thread processes first 5 corresponding input elements.}
-   \label{fig:corealgo}
+\begin{figure*}[!t]
+\centering
+\subfloat[Direct convolution: Each thread loads 5 input elements from global memory.]{\includegraphics[width=0.32\textwidth,height=4.5cm]{./figure/directconv.eps}
+	\label{fig:directalgo}}
+\hspace{0em}
+\subfloat[Optimized convolution: each thread retrieve its third element from the corresponding thread.]{\includegraphics[width=0.32\textwidth,height=4.5cm]{./figure/optalgo1.eps}
+	\label{fig:optalgo1}}
+\hspace{0em}
+\subfloat[Optimized convolution: each thread retrieve its second and fourth elements from corresponding threads.]{\includegraphics[width=0.32\textwidth,height=4.5cm]{./figure/optalgo2.eps}
+	\label{fig:optalgo2}}
+
+\caption{Illustration of direct and optimized convolution. We use a $5 \times 5$ filter  and each thread calculate convolution for one output element. Here we demonstrate how each thread processes first 5 corresponding input elements.}
+\label{fig:corealgo}
 \end{figure*}
 
 

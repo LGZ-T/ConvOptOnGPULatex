@@ -1,0 +1,64 @@
+\documentclass[conference,10pt,final]{IEEEtran}
+
+\ifCLASSOPTIONcompsoc
+\usepackage[caption=false,font=normalsize,labelfon
+t=sf,textfont=sf]{subfig}
+\else
+\usepackage[caption=false,font=footnotesize]{subfi
+g}
+\fi
+\usepackage{booktabs}
+%\usepackage{subcaption}
+\usepackage{listings}
+\usepackage{graphicx}
+\usepackage[ruled,linesnumbered]{algorithm2e}
+\usepackage{url}
+\usepackage{enumerate}
+\usepackage{amsmath}
+\usepackage{multirow}
+\usepackage{makecell,rotating}
+\usepackage{color, colortbl}
+
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+
+\newcommand\FIXME[1]{\textcolor{red}{FIX:}\textcolor{red}{#1}}
+
+\begin{document}
+\title{Optimizing GPU Memory Transactions for Convolution Operations-full paper only}
+
+\author{
+\IEEEauthorblockN{Gangzhao Lu}
+\IEEEauthorblockA{\textit{Computer Science and Technology}\\
+\textit{Harbin Institute of Technology}\\
+Harbin, China\\
+lugangzhao@hit.edu.cn}
+\and
+\IEEEauthorblockN{Weizhe Zhang}
+\IEEEauthorblockA{\textit{Computer Science and Technology}\\
+\textit{Harbin Institute of Technology}\\
+Harbin, China\\
+wzzhang@hit.edu.cn}
+\and
+\IEEEauthorblockN{Zheng Wang}
+\IEEEauthorblockA{\textit{School of Computing}\\
+\textit{University of Leeds}\\
+U. K.\\
+z.wang5@leeds.ac.uk}
+}
+\maketitle
+\input{sections/abstract}
+\input{sections/intro}
+\input{sections/background}
+\input{sections/transopt}
+\input{sections/convopt}
+\input{sections/eval}
+\input{sections/relatedwork}
+\input{sections/conclusions}
+
+
+%% Bibliography
+\bibliographystyle{IEEEtran}
+\bibliography{IEEEabrv,ref}
+
+\end{document}
