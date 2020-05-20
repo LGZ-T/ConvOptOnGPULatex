@@ -10,7 +10,7 @@ overlapped columns of the input for reducing the number of memory transactions. 
 multiply each overlapped row of the input with multiple rows of a filter to compute multiple output elements to improve the data locality
 of row elements. Our approach is simple yet effective and can work on existing CUDA and OpenCL standards without hardware modification.
 %
-We apply our approach to {\color{red}2D and depth-wise convolutions and evaluate them on an NVIDIA RTX 2080Ti GPU}. For the 2D
+We apply our approach to {\color{red}single-channel 2D and depth-wise convolutions and evaluate them on an NVIDIA RTX 2080Ti GPU}. For the single-channel 2D
 convolution, our approach delivers over 2x faster performance than the state-of-the-art image processing libraries. {\color{red}For the depth-wise convolution,
 we obtain up to 4x speedups over the fastest algorithm of cuDNN.}
 
