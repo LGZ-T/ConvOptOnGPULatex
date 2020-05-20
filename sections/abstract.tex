@@ -5,14 +5,14 @@ these strategies often increase the memory footprint with extra memory access, t
 %
 This paper presents a novel approach to optimize memory access for convolution operations, specifically targeting GPU execution. Our
 approach leverages two optimization techniques to reduce the number of memory operations for convolution operations performed on the
-width and the hight dimensions. For convolution computations on the width dimension, we exploit shuffle instructions to exchange the
+width and the height dimensions. For convolution computations on the width dimension, we exploit shuffle instructions to exchange the
 overlapped columns of the input for reducing the number of memory transactions. For convolution operations on the height dimension, we
 multiply each overlapped row of the input with multiple rows of a filter to compute multiple output elements to improve the data locality
 of row elements. Our approach is simple yet effective and can work on existing CUDA and OpenCL standards without hardware modification.
 %
-We apply our approach to 2D and 3D convolutions and evaluate it on two NVIDIA GPU architectures (K40 and 2080Ti). For the 2D
-convolution, our approach delivers over 2x faster performance than the state-of-the-art image processing libraries. For the 3D convolution,
-we obtain up to 2.5x speedups over the fastest algorithm of cuDNN.
+We apply our approach to {\color{red}2D and depth-wise convolutions and evaluate them on an NVIDIA RTX 2080Ti GPU}. For the 2D
+convolution, our approach delivers over 2x faster performance than the state-of-the-art image processing libraries. {\color{red}For the depth-wise convolution,
+we obtain up to 4x speedups over the fastest algorithm of cuDNN.}
 
 
 

@@ -1,36 +1,18 @@
 \section{Introduction}
-Convolution is a fundamental building block for many application tasks, including image and video processing and machine learning
-models \cite{Perrot2014Fine,Ma2014Optimized,Rudi2015Image,Niklaus2017Video,Krizhevsky2012ImageNet,SimonyanZ14a,HeZRS16,SzegedyLJSRAEVR15}. Convolution can be performed on multiple dimensions, but 2D and 3D convolutions are among the most frequently used
-application scenarios. The former is often used in image filtering and frame
-interpolation~\cite{Perrot2014Fine,Ma2014Optimized,Rudi2015Image,Niklaus2017Video}, whereas the latter is at the core of Convolutional
-Neural Networks (CNNs) \cite{Krizhevsky2012ImageNet,SimonyanZ14a,HeZRS16,SzegedyLJSRAEVR15}. However, convolution operations are computation and memory intensive \cite{cavigelli2015accelerating},
-and account for nearly 90\% of the overall runtime \cite{Li2016Performance} for representative image and machine learning processing tasks.
-Therefore, there is a critical need for accelerating convolution operations.
+Convolution is a fundamental building block for many application tasks, including image and video processing and machine learning models. Convolution can be performed on multiple dimensions, {\color{red}but single-channel 2D, multi-channel 2D and depth-wise convolutions} are among the most frequently used application scenarios. 
+{\color{red}The single-channel 2D convolution is often used in image filtering and frame interpolation~\cite{Perrot2014Fine,Ma2014Optimized,Rudi2015Image,Niklaus2017Video}, the multi-channel 2D convolution is at the core of Convolutional Neural Networks (CNNs) \cite{Krizhevsky2012ImageNet,SimonyanZ14a,HeZRS16,SzegedyLJSRAEVR15} and the depth-wise convolution is the basic operation of mobile CNNs \cite{Sandler_2018_CVPR,Ma_2018_ECCV,tan2019efficientnet}}. 
+However, convolution operations are computation and memory intensive \cite{cavigelli2015accelerating}, and account for nearly 90\% of the overall runtime \cite{Li2016Performance} for representative image and machine learning processing tasks. Therefore, there is a critical need for accelerating convolution operations.
 
 
-A wide range of techniques have been proposed to accelerate convolution operations \cite{Iandola2014Communication,vasilache2014fast,lavin2016fast,cho2017mec,Zhen2018Optimizing,Vasudevan2017Parallel,Chellapilla2006High,zhang2015dwarfcode}. Among these methods, convulsion-based general matrix multiplication (GEMM) \cite{Vasudevan2017Parallel,Chellapilla2006High}, fast fourier transform (FFT) \cite{vasilache2014fast} and Winograd \cite{lavin2016fast} methods are the broadly adopted ones;  all of which follow a three-step processing pipeline. The algorithm first transforms the input and a filter (which is applied on the input) into two matrices. Then, fast matrix multiplication algorithms \cite{karstadt2017matrix,scott2015matrix} are performed on the two matrices before finally converting the result into the output.
-However, this processing pipeline can incur many memory transactions (accesses) during the
+A wide range of techniques have been proposed to accelerate convolution operations \cite{Iandola2014Communication,vasilache2014fast,lavin2016fast,cho2017mec,Zhen2018Optimizing,Vasudevan2017Parallel,Chellapilla2006High,zhang2015dwarfcode}. Among these methods, general matrix multiplication (GEMM) \cite{Vasudevan2017Parallel,Chellapilla2006High}, fast fourier transform (FFT) \cite{vasilache2014fast} and Winograd \cite{lavin2016fast} methods are the broadly adopted ones;  all of which follow a three-step processing pipeline. The algorithm first transforms the input and a filter (which is applied on the input) into two matrices. Then, fast matrix multiplication algorithms \cite{karstadt2017matrix,scott2015matrix} are performed on the two matrices before finally converting the result into the output.
+However, this processing pipeline can incur many {\color{red}global} memory transactions (accesses) during the
 transformation phase due to the involvement of matrix multiplications and duplicate elements of the transformed
-matrices. Such overhead can be significant; for example, the number of memory transactions increases
-by 90\% for the popular 3D convolution (Section \ref{3dconvexp}). This phenomenon is a serious problem for distributed memory
+matrices. Such overhead can be significant {\color{red}in two aspects: (1) the number of memory transactions increases significantly for the convolution operation; (2) the access latency to GPU global memory (around 500 cycles) is about 16.7 times longer than that to shared memory (around 30 cycles) \cite{mei2016dissecting}}. This phenomenon is a serious problem for distributed memory
 architecture, which is a commonly used design for high-end GPUs, where memory access often becomes a performance bottleneck. As a
 result, prior optimization techniques leave a large room for improvement when executing convolution operations on GPUs.
 
 
-%%We examine the process of convolution and propose two optimization algorithms which can improve the performance of convolution by reducing
-%%the number of memory transactions without incurring any additional memory storage. First, we utilize shuffle instructions to exchange elements between threads of the same warp.
-%This paper aims to optimizing memory transactions for executing convolution operations on GPUs. Doing so can
-%significantly improve the performance for convolution operations by reducing the number of memory access. Our technique
-%is complementary to convolution optimization techniques based on GEMM, FFT and Winograd, and can be integrated with
-%these techniques. To this end, this paper presents two novel optimization algorithms. Our first optimization techniques
-%utilizes shuffle instructions (that supported by CUDA and OpenCL) to exchange elements among threads within the same
-%GPU warp (or working group). In this way, we can avoid reloading the same elements which are shared among different
-%threads. We further extend the shuffle instruction to support dynamic indexing which is not supported in the previous
-%study \cite{vasilache2014fast}. We call this strategy column reuse. Second, we try to make full use of rows of the
-%input since each row of the input can be used to generate multiple output elements. We call this the row reuse
-%algorithm.
-
-This study aims to optimize the memory transactions involved when executing convolution operations on GPUs. By reducing the number of
+This study aims to optimize the memory {\color{red}performance} involved when executing convolution operations on GPUs. By reducing the number of
 memory access, we can significantly improve the performance of convolution operations. To this end, we introduce two novel optimization
 techniques for operations performed on columns and rows. The first technique exploits column reuse by utilizing shuffle instructions
 (supported by CUDA and OpenCL) to exchange elements among threads within the same GPU warp (or working group). In this way, we can avoid
@@ -41,14 +23,9 @@ elements within a row, thereby reducing the number of memory transactions in com
 pipeline. Consequently, computation performance is improved.
 
 
-
-%Our technique is complementary to convolution optimization techniques based on GEMM, FFT and Winograd, and can be
-%integrated with these techniques.
-
-We apply our optimization techniques to direct convolution operations and evaluate them on two NVIDIA GPU platforms (K40 and 2080Ti). We
-then compare the findings with highly optimized DNN libraries, including cuDNN. Experimental results show that our approach delivers over
-2$\times$ faster performance over the best-performing competitive strategy, by significantly reduce the number of memory transactions for
-convolution operations.
+We apply our optimization techniques to {\color{red}single-channel 2D and depth-wise convolution} operations and evaluate them {\color{red}on an NVIDIA RTX 2080Ti GPU}. We
+then compare the findings with highly optimized DNN libraries, including cuDNN \cite{ChetlurWVCTCS14}. Experimental results show that our approach delivers over
+4$\times$ faster performance over the best-performing competitive strategy, by significantly {\color{red}improving the memory performance} for convolution operations.
 
 This paper makes the following technical contributions:
 \begin{itemize}
@@ -58,5 +35,4 @@ This paper makes the following technical contributions:
       when performing convolution in the row direction (Section~\ref {sec:rowreuse}).
   \item It describes a novel method for transforming dynamic indices into static indices. Our approach enables better
       register promotion, leading to better performance (Section \ref{exp}).
-  %\item we implement a 2D convolution and 3D convolutions with one and three input channels. The experiments show that our 2D and 3D convolutions are fast and memory efficient compared with state-of-the-art convolution libraries, including ArrayFire, NPP and cuDNN.
 \end{itemize}

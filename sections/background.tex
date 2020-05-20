@@ -1,13 +1,10 @@
 
 \section{Background}
+{\color{red}Modern GPUs employ a complex execution and memory hierarchy to support concurrent execution of massive threads. A single GPU device consists of multiple Streaming Multiprocessors (SMs). Each SM includes multiple Single-Instruction-Multiple-Thread (SIMT) units, each of which has multiple lanes of execution. Threads scheduled in the same SIMT unit are called a warp, which is the smallest scheduling unit in GPU. A typical GPU memory hierarchy is organized as follows: (1) thread local registers with the lowest access latency (1-2 cycles); (2) SM local L1 caches and shared memory (around 30 cycles); (3) a unified L2 cache shared by all SMs (around 200 cycles); and (4) the off-chip global memory (around 500 cycles).}
+%\subsection{Convolution Operations}
 
-\subsection{Convolution Operations}
+At the convolutional stage, the computational kernel {\color{red}of single-channel 2D convolution takes as input a 2D single-channel feature map and a 2D single-channel filter. Then the filter slides over the input feature map to perform an elementwise multiplication with the part of input where it is currently located. Depth-wise convolution takes as input a 2D multi-channel feature map and a bank of 2D single-channel filters. And then each filter is convolved with the corresponding input channel to produce one output channel. In depth-wise convolution, the number of filters equal to the number of input channels and each filter has only one channel. In multi-channel 2D convolution, all filters are used to convolve with the same input feature map to compute one output feature map.}
 
-At the convolutional stage, the computational kernel takes as input a batch of 2D multi-channel feature maps and a bank of  2D
-multi-channel filters. The computation produces a batch of 2D multi-channel output feature maps with the same batch size as input. To
-compute one output feature map, all filters are used to convolve with the same input feature map. Specifically, each filter slides over the
-input feature map to perform an elementwise multiplication with the part of input where it is currently located and then sums up the
-results across all channels.
 
 \begin{figure}
 \centering
@@ -31,7 +28,7 @@ matrix elements. Our work aims to eliminate the redundant elements to reduce the
 \begin{figure}[t!]
 \centering
   \includegraphics[width=\columnwidth,height=6cm]{./figure/twostrategies.eps}
-  \caption{Example of performing 2D convolution using a GPU. Here, the filter size is $5 \times 5$, the input image size is $6 \times 11$
+  \caption{Example of performing single-channel 2D convolution using a GPU. Here, the filter size is $5 \times 5$, the input image size is $6 \times 11$
   and the output size is $2 \times 7$. Each thread calculates one column of the output. Assume threads 0 and 1 load the required regions from input
   image with four duplicate columns, and thread 6 loads two overlapped regions from input image and generates four duplicate rows. Numbers in
   the square denote the index of input elements.}
