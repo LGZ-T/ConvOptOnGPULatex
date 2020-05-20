@@ -1,17 +1,31 @@
 
 \section{Background}
-{\color{red}Modern GPUs employ a complex execution and memory hierarchy to support concurrent execution of massive threads. A single GPU device consists of multiple Streaming Multiprocessors (SMs). Each SM includes multiple Single-Instruction-Multiple-Thread (SIMT) units, each of which has multiple lanes of execution. Threads scheduled in the same SIMT unit are called a warp, which is the smallest scheduling unit in GPU. A typical GPU memory hierarchy is organized as follows: (1) thread local registers with the lowest access latency (1-2 cycles); (2) SM local L1 caches and shared memory (around 30 cycles); (3) a unified L2 cache shared by all SMs (around 200 cycles); and (4) the off-chip global memory (around 500 cycles).}
-%\subsection{Convolution Operations}
+\subsection{GPU Memory Architecture}
+Modern GPUs employ a complex execution pipeline and memory hierarchy to support concurrent execution of parallel threads. A typical GPU
+consists of multiple Streaming Multiprocessors (SMs). Each SM includes multiple Single-Instruction-Multiple-Thread (SIMT) units, each of
+which has multiple lanes of execution. Threads scheduled in the same SIMT unit are called a warp, which is the smallest scheduling unit in
+GPU. Like a modern CPU, a GPU consists of multiple memory hierarchies. The thread-local registers are the fastest memory component, having
+the lowest access latency (1-2 cycles). The SM local L1 caches and shared memory provide a larger storage capacity over the thread-local
+registers but have modestly higher accessing latency of around 30 cycles. All the SMs share a unified L2 cache that provides an accessing
+latency of about 200 cycles. The off-chip global memory, similar to the RAM in a CPU system, provides the largest memory storage capacity
+on the GPU but has the longest accessing latency of around 500 cycles. The key to optimizing memory performance is to make use of the fast
+memory sub-systems (i.e., registers and shared memory) and reduce the number of memory accesses or transactions. Our work is design to
+provide such capabilities for convolution operations.
 
-At the convolutional stage, the computational kernel {\color{red}of single-channel 2D convolution takes as input a 2D single-channel feature map and a 2D single-channel filter. Then the filter slides over the input feature map to perform an elementwise multiplication with the part of input where it is currently located. Depth-wise convolution takes as input a 2D multi-channel feature map and a bank of 2D single-channel filters. And then each filter is convolved with the corresponding input channel to produce one output channel. In depth-wise convolution, the number of filters equal to the number of input channels and each filter has only one channel. In multi-channel 2D convolution, all filters are used to convolve with the same input feature map to compute one output feature map.}
-
-
-\begin{figure}
+\subsection{Convolution Operations}
+\begin{figure}[t!]
 \centering
   \includegraphics[width=0.75\columnwidth,height=6cm]{./figure/convlowering.eps}
   \caption{An example (reproduced from \cite{ChetlurWVCTCS14}) of converting a simple convolution into matrix multiplications. Here, two filters are used to convolve with a 3-channel input.}
   \label{fig:convlowering}
 \end{figure}
+
+Our work targets two representative convolution operations: 2D and deep-wise convolution. The computational kernel of 2D convolution takes
+as input a 2D single-channel feature map and a channel filter. The filter slides over the input feature map to perform an element-wise
+multiplication over the input elements within the filter. Depth-wise convolution takes as input a 2D feature map and a bank of 2D filters.
+Each filter is convolved with the corresponding input channel to produce one output channel.
+
+
 
 Representative algorithms for convolution operations, including GEMM-, FFT- and Winograd-based convolutions, all require to transform 4D
 tensors into a transformed matrix where computation can be performed. Doing so can incur high memory overhead. For example, Figure
@@ -20,7 +34,7 @@ are organized as a 4-element tuple, $(batch\_size, channel\_size, height, width)
 \ref{fig:convlowering} is $(2, 3, 2, 2)$. The transformed filter matrix has the same number of elements as the filter data. The input data
 are of size $(1, 3, 3, 3)$ and have 27 elements in total. However, after transforming the input data into an input matrix, the resulting
 matrix would have 48 elements, 44\% of which are redundant elements. This can incur redundant memory accesses for loading and storing the
-matrix elements. Our work aims to eliminate the redundant elements to reduce the overhead for memory accessing. 
+matrix elements. Our work aims to eliminate the redundant elements to reduce the overhead for memory accessing.
 
 
 

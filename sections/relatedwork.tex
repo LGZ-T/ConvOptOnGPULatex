@@ -19,10 +19,12 @@ Zhen et al. \cite{Zhen2018Optimizing} extended Winograd's algorithm to support a
 algorithms need to transform the input and filter before performing matrix multiplication, and both require more operations compared with
 the FFT algorithm.
 
-The transformation of the input and filter before performing matrix multiplication incurs a large memory
-overhead and offset some performance gains caused by the reduction in computational complexity. Therefore, recent studies have mainly focused on reduction of the the memory overhead of the transformation phases. Cho et al. \cite{cho2017mec} reduced the memory overhead of GEMM-based convolutions using a
-compact lowering scheme to reduce the redundancy in the lowered matrix and then performed multiple small matrix multiplications in parallel.
-However, this algorithm still needs to transform the input and filter tensors into lowered matrixes to compute the convolution.
-Iandola et al. \cite{Iandola2014Communication} reduced memory communication of 2D convolutions on GPU. They also prefetched the image regions to the registers. {\color{red}Their method uses a fewer number of threads, but each thread operates on a larger number of data items.} This method uses the registers to accelerate the convolution and does not reduce the number of
-memory accesses. Different from \cite{Iandola2014Communication}, we further optimize the use of registers and significantly reduce the
-number of memory accesses.
+The transformation of the input and filter before performing matrix multiplication incurs a large memory overhead and offset some
+performance gains caused by the reduction in computational complexity. Therefore, recent studies have mainly focused on reduction of the
+the memory overhead of the transformation phases. Cho et al. \cite{cho2017mec} reduced the memory overhead of GEMM-based convolutions using
+a compact lowering scheme to reduce the redundancy in the lowered matrix and then performed multiple small matrix multiplications in
+parallel. However, this algorithm still needs to transform the input and filter tensors into lowered matrixes to compute the convolution.
+Iandola et al. \cite{Iandola2014Communication} reduced memory communication of 2D convolutions on GPU. They also prefetched the image
+regions to the registers. While their method uses fewer threads, each thread operates on a larger number of data items. As a result, their
+method does not reduce the number of global memory transactions. Unlike \cite{Iandola2014Communication}, we further optimize the use of
+registers and significantly reduce the number of memory accesses.

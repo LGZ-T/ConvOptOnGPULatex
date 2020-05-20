@@ -1,27 +1,29 @@
 \section{Memory Transaction Optimization}
 \label{sec:strategies}
 
-\paragraph{Working example.} We take the single-channel 2D convolution example shown in Figure \ref{fig:twostrategies} as a work example to explain out approach. Here, we slide a $5
-\times 5$ filter over a $6 \times 11$ image to produce a $2 \times 7$ output. In this example, each thread calculates one column of the
-output. For example, threads 0 and 1 could execute code to slide the filter along the width dimension. Both threads load two overlapped
-regions from the input image, thereby generating four duplicate columns. Assume thread 6 demonstrates the process of sliding the filter
-along the height dimension. It loads two overlapped regions and generates four duplicate rows.
+\mypara{Working example.} We take the single-channel 2D convolution example shown in Figure \ref{fig:twostrategies} as a work example to
+explain out approach. Here, we slide a $5 \times 5$ filter over a $6 \times 11$ image to produce a $2 \times 7$ output. In this example,
+each thread calculates one column of the output. For example, threads 0 and 1 could execute code to slide the filter along the width
+dimension. Both threads load two overlapped regions from the input image, thereby generating four duplicate columns. Assume thread 6
+demonstrates the process of sliding the filter along the height dimension. It loads two overlapped regions and generates four duplicate
+rows.
 
-\paragraph{Notations.} Our approach optimizes convolution operations on GPUs by reusing column and row elements. We use the following notations in Table
-\ref{tab:notations} throughout the paper.
+\mypara{Notations.} Our approach optimizes convolution operations on GPUs by reusing column and row elements. We use following notations
+throughout the paper. We use $I$, $F$, and $O$ to represent the input, the filter, and the output respectively, $N$, $C$, $H$, and $W$ to
+denote the batch size, the channel, the height, and the width, respectively.
 
-\begin{table}[t!]
-\centering
-\caption{Notations for the convolution operation.}
-	\begin{tabular}{c|c}
-	\hline
-		$I$, $F$, $O$ & Input, Filter, Output \\
-		\hline
-		$N$, $C$, $H$, $W$ & batch size, channel, height, width\\
-		\hline
-	\end{tabular}
-	\label{tab:notations}
-\end{table}
+%\begin{table}[t!]
+%\centering
+%\caption{Notations for the convolution operation.}
+%	\begin{tabular}{c|c}
+%	\hline
+%		$I$, $F$, $O$ & Input, Filter, Output \\
+%		\hline
+%		$N$, $C$, $H$, $W$ & batch size, channel, height, width\\
+%		\hline
+%	\end{tabular}
+%	\label{tab:notations}
+%\end{table}
 
 \subsection{Column Reuse}
 \label{sec:creuse}
@@ -62,7 +64,7 @@ Similarly, threads $t2$ and $t3$ retrieve the third elements from threads $t0$ a
 elements (dashed squares in step 1) for threads $t0$ and $t1$. This exchange process can be implemented using the instruction
 $shfl\_xor(iTemp[i],2)$ (taking CUDA shuffle as an example, \cite{CUDAtoolkit} provides the exact form of the shuffle instructions), where $iTemp$ is the thread local
 array used to store the five input elements, and $i$ indexes which element to provide. For threads $t0$ and $t1$, both need to provide the fifth
-elements, thus $i=4$. For threads $t2$ and $t3$, both need to provide the first elements, thus $i=0$. 
+elements, thus $i=4$. For threads $t2$ and $t3$, both need to provide the first elements, thus $i=0$.
 %The procedure presented in Figure  \ref{fig:optalgo2} is the same as that in Figure \ref{fig:optalgo1}, except that each thread in Figure 3c retrieves the second and fourth elements from its neighboring threads.
 
 However, the instruction $shfl\_xor(iTemp[i],2)$ significantly degrades the performance of the convolution because $iTemp$ is an array with

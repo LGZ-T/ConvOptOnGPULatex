@@ -1,73 +1,10 @@
-
-\acmConference[SPAA'20]{ACM Symposium on Parallelism in Algorithms and Architectures}{July 14--17, 2020}{Philadelphia, PA, USA} \acmYear{2020}
-\acmISBN{} % \acmISBN{978-x-xxxx-xxxx-x/YY/MM}
-\acmDOI{} % \acmDOI{10.1145/nnnnnnn.nnnnnnn}
-\startPage{1}
-\begin{CCSXML}
-<ccs2012>
-<concept>
-<concept_id>10010147</concept_id>
-<concept_desc>Computing methodologies</concept_desc>
-<concept_significance>500</concept_significance>
-</concept>
-<concept>
-<concept_id>10010147.10010169</concept_id>
-<concept_desc>Computing methodologies~Parallel computing methodologies</concept_desc>
-<concept_significance>500</concept_significance>
-</concept>
-<concept>
-<concept_id>10010147.10010169.10010170</concept_id>
-<concept_desc>Computing methodologies~Parallel algorithms</concept_desc>
-<concept_significance>500</concept_significance>
-</concept>
-<concept>
-<concept_id>10010147.10010169.10010170.10010174</concept_id>
-<concept_desc>Computing methodologies~Massively parallel algorithms</concept_desc>
-<concept_significance>500</concept_significance>
-</concept>
-</ccs2012>
-\end{CCSXML}
-
-\ccsdesc[500]{Computing methodologies}
-\ccsdesc[500]{Computing methodologies~Parallel computing methodologies}
-\ccsdesc[500]{Computing methodologies~Parallel algorithms}
-\ccsdesc[500]{Computing methodologies~Massively parallel algorithms}%% Copyright information
-%% Supplied to authors (based on authors' rights management selection;
-%% see authors.acm.org) by publisher for camera-ready submission;
-%% use 'none' for review submission.
-\setcopyright{none}
-%\setcopyright{acmcopyright}
-%\setcopyright{acmlicensed}
-%\setcopyright{rightsretained}
-%\copyrightyear{2018}           %% If different from \acmYear
-
-%% Bibliography style
-\bibliographystyle{ACM-Reference-Format}
-%% Citation style
-%\citestyle{acmauthoryear}  %% For author/year citations
-%\citestyle{acmnumeric}     %% For numeric citations
-%\setcitestyle{nosort}      %% With 'acmnumeric', to disable automatic
-                            %% sorting of references within a single citation;
-                            %% e.g., \cite{Smith99,Carpenter05,Baker12}
-                            %% rendered as [14,5,2] rather than [2,5,14].
-%\setcitesyle{nocompress}   %% With 'acmnumeric', to disable automatic
-                            %% compression of sequential references within a
-                            %% single citation;
-                            %% e.g., \cite{Baker12,Baker14,Baker16}
-                            %% rendered as [2,3,4] rather than [2-4].
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Note: Authors migrating a paper from traditional SIGPLAN
-%% proceedings format to PACMPL format must update the
-%% '\documentclass' and topmatter commands above; see
-%% 'acmart-pacmpl-template.tex'.
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
-
+\ifCLASSOPTIONcompsoc
+\usepackage[caption=false,font=normalsize,labelfon
+t=sf,textfont=sf]{subfig} \else
+\usepackage[caption=false,font=footnotesize]{subfi
+g} \fi
 \usepackage{booktabs}
-\usepackage{subcaption}
+%\usepackage{subcaption}
 \usepackage{listings}
 \usepackage{graphicx}
 \usepackage[ruled,linesnumbered]{algorithm2e}
@@ -78,4 +15,8 @@
 \usepackage{makecell,rotating}
 \usepackage{color, colortbl}
 
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+
 \newcommand\FIXME[1]{\textcolor{red}{FIX:}\textcolor{red}{#1}}
+\newcommand\mypara[1]{\vspace{1.5mm}\noindent \textbf{#1}}

@@ -1,38 +1,53 @@
 \section{Introduction}
-Convolution is a fundamental building block for many application tasks, including image and video processing and machine learning models. Convolution can be performed on multiple dimensions, {\color{red}but single-channel 2D, multi-channel 2D and depth-wise convolutions} are among the most frequently used application scenarios. 
-{\color{red}The single-channel 2D convolution is often used in image filtering and frame interpolation~\cite{Perrot2014Fine,Ma2014Optimized,Rudi2015Image,Niklaus2017Video}, the multi-channel 2D convolution is at the core of Convolutional Neural Networks (CNNs) \cite{Krizhevsky2012ImageNet,SimonyanZ14a,HeZRS16,SzegedyLJSRAEVR15} and the depth-wise convolution is the basic operation of mobile CNNs \cite{Sandler_2018_CVPR,Ma_2018_ECCV,tan2019efficientnet}}. 
-However, convolution operations are computation and memory intensive \cite{cavigelli2015accelerating}, and account for nearly 90\% of the overall runtime \cite{Li2016Performance} for representative image and machine learning processing tasks. Therefore, there is a critical need for accelerating convolution operations.
+Convolution is a fundamental building block for many application tasks, including image and video processing and machine learning models.
+Convolution can be performed on multiple dimensions, but  2D and depth-wise convolutions are among the most frequently used application
+scenarios. Specifically, 2D convolution is often used in image filtering, frame
+interpolation~\cite{Perrot2014Fine,Ma2014Optimized,Rudi2015Image,Niklaus2017Video}, and Convolutional Neural Networks (CNNs)
+\cite{Krizhevsky2012ImageNet,SimonyanZ14a,HeZRS16,SzegedyLJSRAEVR15}. Depth-wise convolution is the building block of many embedded CNNs
+\cite{Sandler_2018_CVPR,Ma_2018_ECCV,tan2019efficientnet}. However, convolution operations are computation and memory intensive
+\cite{cavigelli2015accelerating}, and account for nearly 90\% of the overall runtime \cite{Li2016Performance} for representative image and
+machine learning processing tasks. Therefore, there is a critical need for accelerating convolution operations.
 
 
-A wide range of techniques have been proposed to accelerate convolution operations \cite{Iandola2014Communication,vasilache2014fast,lavin2016fast,cho2017mec,Zhen2018Optimizing,Vasudevan2017Parallel,Chellapilla2006High,zhang2015dwarfcode}. Among these methods, general matrix multiplication (GEMM) \cite{Vasudevan2017Parallel,Chellapilla2006High}, fast fourier transform (FFT) \cite{vasilache2014fast} and Winograd \cite{lavin2016fast} methods are the broadly adopted ones;  all of which follow a three-step processing pipeline. The algorithm first transforms the input and a filter (which is applied on the input) into two matrices. Then, fast matrix multiplication algorithms \cite{karstadt2017matrix,scott2015matrix} are performed on the two matrices before finally converting the result into the output.
-However, this processing pipeline can incur many {\color{red}global} memory transactions (accesses) during the
-transformation phase due to the involvement of matrix multiplications and duplicate elements of the transformed
-matrices. Such overhead can be significant {\color{red}in two aspects: (1) the number of memory transactions increases significantly for the convolution operation; (2) the access latency to GPU global memory (around 500 cycles) is about 16.7 times longer than that to shared memory (around 30 cycles) \cite{mei2016dissecting}}. This phenomenon is a serious problem for distributed memory
-architecture, which is a commonly used design for high-end GPUs, where memory access often becomes a performance bottleneck. As a
-result, prior optimization techniques leave a large room for improvement when executing convolution operations on GPUs.
+
+A wide range of techniques have been proposed to accelerate convolution operations
+\cite{Iandola2014Communication,vasilache2014fast,lavin2016fast,cho2017mec,Zhen2018Optimizing,Vasudevan2017Parallel,Chellapilla2006High,zhang2015dwarfcode}.
+Among these methods, general matrix multiplication (GEMM) \cite{Vasudevan2017Parallel,Chellapilla2006High}, fast fourier transform (FFT)
+\cite{vasilache2014fast} and Winograd \cite{lavin2016fast} methods are the broadly adopted ones;  all of which follow a three-step
+processing pipeline. The algorithm first transforms the input and a filter (which is applied on the input) into two matrices. Then, fast
+matrix multiplication algorithms \cite{karstadt2017matrix,scott2015matrix} are performed on the two matrices before finally converting the
+result into the output. Due to the large size of the matrices a convolution algorithm typically works on, the input and output matrices
+typically have to be stored on the GPU global memory. However, this processing pipeline can incur many GPU global memory transactions (or
+memory accesses) during the transformation phase due to the involvement of matrix multiplications and duplicate elements of the transformed
+matrices. Unfortunately, GPU global memory accessing is typically expensive. For example, on an NVIDIA GPU, the global memory accessing
+latency is 16.7x longer than that of the shared memory. As a result, the large number of global memory transactions introduced by
+convolution operations lead to longer processing time and could become the bottleneck for both model training and inferencing.  This
+phenomenon is a serious problem for the commonly used distributed memory architecture on high-end GPUs, where memory access is often
+responsible for the whole-system performance bottleneck. Therefore, prior optimization techniques leave a large room for improvement when
+executing convolution operations on GPUs.
 
 
-This study aims to optimize the memory {\color{red}performance} involved when executing convolution operations on GPUs. By reducing the number of
-memory access, we can significantly improve the performance of convolution operations. To this end, we introduce two novel optimization
-techniques for operations performed on columns and rows. The first technique exploits column reuse by utilizing shuffle instructions
-(supported by CUDA and OpenCL) to exchange elements among threads within the same GPU warp (or working group). In this way, we can avoid
-reloading the same elements shared among different threads. We further extend the shuffle instructions to facilitate dynamic indexing,
-which is not supported in the previous study \cite{vasilache2014fast}. The second technique targets row reuse by multiplying one input row
-with multiple rows of a convolutional kernel (or filter) to compute multiple output elements. This strategy improves the data locality of
-elements within a row, thereby reducing the number of memory transactions in comparison with that of the existing convolution processing
-pipeline. Consequently, computation performance is improved.
+This paper aims to reduce the memory accessing overhead when executing convolution operations on GPUs. By reducing the number of memory
+access, we can significantly improve the performance of convolution operations. To this end, we introduce two novel optimization techniques
+for operations performed on columns and rows. The first technique exploits column reuse by utilizing shuffle instructions (supported by
+both CUDA and OpenCL and hence is applicable to mainstream GPUs) to exchange elements among threads within the same GPU warp (or working
+group). In this way, we can avoid reloading the same elements shared among different threads. We further extend the shuffle instructions to
+facilitate dynamic indexing, which is not supported in the previous study \cite{vasilache2014fast}. The second technique targets row reuse
+by multiplying one input row with multiple rows of a convolutional kernel (or filter) to compute multiple output elements. This strategy
+improves the data locality of elements within a row, thereby reducing the number of memory transactions in comparison with that of the
+existing convolution processing pipeline. By reducing the number of memory transactions, our approach thus can improve the performance for
+convolution operations.
 
-
-We apply our optimization techniques to {\color{red}single-channel 2D and depth-wise convolution} operations and evaluate them {\color{red}on an NVIDIA RTX 2080Ti GPU}. We
-then compare the findings with highly optimized DNN libraries, including cuDNN \cite{ChetlurWVCTCS14}. Experimental results show that our approach delivers over
-4$\times$ faster performance over the best-performing competitive strategy, by significantly {\color{red}improving the memory performance} for convolution operations.
+We apply our optimization techniques to both 2D and depth-wise convolution operations and evaluate them on an NVIDIA 2080Ti GPU. We compare
+our approach against a range of highly optimized  deep neural network (DNN) libraries, including cuDNN \cite{ChetlurWVCTCS14}. Experimental
+results show that our approach delivers over 4$\times$ faster performance over the best-performing competitive strategy.
 
 This paper makes the following technical contributions:
 \begin{itemize}
   \item It presents a novel algorithm for column reuse (Section~\ref{sec:creuse}), which has a better generalization
       ability over prior work.
-  \item It presents a novel row reuse algorithm to improve the data locality and reduce the number of memory accesses
-      when performing convolution in the row direction (Section~\ref {sec:rowreuse}).
-  \item It describes a novel method for transforming dynamic indices into static indices. Our approach enables better
-      register promotion, leading to better performance (Section \ref{exp}).
+  \item It presents a novel row reuse algorithm to improve the data locality and reduce the number of global memory transactions when
+      performing convolution in the row direction (Section~\ref {sec:rowreuse}).
+  \item It describes a novel method for transforming dynamic indices into static indices. Our approach enhance register promotion,
+      leading to better performance (Section \ref{exp}).
 \end{itemize}
