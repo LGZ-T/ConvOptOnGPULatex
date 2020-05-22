@@ -25,7 +25,7 @@ Intel Xeon E5-2697 CPU with 252GB memory, running Linux kernel v4.15.0. We use C
 
 \subsection{Use Cases}
 We apply our approach to three representative convolution operations, single-channel 2D convolution, depth-wise convolution and
-multi-channel 2D convolution, described as follows. 
+multi-channel 2D convolution, described as follows.
 
 \mypara{Single-channel 2D convolution.} \FIXME{briefly explain the method.}
 
@@ -34,10 +34,10 @@ multi-channel 2D convolution, described as follows.
 \mypara{Multi-channel 2D convolution.} \FIXME{briefly explain the method.}
 
 
-\subsection{Performance Report} We run each test case ten times and report the averaged running time. The data type is 32-bit float and all the data are
-organized as 4D tensors $(N,C,H,$ and $W)$. For now, we test 2D, multi-channel 2D and depth-wise convolutions for the filters of size $3
-\times 3$ and $5 \times 5$, because small filters are commonly used in applications. The results for the 2D convolution are presented first
-in the subsequent section, followed by that for the depth-wise convolution.
+\subsection{Performance Report} We run each test case ten times on an unloaded machine and report the averaged running time. We found
+little variance during execution runs, less than 2\%.  The data type is 32-bit (single-precision) floating point, and all the data are
+organized as 4D tensors $(N,C,H,$ and $W)$. In this work, we test 2D, multi-channel 2D and depth-wise convolutions with two filters sizes,
+$3 \times 3$ and $5 \times 5$, because these are commonly used filter sizes.
 
 \section{Experimental Results}
 \label{exp} In this section, we report our results 2D convolution (Section \ref{sec:ex2dc}), depth-wise convolution (Section
