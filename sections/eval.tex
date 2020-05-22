@@ -23,14 +23,29 @@ Intel Xeon E5-2697 CPU with 252GB memory, running Linux kernel v4.15.0. We use C
 
 \end{itemize}
 
+\subsection{Use Cases}
+We apply our approach to three representative convolution operations, single-channel 2D convolution, depth-wise convolution and
+multi-channel 2D convolution.
+
+\mypara{Single-channel 2D convolution.} \FIXME{briefly explain the method.}
+
+\mypara{depth-wise convolution.} \FIXME{briefly explain the method.}
+
+\mypara{multi-channel 2D convolution.} \FIXME{briefly explain the method.}
+
+
 \subsection{Performance Report} We run each test case ten times and report the averaged running time. The data type is 32-bit float and all the data are
 organized as 4D tensors $(N,C,H,$ and $W)$. For now, we test 2D, multi-channel 2D and depth-wise convolutions for the filters of size $3
 \times 3$ and $5 \times 5$, because small filters are commonly used in applications. The results for the 2D convolution are presented first
 in the subsequent section, followed by that for the depth-wise convolution.
 
 \section{Experimental Results}
-\label{exp}
-\subsection{2D Convolution}
+\label{exp} In this section, we report our results 2D convolution (Section \ref{sec:ex2dc}), depth-wise convolution (Section
+\ref{sec:depconvexp}) and multi-channel 2D convolution (Section \ref {multicconvexp}), showing that our approach consistently outperforms
+alternative methods for all use cases. 
+
+
+\subsection{2D Convolution\label{sec:ex2dc}}
 \begin{figure*}
 \centering
 \subfloat[Speedups for the filter of size $3 \times 3$.]{\includegraphics[width=\columnwidth,height=6cm]{./figure/2d_conv_f3.eps}
@@ -42,6 +57,8 @@ in the subsequent section, followed by that for the depth-wise convolution.
 \caption{Speedups of 2D convolutions of four implementations over im2col.}
 \label{fig:2druntime}
 \end{figure*}
+
+
 
 This section presents the performance of the 2D convolution obtained from five implementations, including cuDNN, im2col,  ArrayFire,
 NPP and the proposed method. We evaluate the five implementations with the image size ($I_H \times I_W$) ranging from $256 \times 256$ to $4K \times 4K$, $I_N=F_N=1$ and $I_C=F_C=1$.
@@ -76,7 +93,7 @@ In summary, our optimization algorithms can greatly reduce the number of memory 
 convolutions. Compared with state-of-the-art image processing libraries, NPP, our implementation achieve average speedups of 1.3$\times$ and 1.28$\times$ for the $3 \times 3$ and $5 \times 5$ filters, respectively.
 
 \subsection{Depth-wise Convolution}
-\label{3dconvexp}
+\label{sec:depconvexp}
 
 \begin{table}[]
 \caption{Configurations of 3D convolution}
@@ -147,7 +164,7 @@ Figure \ref{fig:depwisememanaly} demonstrates the memory throughput and max band
 In summary, both of reuse algorithms can significantly improve the memory throughput and max bandwidth, which leads to the performance improvements of depth-wise convolutions.  In contrast to the fastest algorithms in cuDNN, which is the state-of-the-art convolution library, our implementation achieves an average speedup of $1.5\times$ and $4\times$ for the $3 \times 3$ and $5 \times 5$ filters, respectively.
 
 \subsection{Multi-channel 2D Convolution}
-\label{3dconvexp}
+\label{multicconvexp}
 
 \begin{table}[]
 \caption{Configurations of multi-channel 2D convolution}
