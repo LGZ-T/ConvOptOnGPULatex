@@ -60,9 +60,8 @@ alternative methods for all use cases.
 
 
 
-This section presents the performance of the 2D convolution obtained from five implementations, including cuDNN, im2col,  ArrayFire,
-NPP and the proposed method. We evaluate the five implementations with the image size ($I_H \times I_W$) ranging from $256 \times 256$ to $4K \times 4K$, $I_N=F_N=1$ and $I_C=F_C=1$.
-
+In this experiment, we compare our approach against the 2D convolution implementation obtained from cuDNN, im2col,  ArrayFire, and NPP. We
+apply each metho to image size ($I_H \times I_W$) ranging from $256 \times 256$ to $4K \times 4K$, where $I_N=F_N=1$ and $I_C=F_C=1$.
 
 Figure \ref{fig:2druntime} presents the speedups of cuDNN, ArrayFire, NPP and our implementation over im2col. The results show that cuDNN is not suitable for 2D convolutions in contrast to ArrayFire, NPP and the proposed method. The average speedups of cuDNN, ArrayFire, NPP and ours over im2col are 1.09$\times$, 2.2$\times$, 4.9$\times$ and 6.5$\times$, respectively. Our implementation exhibits superior performance over other implementations. Our implementation of the 2D convolution is derived from direct convolution. We use column (Algorithm \ref{algo:basic}, Algorithm \ref{algo:basic2}) and row reuse (Algorithm \ref{algo:rowreuse}) on direct convolution. Hence, the performance gain is mainly attributed to the reduction on the number of memory transactions.
 
