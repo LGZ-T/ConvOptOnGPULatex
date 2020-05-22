@@ -3,20 +3,12 @@
 \ref{sec:rowreuse}), for reducing GPU memory transactions for convolution operations.
 
 \subsection{Preliminaries}
-\mypara{Working example.} We use the 2D convolution example shown in Figure \ref{fig:twostrategies} as a working example to explain our
-approach. Here, we slide a $5 \times 5$ filter over a $6 \times 11$ image to produce a $2 \times 7$ output. In this example, each thread
-calculates one column of the output. Two parallel threads 0 and 1 will execute code to slide the filter along the width dimension, where
-both threads load two overlapped regions from the input image (thereby generating four duplicate columns). Similarly, there will be aother
-thread (thread 6 in this example) to slide the filter along the height dimension, which will load two overlapped regions and generates four
-duplicate rows.
 
+Our approach optimizes convolution operations on GPUs by reusing column and row elements. Throughout the paper, we use $I$, $F$, and $O$ to
+represent the input, the filter, and the output respectively, $N$, $C$, $H$, and $W$ to denote the batch size, the channel, the height, and
+the width, respectively.
 
-
-\mypara{Notations.} Our approach optimizes convolution operations on GPUs by reusing column and row elements. Throughout the paper, we use
-$I$, $F$, and $O$ to represent the input, the filter, and the output respectively, $N$, $C$, $H$, and $W$ to denote the batch size, the
-channel, the height, and the width, respectively.
-
-\subsection{Column Reuse}
+\subsection{Column Reuse Optimization}
 \label{sec:creuse}
 
 \begin{figure*}[!t]
@@ -33,6 +25,14 @@ channel, the height, and the width, respectively.
 \caption{Illustration of direct and optimized convolution. We use a $5 \times 5$ filter  and each thread calculates the convolution for one
 output element. This example shows how a thread processes the first 5 corresponding input elements.} \label{fig:corealgo}
 \end{figure*}
+
+\mypara{Working example.} We use the 2D convolution example shown in Figure \ref{fig:twostrategies} as a working example to explain our
+column reuse method. Here, we slide a $5 \times 5$ filter over a $6 \times 11$ image to produce a $2 \times 7$ output. In this example,
+each thread calculates one column of the output. Two parallel threads 0 and 1 will execute code to slide the filter along the width
+dimension, where both threads load two overlapped regions from the input image (thereby generating four duplicate columns). Similarly,
+there will be aother thread (thread 6 in this example) to slide the filter along the height dimension, which will load two overlapped
+regions and generates four duplicate rows.
+
 
 
 \subsubsection{Standard convolution} Figure \ref{fig:directalgo} shows a standard 2D convolution operation, operating on one single channel
@@ -144,18 +144,21 @@ with one overlap column. Each $n \times 5$ and $n \times 3$ filters can be proce
 \end{algorithm}
 
 
-\subsection{Row Reuse}
+\subsection{Row Reuse Optimization}
 \label{sec:rowreuse}
 \begin{figure}
 	\centering
 	\includegraphics[width=0.9\columnwidth,height=3.7cm]{./figure/rowreuse.eps}
-\caption{A $3 \times 3$ filter is used to slide over the input image along height dimension and produce a column of output elements. One
-thread is used to calculate this column of output elements.}
+\caption{A $3 \times 3$ filter is used to slide over the input image along height dimension, which produces a column of output elements.}
 \label{fig:rowreuse}
 \end{figure}
 
-Figure \ref{fig:rowreuse} shows that when sliding the filter over the input image along the height dimension, we can obtain a column of output elements. In the proposed method, we then use one thread to calculate one column of output elements. Referring to Figure \ref{fig:rowreuse},
-we can perform convolution as follows:
+\mypara{Working example.} Consider the standard convolution example shown in Figure \ref{fig:rowreuse} as a working example for row reuse
+algorithm. When sliding the filter over the input image along the height dimension, it produces a column of elements as the output.
+
+
+\subsubsection{Standard convolution} Assume we use use one thread to calculate one column of output elements. For the working example given in Figure
+\ref{fig:rowreuse}, the convolution will be computed as follows:
 
 \begin{gather*}
   out_0=row_{i0} \cdot row_{f0} + row_{i1} \cdot row_{f1} + row_{i2} \cdot row_{f2} \\
@@ -163,8 +166,19 @@ out_{1}=row_{i1} \cdot row_{f0} + row_{i2} \cdot row_{f1} + row_{i3} \cdot row_{
 out_{2}=row_{i2} \cdot row_{f0} + row_{i3} \cdot row_{f1} + row_{i4} \cdot row_{f2}
 \end{gather*}
 
-The above equations suggest that $row_{i1}$ and $row_{i3}$ are loaded twice, and $row_{i2}$ is loaded three times; nine rows should be loaded in total. To eliminate row duplications, we redesign the execution of the convolution. After loading a row from the input, we determine the number of output elements that need the row. For example, $out_0$ needs $row_{i0}$, and $out_0$ and $out_1$ need $row_{i1}$. Then, we use
-this row to do inner product with corresponding rows of the filter to calculate the output elements that need this row. The redesigned formulations are shown as follows:
+The above equations suggest that $row_{i1}$ and $row_{i3}$ are loaded twice, and $row_{i2}$ is loaded three times; nine rows should be
+loaded in total. The redundant loads to the same read-only row thus incur extra memory transactions and additional overhead.
+
+
+
+\subsubsection{Our optimization}
+To remove redundant loads to the same row, we redesign the execution flow of the convolution. Specifically, after loading a row from the
+input, we compute the number of output elements that depend on the loaded row. For our working example, the computation of element $out_0$
+in the output column would depend on $row_{i0}$. Similarly, output elements $out_0$ and $out_1$ will need $row_{i1}$. With this information
+in place, we use the loaded row to perform inner product with corresponding rows of the filter to calculate the output elements whose
+outcomes depending on the loaded row. Our approach translates the execution flow of the working example presented in Figure \ref
+{fig:rowreuse} to:
+
 \begin{equation}\nonumber
 \begin{aligned}
 load\ row_{i0}:
@@ -186,14 +200,20 @@ load\ row_{i4}:
 
 
 
-We can see from above equations that only 5 rows are loaded to calculate output elements. {\color{red}Though the number of accesses to $out$ is increased, we store $out$ in registers and the overhead for the increased number of store operations is negligible.} A generalized description of the method is
-shown in Algorithm \ref{algo:rowreuse}, where $row$ denotes the row loaded from the input, $index$ denotes the index of $row$, $filter$ denotes
-the vector of filter rows and $filter[i]$ means the $i$th row of the filter. Lines 1-5 deal with the first $F_H-1$ rows ($row_{i0}$ and $row_{i1}$ in Figure \ref{algo:rowreuse}), which
-are needed by less than $F_H$ output elements. Lines 6-11 deal with the rows that are needed by exact $F_H$ output elements ($row_{i2}$ in
-Figure \ref{algo:rowreuse}). Lines 12-17 deal with last $F_H-1$ rows, which are needed by less than $F_H$ output elements ($row_{i3}$
-and $row_{i4}$ in Figure \ref{algo:rowreuse}).
+In this new implementation, we would only issue loads to five rows to calculate the output elements. Compared to the nine loads required by
+the standard convolution implementation, we reduce the number of loads to row elements by nearly half.  We note that although the number of
+accesses to the output column $out$ is increased, the overhead is negligible because $out$ is much smaller than multiple rows and hence can
+be stored in registers.
 
-\begin{algorithm}
+We describe a general solution for row reuse in Algorithm \ref{algo:rowreuse}, where $row$ denotes the row loaded from the input, $index$
+denotes the index of $row$, $filter$ denotes the vector of filter rows and $filter[i]$ means the $i$th row of the filter. Pesudo code at
+Lines 1-5 process the first $F_H-1$ rows ($row_{i0}$ and $row_{i1}$ in Figure \ref{algo:rowreuse} for eexample) that are needed by less
+than $F_H$ output elements. Code at lines 6-11 process the rows that are needed by exact $F_H$ output elements (e.g., $row_{i2}$ in Figure
+\ref{algo:rowreuse}). Finally, code at Lines 12-17 process the last $F_H-1$ rows, which are needed by less than $F_H$ output elements
+(e.g., $row_{i3}$ and $row_{i4}$ in Figure \ref{algo:rowreuse}).
+
+
+\begin{algorithm}[t!]
 	\KwIn{$row$, $index$, $filter$, $Out$}
 	\KwOut{$Out$}
 	\If{$index \textless F_H-1$}{
@@ -211,9 +231,10 @@ and $row_{i4}$ in Figure \ref{algo:rowreuse}).
 			$Out[o_{index}] \gets Out[o_{index}]+row \cdot filter[F_H-i]$\;
 		}
 	}
-	\caption{RowReuse}
+	\caption{Row Reuse Algorithm}
 	\label{algo:rowreuse}
 \end{algorithm}
 
-In summary, Algorithm \ref{algo:rowreuse} eliminates row duplications caused by sliding a filter over the input along height dimension. The
-algorithm loads each row of the input exactly once and thus greatly reduces the number of memory transactions.
+Algorithm \ref{algo:rowreuse} is designed to eliminate redundant loads to the same row introduced by sliding a filter over the input along
+the height dimension. By loading each row of the input just once, our approach greatly reduces the number of memory transactions for
+convolution operations.
