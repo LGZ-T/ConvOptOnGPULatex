@@ -7,11 +7,10 @@
 \end{figure}
 
 
-This section demonstrates the implementation of the two proposed reuse algorithms on single-channel 2D and depth-wise convolutions. {\color{red}As the single-channel 2D convolution is the basic operation of depth-wise convolution, we take the single-channel 2D convolution as an example to illustrate how to apply proposed reuse algorithms on convolution operations.}
+This section demonstrates the implementation of the two proposed reuse algorithms on convolution operations. {\color{red}As the 2D convolution is the basic operation of depth-wise and multi-channel 2D convolutions, we take the 2D convolution as an example to illustrate how to apply proposed reuse algorithms on convolution operations.}
 %The main difference between the implementations in the 2D and 3D convolutions lies in the loading of filters. For the former, we focus on the scenario where a filter is used to slide over a large image. Therefore, we can load the entire filter into the shared memory, and only one thread block needs to load the filter once. For the latter, we focus on the scenario where many filters are used to slide over a batch of images, which are often the first layers of CNNs. All filters cannot fit into the shared memory; hence, we need to load the filters multiple times.
 
-To simplify the discussion, we use a single-channel 2D convolution running at an NVIDIA GPU as an example. We first divide the output
-into sub-blocks, which contain exactly 32 (warp size) columns each, except for the last sub-block, which may contain less than 32 columns. {\color{red}We further divide a sub-block along height dimension if there are too many rows in it. Normally, each sub-block contains less than 56 rows.}
+We first divide the output into sub-blocks, which contain exactly 32 (warp size) columns each, except for the last sub-block, which may contain less than 32 columns. {\color{red}We further divide a sub-block along height dimension if there are too many rows in it. Normally, each sub-block contains less than 56 rows.}
 Each thread block processes one or more sub-blocks, and each warp processes one sub-block. The threads within the same warp process the adjacent columns of one sub-block.
 
 \begin{algorithm}
@@ -41,7 +40,7 @@ Each thread block processes one or more sub-blocks, and each warp processes one 
 	\label{algo:overalldesign}
 \end{algorithm}
 
-Figure \ref{fig:overalldesign} shows the mapping process of the threads onto output elements. Given that single-channel 2D convolutions normally produce an output image that has the same size as the input image, the latter should be padded. But we do not actually allocate memory on the GPU. We use different methods to calculate the edge and inner elements of the output. The edge and inner elements are represented by the shaded and dashed squares in Figure \ref{fig:overalldesign}, respectively.
+Figure \ref{fig:overalldesign} shows the mapping process of the threads onto output elements. Given that 2D convolutions normally produce an output image that has the same size as the input image, the latter should be padded. But we do not actually allocate memory on the GPU. We use different methods to calculate the edge and inner elements of the output. The edge and inner elements are represented by the shaded and dashed squares in Figure \ref{fig:overalldesign}, respectively.
 
 %We also demonstrate how to deal with the inner elements and how to  calculate the edge elements using the same method for the inner elements. 
 Each warp is assumed to contain four threads (Figure \ref{fig:overalldesign}). The inner elements are divided into two
@@ -49,6 +48,6 @@ sub-blocks. Sub-block 0 contains four columns, which represent the warp size, wh
 
 We process the sub-blocks with exactly 32 columns and the last sub-block in Lines 4-15 and 16-19, respectively. Each thread calculates one column of output elements. First, each thread calculates the address of the first input element it needs (Lines 9). Second, each thread uses Algorithms \ref{algo:basic} and \ref{algo:basic2} to fulfill the row vector $iTemp$ (Line 10). Third, each thread passes the
 vector $iTemp$ to Algorithm \ref{algo:rowreuse} to calculate multiple output elements and store results in register array $sum$ (Line 11).
-Lastly, each thread writes the completed element of $sum$ into the result array $O$ (Line 13).
+At last, each thread writes the completed element of $sum$ into the result array $O$ (Line 13).
 
 

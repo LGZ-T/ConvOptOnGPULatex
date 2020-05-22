@@ -1,10 +1,9 @@
 \section{Conclusion}
 We have presented a novel approach to optimize the memory access for convolution computation on GPUs. Our approach improves the data
 locality for convolutional operations performed on the row and column directions to reduce the memory access. Our techniques utilize the
-GPU operations supported by CUDA and OpenCL and do not require hardware modifications. We evaluate our approach by applying it to 2D and depth-wise
+GPU operations supported by CUDA and OpenCL and do not require hardware modifications. We evaluate our approach by applying it to 2D, depth-wise and multi-channel 2D
 convolutions and evaluate it on the NVIDIA RTX 2080Ti GPU platform. For the 2D convolution, our approach doubles the performance of the
-state-of-the-art image processing libraries. For the depth-wise convolution, our techniques deliver up to $4 \times$ speedups over the fastest algorithm
-of cuDNN.
+state-of-the-art image processing libraries. For the depth-wise convolution, our techniques deliver up to $4 \times$ speedups over the fastest algorithm of cuDNN. For the multi-channel 2D convolution, proposed reuse algorithms achieve an average speedup of $1.23\times$ over the fastest algorithm of cuDNN.
 
 
 %\begin{acks}                            %% acks environment is optional

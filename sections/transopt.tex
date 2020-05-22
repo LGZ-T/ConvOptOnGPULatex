@@ -2,7 +2,7 @@
 \label{sec:strategies}
 
 \mypara{Working example.} We take the single-channel 2D convolution example shown in Figure \ref{fig:twostrategies} as a work example to
-explain out approach. Here, we slide a $5 \times 5$ filter over a $6 \times 11$ image to produce a $2 \times 7$ output. In this example,
+explain our approach. Here, we slide a $5 \times 5$ filter over a $6 \times 11$ image to produce a $2 \times 7$ output. In this example,
 each thread calculates one column of the output. For example, threads 0 and 1 could execute code to slide the filter along the width
 dimension. Both threads load two overlapped regions from the input image, thereby generating four duplicate columns. Assume thread 6
 demonstrates the process of sliding the filter along the height dimension. It loads two overlapped regions and generates four duplicate
@@ -62,7 +62,7 @@ thread utilizes the shuffle instruction to retrieve the third element from anoth
 from threads $t2$ and $t3$, respectively, and provide the fifth elements (dashed squares in step 2) for both threads.
 Similarly, threads $t2$ and $t3$ retrieve the third elements from threads $t0$ and $t1$, respectively, and provide the first
 elements (dashed squares in step 1) for threads $t0$ and $t1$. This exchange process can be implemented using the instruction
-$shfl\_xor(iTemp[i],2)$ (taking CUDA shuffle as an example, \cite{CUDAtoolkit} provides the exact form of the shuffle instructions), where $iTemp$ is the thread local
+$shfl\_xor(iTemp[i],2)$ (taking CUDA shuffle as an example, readers could refer to \cite{CUDAtoolkit} for the exact form of the shuffle instructions), where $iTemp$ is the thread local
 array used to store the five input elements, and $i$ indexes which element to provide. For threads $t0$ and $t1$, both need to provide the fifth
 elements, thus $i=4$. For threads $t2$ and $t3$, both need to provide the first elements, thus $i=0$.
 %The procedure presented in Figure  \ref{fig:optalgo2} is the same as that in Figure \ref{fig:optalgo1}, except that each thread in Figure 3c retrieves the second and fourth elements from its neighboring threads.
@@ -93,7 +93,7 @@ places array $iTemp$ in the local memory, which possesses the same access latenc
 	\label{algo:basic}
 \end{algorithm}
 
-To convert dynamic indexing into static one, we design Algorithm \ref{algo:basic} for step 3 in Figure \ref{fig:optalgo1} and Algorithm \ref{algo:basic2} for steps 4 and 5 in Figure \ref{fig:optalgo2}. Both algorithms can change dynamic indexing into static indexing and reduce the number of memory accesses. Figure \ref{fig:exchange} illustrates the process of Algorithm \ref{algo:basic}. We first load the corresponding first and fifth input elements into $iTemp$ before passing it to Algorithm \ref{algo:basic}. Then we pack two 32-bit elements into a 64-bit variable $exchange$, where $iTemp[4]$ and $iTemp[0]$ are the high and low 32 bits, respectively (Line 2).  Threads $t0$ and $t1$ must provide their fifth elements, which are the high 32 bits of $exchange$, thus we right shift $exchange$ in both threads by 32 to place $iTemp[4]$ in the low 32 bits. Threads $t2$ and $t3$ must provide their first elements, which are already the low 32 bits of $exchange$. Therefore, we right shift $exchange$ in both threads by 0. The shift amounts of each thread is calculated on the basis of the thread ID (Line 3). Next, unpack $exchange$ into $iTemp[2]$ (high 32 bits) and $iTemp[1]$ (low 32 bits) (Line 5). And $iTemp[1]$ is the element that each thread must provide. Lastly, the shuffle instruction is used to exchange the elements among the threads (Line 6).
+To convert dynamic indexing into static one, we design Algorithm \ref{algo:basic} for step 3 in Figure \ref{fig:optalgo1} and Algorithm \ref{algo:basic2} for steps 4 and 5 in Figure \ref{fig:optalgo2}. Both algorithms can change dynamic indexing into static indexing and reduce the number of memory accesses. Figure \ref{fig:exchange} illustrates the process of Algorithm \ref{algo:basic}. We first load the corresponding first and fifth input elements into $iTemp$ before passing it to Algorithm \ref{algo:basic}. Then we pack two 32-bit elements into a 64-bit variable $exchange$, where $iTemp[4]$ and $iTemp[0]$ are the high and low 32 bits, respectively (Line 2).  Threads $t0$ and $t1$ must provide their fifth elements, which are the high 32 bits of $exchange$, thus we right shift $exchange$ in both threads by 32 to place $iTemp[4]$ in the low 32 bits. Threads $t2$ and $t3$ must provide their first elements, which are already the low 32 bits of $exchange$. Therefore, we right shift $exchange$ in both threads by 0. The shift amounts of each thread is calculated on the basis of the thread ID (Line 3). Next, unpack $exchange$ into $iTemp[2]$ (high 32 bits) and $iTemp[1]$ (low 32 bits) (Line 5). In addition, $iTemp[1]$ is the element that each thread must provide. Lastly, the shuffle instruction is used to exchange the elements among the threads (Line 6).
 
 \begin{algorithm}[t!]
 	\KwIn{$iTemp$}
@@ -108,7 +108,9 @@ To convert dynamic indexing into static one, we design Algorithm \ref{algo:basic
 	\label{algo:basic2}
 \end{algorithm}
 
-Algorithm \ref{algo:basic} successfully replace dynamic indexing $i$ in $shfl\_xor(iTemp[i],2)$ with static indexing $1$ in $shfl\_xor(iTemp[1],2)$. {\color{red}And therefore all thread local variables can be put in registers,} which significantly improve the performance of convolution. Steps 4 and 5 in Figure \ref{fig:optalgo2} have similar procedure as step 3 in Figure \ref{fig:optalgo1}. Thus, we slightly modify Algorithm \ref{algo:basic} to obtain Algorithm \ref{algo:basic2}. {\color{red}Other filter sizes can also be handled automatically by our method. For filters of size $3 \times 3$, only Algorithm \ref{algo:basic} is needed to retrieve the second element. For filters of size $7 \times 7$, we consider it as a combination of a $7 \times 5$ filter and a $7 \times 3$ filter with one overlapped column. Then we use Algorithm \ref{algo:basic} and Algorithm \ref{algo:basic2} to retrieve elements for the $7 \times 7$ filter.}
+Algorithm \ref{algo:basic} successfully replace dynamic indexing $i$ in $shfl\_xor(iTemp[i],2)$ with static indexing $1$ in $shfl\_xor(iTemp[1],2)$. {\color{red}Therefore all the thread local variables can be put in registers,} which improves the performance of convolution. Steps 4 and 5 in Figure \ref{fig:optalgo2} have similar procedure as step 3 in Figure \ref{fig:optalgo1}. Thus, we slightly modify Algorithm \ref{algo:basic} to obtain Algorithm \ref{algo:basic2}. {\color{red}Other filter sizes can also be handled automatically by our method. For the filter of size $n \times n$, we first try to divide the filter into a number of $n \times 5$ sub-filters. If $n$ is not divisible by 5, then we divide remaining columns into a number of $n \times 3$ sub-filters with some overlapped columns. For example, a $7 \times 7$ filter can be divided into a $7 \times 5$ sub-filter and a $7 \times 3$ sub-filter with one overlapped column. Each $n \times 5$ and $n \times 3$ filters can be processed by Algorithm \ref{algo:basic} and Algorithm \ref{algo:basic2}.} 
+
+%For filters of size $3 \times 3$, only Algorithm \ref{algo:basic} is needed to retrieve the second element. For filters of size $7 \times 7$, we consider it as a combination of a $7 \times 5$ filter and a $7 \times 3$ filter with one overlapped column. Then we use Algorithm \ref{algo:basic} and Algorithm \ref{algo:basic2} to retrieve elements for the $7 \times 7$ filter.}
 
 In summary, Algorithms \ref{algo:basic} and Algorithm \ref{algo:basic2} can reduce the number of memory transactions from 5 to 2 and 25 to 10 when 5 and 25 input elements are loaded, respectively. This reduction greatly improves the performance of the convolution.
 
@@ -121,7 +123,7 @@ In summary, Algorithms \ref{algo:basic} and Algorithm \ref{algo:basic2} can redu
 \label{fig:rowreuse}
 \end{figure}
 
-Figure \ref{fig:rowreuse} shows that when sliding the filter over the input image along the height dimension, we can obtain a column of output elements. Our design then uses one thread to calculate one column of output elements. Based on Figure \ref{fig:rowreuse},
+Figure \ref{fig:rowreuse} shows that when sliding the filter over the input image along the height dimension, we can obtain a column of output elements. In the proposed method, we then use one thread to calculate one column of output elements. Referring to Figure \ref{fig:rowreuse},
 we can perform convolution as follows:
 
 \begin{gather*}
@@ -155,10 +157,10 @@ load\ row_{i4}:
 
 We can see from above equations that only 5 rows are loaded to calculate output elements. {\color{red}Though the number of accesses to $out$ is increased, we store $out$ in registers and the overhead for the increased number of store operations is negligible.} A generalized description of the method is
 shown in Algorithm \ref{algo:rowreuse}, where $row$ denotes the row loaded from the input, $index$ denotes the index of $row$, $filter$ denotes
-the vector of filter rows and $filter[i]$ means the $i$th row of the filter. Lines 1-5 deal with the first $F_H-1$ rows ($row_{i1}$ and $row_{i2}$ in Figure \ref{algo:rowreuse}), which
-are needed by less than $F_H$ output elements. Lines 6-11 deal with the rows that are needed by exact $F_H$ output elements ($row_{i3}$ in
-Figure \ref{algo:rowreuse}). Lines 12-17 deal with last $F_H-1$ rows, which are needed by less than $F_H$ output elements ($row_{i4}$
-and $row_{i5}$ in Figure \ref{algo:rowreuse}).
+the vector of filter rows and $filter[i]$ means the $i$th row of the filter. Lines 1-5 deal with the first $F_H-1$ rows ($row_{i0}$ and $row_{i1}$ in Figure \ref{algo:rowreuse}), which
+are needed by less than $F_H$ output elements. Lines 6-11 deal with the rows that are needed by exact $F_H$ output elements ($row_{i2}$ in
+Figure \ref{algo:rowreuse}). Lines 12-17 deal with last $F_H-1$ rows, which are needed by less than $F_H$ output elements ($row_{i3}$
+and $row_{i4}$ in Figure \ref{algo:rowreuse}).
 
 \begin{algorithm}
 	\KwIn{$row$, $index$, $filter$, $Out$}

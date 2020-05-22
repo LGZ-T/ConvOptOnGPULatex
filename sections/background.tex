@@ -8,8 +8,8 @@ GPU. Like a modern CPU, a GPU consists of multiple memory hierarchies. The threa
 the lowest access latency (1-2 cycles). The SM local L1 caches and shared memory provide a larger storage capacity over the thread-local
 registers but have modestly higher accessing latency of around 30 cycles. All the SMs share a unified L2 cache that provides an accessing
 latency of about 200 cycles. The off-chip global memory, similar to the RAM in a CPU system, provides the largest memory storage capacity
-on the GPU but has the longest accessing latency of around 500 cycles. The key to optimizing memory performance is to make use of the fast
-memory sub-systems (i.e., registers and shared memory) and reduce the number of memory accesses or transactions. Our work is design to
+on the GPU but has the longest accessing latency of around 500 cycles. Local memory resides in global memory and is used to hold variables with dynamic indexing or too large to fit into registers. It has the same access latency as global memory. The key to optimizing memory performance is to make use of the fast
+memory sub-systems (i.e., registers and shared memory) and reduce the number of memory accesses or transactions. Our work is designed to
 provide such capabilities for convolution operations.
 
 \subsection{Convolution Operations}
@@ -20,10 +20,10 @@ provide such capabilities for convolution operations.
   \label{fig:convlowering}
 \end{figure}
 
-Our work targets two representative convolution operations: 2D and deep-wise convolution. The computational kernel of 2D convolution takes
+Our work targets three representative convolution operations: 2D, deep-wise and multi-channel 2D convolutions. The computational kernel of 2D convolution takes
 as input a 2D single-channel feature map and a channel filter. The filter slides over the input feature map to perform an element-wise
 multiplication over the input elements within the filter. Depth-wise convolution takes as input a 2D feature map and a bank of 2D filters.
-Each filter is convolved with the corresponding input channel to produce one output channel.
+Each filter is convolved with the corresponding input channel to produce one output channel. In the multi-channel 2D convolution, all filters are used to convolve with the same input feature map to compute one output feature map.
 
 
 

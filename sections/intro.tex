@@ -1,9 +1,9 @@
 \section{Introduction}
 Convolution is a fundamental building block for many application tasks, including image and video processing and machine learning models.
-Convolution can be performed on multiple dimensions, but  2D and depth-wise convolutions are among the most frequently used application
+Convolution can be performed on multiple dimensions, but 2D, depth-wise and multi-channel 2D convolutions are among the most frequently used application
 scenarios. Specifically, 2D convolution is often used in image filtering, frame
-interpolation~\cite{Perrot2014Fine,Ma2014Optimized,Rudi2015Image,Niklaus2017Video}, and Convolutional Neural Networks (CNNs)
-\cite{Krizhevsky2012ImageNet,SimonyanZ14a,HeZRS16,SzegedyLJSRAEVR15}. Depth-wise convolution is the building block of many embedded CNNs
+interpolation~\cite{Perrot2014Fine,Ma2014Optimized,Rudi2015Image,Niklaus2017Video},  the multi-channel 2D convolution is at the core of Convolutional Neural Networks (CNNs)
+\cite{Krizhevsky2012ImageNet,SimonyanZ14a,HeZRS16,SzegedyLJSRAEVR15} and the depth-wise convolution is the building block of many embedded CNNs
 \cite{Sandler_2018_CVPR,Ma_2018_ECCV,tan2019efficientnet}. However, convolution operations are computation and memory intensive
 \cite{cavigelli2015accelerating}, and account for nearly 90\% of the overall runtime \cite{Li2016Performance} for representative image and
 machine learning processing tasks. Therefore, there is a critical need for accelerating convolution operations.
@@ -13,8 +13,8 @@ machine learning processing tasks. Therefore, there is a critical need for accel
 A wide range of techniques have been proposed to accelerate convolution operations
 \cite{Iandola2014Communication,vasilache2014fast,lavin2016fast,cho2017mec,Zhen2018Optimizing,Vasudevan2017Parallel,Chellapilla2006High,zhang2015dwarfcode}.
 Among these methods, general matrix multiplication (GEMM) \cite{Vasudevan2017Parallel,Chellapilla2006High}, fast fourier transform (FFT)
-\cite{vasilache2014fast} and Winograd \cite{lavin2016fast} methods are the broadly adopted ones;  all of which follow a three-step
-processing pipeline. The algorithm first transforms the input and a filter (which is applied on the input) into two matrices. Then, fast
+\cite{vasilache2014fast} and winograd \cite{lavin2016fast} methods are the broadly adopted ones;  all of which follow a three-step
+processing pipeline. The algorithms first transforms the input and a filter (which is applied on the input) into two matrices. Then, fast
 matrix multiplication algorithms \cite{karstadt2017matrix,scott2015matrix} are performed on the two matrices before finally converting the
 result into the output. Due to the large size of the matrices a convolution algorithm typically works on, the input and output matrices
 typically have to be stored on the GPU global memory. However, this processing pipeline can incur many GPU global memory transactions (or
@@ -27,7 +27,7 @@ responsible for the whole-system performance bottleneck. Therefore, prior optimi
 executing convolution operations on GPUs.
 
 
-This paper aims to reduce the memory accessing overhead when executing convolution operations on GPUs. By reducing the number of memory
+This study aims to optimize the memory performance involved when executing convolution operations on GPUs. By reducing the number of memory
 access, we can significantly improve the performance of convolution operations. To this end, we introduce two novel optimization techniques
 for operations performed on columns and rows. The first technique exploits column reuse by utilizing shuffle instructions (supported by
 both CUDA and OpenCL and hence is applicable to mainstream GPUs) to exchange elements among threads within the same GPU warp (or working
