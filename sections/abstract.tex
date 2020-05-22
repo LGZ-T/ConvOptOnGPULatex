@@ -12,23 +12,8 @@ of row elements. Our approach is simple yet effective and can work on existing C
 %
 We apply our approach to three representative convolutional operations, 2D convolution, depth-wise convolution and multi-channel 2D convolution on an NVIDIA 2080Ti GPU. For 2D
 convolution, our approach delivers over 2x faster performance than the state-of-the-art image processing libraries. For depth-wise
- and multi-channel 2D convolutions, we obtain up to $4\times$ and $2\times$ speedups over the quickest algorithm of cuDNN.  
+ and multi-channel 2D convolutions, we obtain up to $4\times$ and $2\times$ speedups over the quickest algorithm of cuDNN. 
 
-
-
-
-%Convolution computation is a common operation in deep neural networks (DNNs) and is often responsible for the performance bottleneck
-%during model training and inferencing. Existing approaches for accelerating convolution operations aim to reduce the computational
-%complexity. However, such strategies often increase the memory footprint with extra memory accesses, leaving much room for performance
-%optimization when training and running DNNs on GPUs.
-%
-%This paper presents a novel approach for optimizing memory accessing of convolution operations, specifically targeting GPU execution. Our
-%approach leverages two optimization techniques to reduce the number of memory transactions. First, we use CUDA shuffle instructions to
-%exchange overlapped columns of input when sliding a filter over an input along the width dimension. Second, we multiply each overlapped
-%row of an input with multiple rows of a filter when sliding the filter along the height dimension. We apply our approach to both 2D and
-%3D convolutions and evaluate it on NVIDIA Tesla K40 GPU and NVIDIA RTX 2080 Ti. For 2D convolution, our approach delivers over 2X faster
-%performance than the state-of-the-art image processing libraries. For 3D convolution with one and three input channels, we obtain up to
-%2.5x speedups over the fastest algorithm of cuDNN.
 \end{abstract}
 
 %% End of generated code
