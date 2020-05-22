@@ -110,7 +110,7 @@ reduce the number of memory transactions from 5 to 2 and 25 to 10 when 5 and 25 
 the performance of the convolution.
 
 \mypara{Generalizaiton.} While we describe our approach using a concrete working example with a pre-defined filter size, our algorithms can
-be generalized to filters with a different size. To apply our approach to a filter of size $n \times n$, we will first divide the filter
+be generalized to filters with an arbitary size. To apply our approach to a filter of size $n \times n$, we will first divide the filter
 into a number of $n \times 5$ sub-filters. Next, we divide remaining columns into a number of $n \times 3$ sub-filters with some overlap
 columns. For example, a $7 \times 7$ filter can be divided into a $7 \times 5$ sub-filter and a $7 \times 3$ sub-filter with one overlap
 column. Each $n \times 5$ and $n \times 3$ filters can be processed by Algorithm \ref{algo:basic} and Algorithm \ref{algo:basic2},
