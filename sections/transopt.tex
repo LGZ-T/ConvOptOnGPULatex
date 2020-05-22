@@ -100,15 +100,31 @@ $iTemp[1]$. Finally, we use the shuffle instruction to exchange the elements amo
 	\label{algo:basic2}
 \end{algorithm}
 
-Algorithm \ref{algo:basic} successfully replace dynamic indexing $i$ in $shfl\_xor(iTemp[i],2)$ with static indexing $1$ in $shfl\_xor(iTemp[1],2)$. {\color{red}Therefore all thread local variables can be put in registers,} which significantly improve the performance of convolution. Steps 4 and 5 in Figure \ref{fig:optalgo2} have similar procedure as step 3 in Figure \ref{fig:optalgo1}. Thus, we slightly modify Algorithm \ref{algo:basic} to obtain Algorithm \ref{algo:basic2}. {\color{red}Other filter sizes can also be handled automatically by our method. For the filter of size $n \times n$, we first try to divide the filter into a number of $n \times 5$ sub-filters. If $n$ is not divisible by 5, then we divide remaining columns into a number of $n \times 3$ sub-filters with some overlapped columns. For example, a $7 \times 7$ filter can be divided into a $7 \times 5$ sub-filter and a $7 \times 3$ sub-filter with one overlapped column. Each $n \times 5$ and $n \times 3$ filters can be processed by Algorithm \ref{algo:basic} and Algorithm \ref{algo:basic2}.}
+Using Algorithm \ref{algo:basic}, we can replace the compile-time undecidable dynamic index $i$ in $shfl\_xor(iTemp[i],2)$ with static
+indexing $1$ in $shfl\_xor(iTemp[1],2)$ of our working example. By doing so, we promote register allocation by allowing the compiler to put
+all the thread-local variables into the fast GPU registers (that have access latency of 1 to 2 cycles as opposed to 500 cycles when the
+data are stored in the local memory). Since steps 4 and 5 of our implementation (Figure \ref{fig:optalgo2}) adopt a similar procedure as
+step 3 in Figure \ref{fig:optalgo1}, we can adapt Algorithm \ref{algo:basic} to obtain Algorithm \ref{algo:basic2} with minor
+modifications. \FIXME{Discuss algorithm 1 here.} For this working example, Algorithms \ref{algo:basic} and \ref{algo:basic2} respectively
+reduce the number of memory transactions from 5 to 2 and 25 to 10 when 5 and 25 input elements are loaded. This reduction greatly improves
+the performance of the convolution.
 
-In summary, Algorithms \ref{algo:basic} and Algorithm \ref{algo:basic2} can reduce the number of memory transactions from 5 to 2 and 25 to 10 when 5 and 25 input elements are loaded, respectively. This reduction greatly improves the performance of the convolution.
+\mypara{Generalizaiton.} While we describe our approach using a concrete working example with a pre-defined filter size, our algorithms can
+be generalized to filters with a different size. To apply our approach to a filter of size $n \times n$, we will first divide the filter
+into a number of $n \times 5$ sub-filters. Next, we divide remaining columns into a number of $n \times 3$ sub-filters with some overlap
+columns. For example, a $7 \times 7$ filter can be divided into a $7 \times 5$ sub-filter and a $7 \times 3$ sub-filter with one overlap
+column. Each $n \times 5$ and $n \times 3$ filters can be processed by Algorithm \ref{algo:basic} and Algorithm \ref{algo:basic2},
+respectively.
+
+
+
+
 
 
 \begin{figure}[t!]
 	\centering
 	\includegraphics[width=\columnwidth,height=4.5cm]{./figure/exchange.eps}
-\caption{Convert the dynamic indexing of array $iTemp$ into static indexing. Therefore, The compiler can put $iTemp$ into registers instead of local memory.}
+\caption{Convert the dynamic indexing of array $iTemp$ into static indexing. This allows the compiler to allocate $iTemp$ in registers instead of local memory.}
 \label{fig:exchange}
 \end{figure}
 
