@@ -89,16 +89,19 @@ $iTemp[1]$. Finally, we use the shuffle instruction to exchange the elements amo
 
 
 \begin{algorithm}[t!]
-	\KwIn{$iTemp$}
+\tcp{$iTemp$ contains input elements either loaded from global memory or through \emph{shuffle} instructions.}
+\KwIn{$iTemp$}
 	\KwOut{$iTemp$}
 	$tid \gets threadIdx.x$\;
-	$mov\ exchange, \{iTemp[0], iTemp[2]\}$\;
-	$shift \gets ((tid+1)\&1)<<5$\;
+	$mov\ exchange, \{iTemp[0], iTemp[4]\}$\;
+	$shift \gets ((tid+2)\&2)<<4$\;
 	$exchange \gets exchange >> shift$\;
-	$mov\ \{iTemp[0],iTemp[1]\}, exchange$\;
-	$iTemp[1] \gets shfl\_xor(iTemp[0],1)$\;	
-	\caption{RetrieveSecondElement}
-	\label{algo:basic2}
+	$mov\ \{iTemp[1],iTemp[2]\}, exchange$\;
+	$iTemp[2] \gets shfl\_xor(iTemp[1],2)$\;	
+	
+	\caption{RetrieveThirdElement}
+	\label{algo:basic}
+	
 \end{algorithm}
 
 Using Algorithm \ref{algo:basic}, we can replace the compile-time undecidable dynamic index $i$ in $shfl\_xor(iTemp[i],2)$ with static
@@ -106,7 +109,7 @@ indexing $1$ in $shfl\_xor(iTemp[1],2)$ of our working example. By doing so, we 
 all the thread-local variables into the fast GPU registers (that have access latency of 1 to 2 cycles as opposed to 500 cycles when the
 data are stored in the local memory). Since steps 4 and 5 of our implementation (Figure \ref{fig:optalgo2}) adopt a similar procedure as
 step 3 in Figure \ref{fig:optalgo1}, we can adapt Algorithm \ref{algo:basic} to obtain Algorithm \ref{algo:basic2} with minor
-modifications. \FIXME{Discuss algorithm 1 here.} For this working example, Algorithms \ref{algo:basic} and \ref{algo:basic2} respectively
+modifications. {\color{red}The main distinction between two algorithms is that four threads are involved to exchange the elements in step 3, whereas only two adjacent threads are involved in step 4 and 5. Therefore, the shift amounts for each thread (Line 3) should be recalculated, and the arguments of the shuffle instruction (Line 6) should be changed.} For this working example, Algorithms \ref{algo:basic} and \ref{algo:basic2} respectively
 reduce the number of memory transactions from 5 to 2 and 25 to 10 when 5 and 25 input elements are loaded. This reduction greatly improves
 the performance of the convolution.
 
@@ -134,14 +137,13 @@ with one overlap column. Each $n \times 5$ and $n \times 3$ filters can be proce
 	\KwIn{$iTemp$}
 	\KwOut{$iTemp$}
 	$tid \gets threadIdx.x$\;
-	$mov\ exchange, \{iTemp[0], iTemp[4]\}$\;
-	$shift \gets ((tid+2)\&2)<<4$\;
+	$mov\ exchange, \{iTemp[0], iTemp[2]\}$\;
+	$shift \gets ((tid+1)\&1)<<5$\;
 	$exchange \gets exchange >> shift$\;
-	$mov\ \{iTemp[1],iTemp[2]\}, exchange$\;
-	$iTemp[2] \gets shfl\_xor(iTemp[1],2)$\;	
-	
-	\caption{RetrieveThirdElement}
-	\label{algo:basic}
+	$mov\ \{iTemp[0],iTemp[1]\}, exchange$\;
+	$iTemp[1] \gets shfl\_xor(iTemp[0],1)$\;	
+	\caption{RetrieveSecondElement}
+	\label{algo:basic2}
 \end{algorithm}
 
 

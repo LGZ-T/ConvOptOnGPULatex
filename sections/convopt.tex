@@ -1,4 +1,5 @@
-\subsection{Putting Together\label{sec:together}}
+\subsection{Putting Together}
+\label{sec:together}
 \begin{figure}
 	\centering
 	\includegraphics[width=0.9\columnwidth,height=5.5cm]{./figure/overalldesign.eps} \caption{The output is produced by sliding a $3 \times
@@ -63,8 +64,7 @@ utilize the threads within a warp, we divide elements of the last two columns ev
 
 \mypara{Generalization.} In Algorithm \ref{algo:overalldesign}, we describe our generalized solution. Here, we process the sub-blocks with
 exactly 32 columns (i.e., the default wrap size of our evaluation GPU) and the last sub-block in Lines 4-15 and 16-19, respectively. In
-this way, each GPU thread calculates one column of the output elements. This is done through a number of steps. First, each thread
-calculates the address of the first input element it needs (Lines 9). Next, each thread uses Algorithms \ref{algo:basic} and
-\ref{algo:basic2} to fulfill the row vector $iTemp$ (Line 10). Then, each thread passes the vector $iTemp$ to Algorithm \ref{algo:rowreuse}
-to calculate multiple output elements and store results in register array $sum$ (Line 11). Finally, each thread writes the processed
-element of $sum$ into the result array $O$ (Line 13).
+this way, each GPU thread calculates one column of the output elements. This is done through a number of steps. {\color{red}First, each thread block loads the filter into shared memory and divide the filter into a combination of 3-column and 5-column sub-filters. Second, each thread
+calculates the address of the first input element it needs (Lines 9). Next, for each output element and sub-filter, each thread loads corresponding input elements into $iTemp$ and passes it to Algorithms \ref{algo:basic} and
+\ref{algo:basic2} to fulfill the row vector $iTemp$ (Line 10). Then, each thread passes the fulfilled vector $iTemp$ to Algorithm \ref{algo:rowreuse}
+to calculate multiple output elements and store results in register array $sum$ (Line 11). Finally, when calculation of one output element is completed, we write the corresponding result in $sum$ into the result array $O$ (Line 13).} 
