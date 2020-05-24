@@ -4,10 +4,9 @@ Winograd-based convolutions are broadly adopted convolution algorithms.
 
 GEMM-based convolution is the first attempt to optimize convolution. Chellapilla et al. \cite{Chellapilla2006High} developed an unrolling
 convolution algorithm  called the im2col convolution algorithm. They lowered the convolutions into a matrix multiplication, which is
-highly optimized on GPUs. Despite some duplicate input elements involved in the computation, the performance gain of this algorithm is impressive. Chetlur et al. \cite{ChetlurWVCTCS14}, who worked for NVIDIA, integrated the unrolling convolution algorithm into cuDNN.
+highly optimized on GPUs. Despite some duplicate input elements involved in the computation, the performance gain of this algorithm is impressive.
 
-After obtaining the satisfactory optimization of GEMM, researchers shifted their focus from GEMM-based convolution to FFT- and
-Winograd-based ones. Both of the convolutions can reduce computational complexity and improve convolution performance. Mathieu et al.
+FFT- and Winograd-based convolutions can reduce computational complexity and improve convolution performance. Mathieu et al.
 \cite{mathieu2013fast} proposed an FFT-based convolution to compute convolutions as pointwise products in the Fourier domain and reuse the
 transformed input data, which significantly reduce the complexity of the convolution. This method greatly improved the
 performance of convolution compared with GEMM-based implementation. However, FFT-based convolution is more suitable for large filters than

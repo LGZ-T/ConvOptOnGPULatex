@@ -14,10 +14,9 @@ A wide range of techniques have been proposed to accelerate convolution operatio
 \cite{Iandola2014Communication,vasilache2014fast,lavin2016fast,cho2017mec,Zhen2018Optimizing,Vasudevan2017Parallel,Chellapilla2006High,zhang2015dwarfcode}.
 Among these methods, general matrix multiplication (GEMM) \cite{Vasudevan2017Parallel,Chellapilla2006High}, fast fourier transform (FFT)
 \cite{vasilache2014fast} and winograd \cite{lavin2016fast} methods are the broadly adopted ones;  all of which follow a three-step
-processing pipeline. The algorithms first transforms the input and a filter (which is applied on the input) into two matrices. Then, fast
+processing pipeline. The algorithms first transform the input and a filter (which is applied on the input) into two matrices. Then, fast
 matrix multiplication algorithms \cite{karstadt2017matrix,scott2015matrix} are performed on the two matrices before finally converting the
-result into the output. Due to the large size of the matrices a convolution algorithm typically works on, the input and output matrices
-typically have to be stored on the GPU global memory. However, this processing pipeline can incur many GPU global memory transactions (or
+result into the output. However, this processing pipeline can incur many GPU global memory transactions (or
 memory accesses) during the transformation phase due to the involvement of matrix multiplications and duplicate elements of the transformed
 matrices. Unfortunately, GPU global memory accessing is typically expensive. For example, on an NVIDIA GPU, the global memory accessing
 latency is 16.7x longer than that of the shared memory. As a result, the large number of global memory transactions introduced by
@@ -27,8 +26,7 @@ responsible for the whole-system performance bottleneck. Therefore, prior optimi
 executing convolution operations on GPUs.
 
 
-This study aims to optimize the memory performance involved when executing convolution operations on GPUs. By reducing the number of memory
-access, we can significantly improve the performance of convolution operations. To this end, we introduce two novel optimization techniques
+This study aims to optimize the memory performance involved when executing convolution operations on GPUs. To this end, we introduce two novel optimization techniques
 for operations performed on columns and rows. The first technique exploits column reuse by utilizing shuffle instructions (supported by
 both CUDA and OpenCL and hence is applicable to mainstream GPUs) to exchange elements among threads within the same GPU warp (or working
 group). In this way, we can avoid reloading the same elements shared among different threads. We further extend the shuffle instructions to
@@ -38,7 +36,7 @@ improves the data locality of elements within a row, thereby reducing the number
 existing convolution processing pipeline. By reducing the number of memory transactions, our approach thus can improve the performance for
 convolution operations.
 
-We apply our optimization techniques to both 2D and depth-wise convolution operations and evaluate them on an NVIDIA 2080Ti GPU. We compare
+We apply our optimization techniques to 2D,  depth-wise and multi-channel 2D convolution operations and evaluate them on an NVIDIA 2080Ti GPU. We compare
 our approach against a range of highly optimized  deep neural network (DNN) libraries, including cuDNN \cite{ChetlurWVCTCS14}. Experimental
 results show that our approach delivers over 4$\times$ faster performance over the best-performing competitive strategy.
 
@@ -48,6 +46,6 @@ This paper makes the following technical contributions:
       ability over prior work.
   \item It presents a novel row reuse algorithm to improve the data locality and reduce the number of global memory transactions when
       performing convolution in the row direction (Section~\ref {sec:rowreuse}).
-  \item It describes a novel method for transforming dynamic indices into static indices. Our approach enhance register promotion,
+  \item It describes a novel method for transforming dynamic indices into static indices. Our approach enhances register promotion,
       leading to better performance (Section \ref{exp}).
 \end{itemize}

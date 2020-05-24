@@ -15,7 +15,7 @@ provide such capabilities for convolution operations.
 \subsection{Convolution Operations}
 \begin{figure}[t!]
 \centering
-  \includegraphics[width=0.75\columnwidth,height=6cm]{./figure/convlowering.eps}
+  \includegraphics[width=0.7\columnwidth,height=5cm]{./figure/convlowering.eps}
   \caption{An example (reproduced from \cite{ChetlurWVCTCS14}) of converting convolution into matrix multiplications. Here, two filters are applied to a 3-channel input.}
   \label{fig:convlowering}
   \vspace{-3mm}
@@ -44,8 +44,6 @@ loading and storing the matrix elements. Our work aims to eliminate such redunda
 \centering
   \includegraphics[width=\columnwidth,height=6cm]{./figure/twostrategies.eps}
   \caption{Example of performing a 2D convolution using a GPU. Here, the filter size is $5 \times 5$, the input image size is $6 \times 11$
-  and the output size is $2 \times 7$. Each thread calculates one column of the output. Assume threads 0 and 1 load the required regions from input
-  image with four duplicate columns, and thread 6 loads two overlapped regions from input image and generates four duplicate rows. Numbers in
-  the square denote the index of input elements.}
+  and the output size is $2 \times 7$.}
   \label{fig:twostrategies}
 \end{figure}
