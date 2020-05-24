@@ -72,10 +72,10 @@ alternative methods for all use cases.
 
 
 \subsubsection{Setup}
-In this experiment, we compare our approach against the single-channel 2D convolution implementation from cuDNN, GEMM-im2col, ArrayFire,
-and NPP. As cuDNN provides multiple implementations, we empirically choose the fastest version, denoted as cuDNN-fastest, for evaluation.
-We apply each method to images with sizes ranging from $256 \times 256$ to $4K \times 4K$. We set the batch size, channel, height, and
-width of the input to be 1.
+In this experiment, we compare our approach against the single-channel 2D convolution implementation from cuDNN, im2col, ArrayFire, and
+NPP. As cuDNN provides multiple implementations, we empirically choose the fastest version, denoted as cuDNN-fastest, for evaluation. We
+apply each method to images with sizes ranging from $256 \times 256$ to $4K \times 4K$. We set the batch size, channel, height, and width
+of the input to be 1.
 
 
 \subsubsection{Overall results}
