@@ -224,7 +224,7 @@ configurations used in this experiment.
 %namely, MobileNetv2, ShuffleNetv2 and EfficientNet.
 %Then, we set the number of the batch size to 512 ($I_N=O_N=512$). Other batch sizes demonstrate a similar performance because all tested implementations have a linear scale as the batch size. The exact configuration is presented in Table \ref{tab:3dconvconfigs}.
 
-\subsubsection{Overall results.}
+\subsubsection{Overall results}
 Figure \ref{fig:3druntime} shows that our approach gives the best speedup. Our approach delivers an average speedup of $4.5\times$ and
 $7.6\times$ for the $3 \times 3$ and $5 \times 5$ filters, respectively. The implicit algorithm is the fastest algorithm in cuDNN in all
 test cases. It achieves an average speedup of $2.8\times$ and $1.8\times$ for the $3 \times 3$ and $5 \times 5$ filters, respectively.
