@@ -21,10 +21,12 @@ provide such capabilities for convolution operations.
   \vspace{-3mm}
 \end{figure}
 
-Our work targets three representative convolution operations: 2D, deep-wise and multi-channel 2D convolutions. The computational kernel of 2D convolution takes
-as input a 2D single-channel feature map and a channel filter. The filter slides over the input feature map to perform an element-wise
-multiplication over the input elements within the filter. Depth-wise convolution takes as input a 2D feature map and a bank of 2D filters.
-Each filter is convolved with the corresponding input channel to produce one output channel. In the multi-channel 2D convolution, all filters are used to convolve with the same input feature map to compute one output feature map.
+Our work targets three representative convolution operations: single-channel, deep-wise and multi-channel 2D convolutions. The
+computational kernel of 2D convolution takes as input a 2D single-channel feature map and a channel filter. The filter slides over the
+input feature map to perform an element-wise multiplication over the input elements within the filter. Depth-wise convolution takes as
+input a 2D feature map and a bank of 2D filters. Each filter is convolved with the corresponding input channel to produce one output
+channel. In the multi-channel 2D convolution, all filters are used to convolve with the same input feature map to compute one output
+feature map.
 
 
 
