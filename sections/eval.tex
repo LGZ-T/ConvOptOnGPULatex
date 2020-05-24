@@ -15,7 +15,7 @@ Intel Xeon E5-2697 CPU with 252GB memory, running Linux kernel v4.15.0. We use C
       library implements 2D convolutions on GPU. ArrayFire uses Just In Time compiling for standard arithmetic operations. Thus, the
       first run of an ArrayFire application takes longer than the second run. In the experiment, we run ArrayFire twice in each test and
       record the second runtime.
-  \item N\textbf{VIDIA Performance Primitives (NPP)}. This is an image and signal processing library. We use NPP for 2D convolutions
+  \item \textbf{NVIDIA Performance Primitives (NPP)}. This is an image and signal processing library. We use NPP for 2D convolutions
       only.
   \item \textbf{GEMM-im2col}. We extract the implementation of the GEMM-im2col from Caffe \cite{jia2014caffe} and take it as a baseline
       for the 2D and multi-channel 2D convolutions.
