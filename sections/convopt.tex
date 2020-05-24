@@ -52,14 +52,11 @@ Figure \ref{fig:overalldesign} shows the mapping process of GPU threads to outpu
 over an $8 \times 8$ input.  Given that 2D convolutions typically produce an output image that has the same size as the input image, the
 input image should be padded. To reduce the memory pressure, we do not actually allocate GPU memory space for the padded elements. Instead,
 we use different methods to calculate the edge and inner elements of the output. The edge and inner elements are represented by the shaded
-and dashed squares in Figure \ref{fig:overalldesign}, respectively.Figure \ref{fig:overalldesign} shows the mapping process of the threads
-onto output elements. Given that 2D convolutions normally produce an output image that has the same size as the input image, the latter
-should be padded. But we do not actually allocate memory on the GPU. We use different methods to calculate the edge and inner elements of
-the output. The edge and inner elements are represented by the shaded and dashed squares in Figure \ref{fig:overalldesign}, respectively.
+and dashed squares in Figure \ref{fig:overalldesign}, respectively.
 
 
 In this example, we assume each warp contain four threads (Figure \ref{fig:overalldesign}). Therefore, we will divide the inner elements
-into multiple sub-blocks – each sub-block contains four columns so that a column can be processed by one of the four GPU threads within a
+into multiple sub-blocks and each sub-block contains four columns so that a column can be processed by one of the four GPU threads within a
 wrap. In our case, we will have two sub-blocks, where sub-block 0 contains four columns, but sub-block 1 only contains two columns. To
 utilize the threads within a warp, we divide elements of the last two columns evenly among the four threads.
 

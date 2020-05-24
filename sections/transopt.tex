@@ -14,13 +14,13 @@ optimizations can be used together.
 
 \begin{figure*}[!t]
 \centering
-\subfloat[Direct convolution: Each thread loads 5 input elements from global memory.]{\includegraphics[width=0.32\textwidth,height=3.6cm]{./figure/directconv.eps}
+\subfloat[Direct convolution: Each thread loads 5 input elements from global memory.]{\includegraphics[width=0.3\textwidth,height=3.2cm]{./figure/directconv.eps}
 	\label{fig:directalgo}}
 \hspace{0em}
-\subfloat[Optimized convolution: each thread retrieves its third element from the corresponding thread.]{\includegraphics[width=0.32\textwidth,height=3.6cm]{./figure/optalgo1.eps}
+\subfloat[Optimized convolution: each thread retrieves its third element from the corresponding thread.]{\includegraphics[width=0.3\textwidth,height=3.2cm]{./figure/optalgo1.eps}
 	\label{fig:optalgo1}}
 \hspace{0em}
-\subfloat[Our approach: each thread retrieves its second and fourth elements from corresponding threads.]{\includegraphics[width=0.32\textwidth,height=3.6cm]{./figure/optalgo2.eps}
+\subfloat[Our approach: each thread retrieves its second and fourth elements from corresponding threads.]{\includegraphics[width=0.3\textwidth,height=3.2cm]{./figure/optalgo2.eps}
 	\label{fig:optalgo2}}
 
 \caption{Illustration of direct and optimized convolution. We use a $5 \times 5$ filter  and each thread calculates the convolution for one
@@ -134,7 +134,7 @@ with one overlap column. Each $n \times 5$ and $n \times 3$ filters can be proce
 
 \begin{figure}[t!]
 	\centering
-	\includegraphics[width=\columnwidth,height=4.5cm]{./figure/exchange.eps}
+	\includegraphics[width=0.8\columnwidth,height=3.5cm]{./figure/exchange.eps}
 \caption{Convert the dynamic indexing of array $iTemp$ into static indexing. This allows the compiler to allocate $iTemp$ in registers instead of local memory.}
 \label{fig:exchange}
 \end{figure}
