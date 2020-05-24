@@ -135,7 +135,7 @@ with one overlap column. Each $n \times 5$ and $n \times 3$ filters can be proce
 \begin{figure}[t!]
 	\centering
 	\includegraphics[width=0.8\columnwidth,height=3.5cm]{./figure/exchange.eps}
-\caption{Convert the dynamic indexing of array $iTemp$ into static indexing. This allows the compiler to allocate $iTemp$ in registers instead of local memory.}
+\caption{Convert dynamic indexing of array $iTemp$ into static indexing, allowing  $iTemp$ to be allocated in registers instead of the local memory.}
 \label{fig:exchange}
 \end{figure}
 
@@ -157,15 +157,15 @@ with one overlap column. Each $n \times 5$ and $n \times 3$ filters can be proce
 
 \subsection{Row Reuse Optimization}
 \label{sec:rowreuse}
-\begin{figure}
+\begin{figure}[t!]
 	\centering
 	\includegraphics[width=0.8\columnwidth,height=3cm]{./figure/rowreuse.eps}
 \caption{A $3 \times 3$ filter is used to slide over the input image along height dimension, which produces a column of output elements.}
 \label{fig:rowreuse}
 \end{figure}
 
-\mypara{Working example.} Consider the standard convolution example shown in Figure \ref{fig:rowreuse} as a working example for row reuse
-algorithm. When sliding the filter over the input image along the height dimension, it produces a column of elements as the output.
+\mypara{Working example.} Consider the standard convolution example shown in Figure \ref{fig:rowreuse} as a working example for our row
+reuse algorithm. When sliding the filter over the input image along the height dimension, it produces a column of elements as the output.
 
 
 \subsubsection{Standard convolution} Assume we use use one thread to calculate one column of output elements. For the working example given in Figure
