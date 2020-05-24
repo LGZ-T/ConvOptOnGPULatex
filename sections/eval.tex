@@ -325,5 +325,5 @@ implementation achieves an average speedup of 19.5$\times$ and 25.6$\times$ over
 respectively. This translates to an improvement of 1.23$\times$ and 1.13$\times$ over the fastest algorithm in cuDNN, for one and three
 input channels, respectively. Since our approach does not optimize for input channels, it does not give performance improvement for layer
 configurations that have a large number of channels (e.g., CONV10 and CONV11). This can be improved by \FIXME{Explain how you can improve
-this.}. Nonetheless, our approach gives significant speedup for convolution layers with a small number of channels (which is the typical
-case for many CNNs).
+this.}. Nonetheless, our approach significantly boosts the performance for convolution layers with a small number of channels (which is the
+typical case for many CNNs).
