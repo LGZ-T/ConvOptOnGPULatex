@@ -42,6 +42,10 @@ generate one output channel.
 little variance during execution runs, less than 2\%.  The data type is 32-bit (single-precision) floating point, and all the data are
 organized as 4D tensors $(N,C,H,$ and $W)$. In this work, we test 2D, multi-channel 2D and depth-wise convolutions with two filters sizes,
 $3 \times 3$ and $5 \times 5$, because these are commonly used filter sizes.
+%
+%\subsection{Notations}
+%Throughout the evaluation, we use $I$, $F$, and $O$ to represent the input, the filter, and the output respectively, $N$, $C$, $H$, and $W$
+%to denote the batch size, the channel, the height, and the width, respectively.
 
 \section{Experimental Results}
 \label{exp} In this section, we report our results 2D convolution (Section \ref{sec:ex2dc}), depth-wise convolution (Section
@@ -65,11 +69,18 @@ alternative methods for all use cases.
 
 
 In this experiment, we compare our approach against the 2D convolution implementation obtained from cuDNN, im2col,  ArrayFire, and NPP. We
-apply each metho to image size ($I_H \times I_W$) ranging from $256 \times 256$ to $4K \times 4K$, where $I_N=F_N=1$ and $I_C=F_C=1$.
+apply each method to image size ($I_H \times I_W$) ranging from $256 \times 256$ to $4K \times 4K$. We set the batch size, channel, height,
+and width of the input to be 1.
+
+
+
 
 Figure \ref{fig:2druntime} presents the speedups of cuDNN, ArrayFire, NPP and our implementation over im2col. The results show that cuDNN is not suitable for 2D convolutions in contrast to ArrayFire, NPP and the proposed method. The average speedups of cuDNN, ArrayFire, NPP and ours over im2col are 1.09$\times$, 2.2$\times$, 4.9$\times$ and 6.5$\times$, respectively. Our implementation exhibits superior performance over other implementations. Our implementation of the 2D convolution is derived from direct convolution. We use column (Algorithm \ref{algo:basic}, Algorithm \ref{algo:basic2}) and row reuse (Algorithm \ref{algo:rowreuse}) on direct convolution. Hence, the performance gain is mainly attributed to the reduction on the number of memory transactions.
 
-The proposed implementation achieves the best speedups in six out of ten test cases. NPP achieves the best results on small image sizes, whereas our implementation demonstrates the best results on large image sizes. We use \emph{nvidia compute} to collect memory profiles, including memory throughput and max bandwidth, of our implementation and NPP when convolving with a $3 \times 3$ filter. The results are shown in Figure \ref{fig:2dmemanaly}.
+Our approach achieves the best speedups in six out of ten test cases. NPP achieves the best results on small image sizes, whereas our
+implementation demonstrates the best results on large image sizes. We use \emph{nvidia compute} to collect memory profiles, including
+memory throughput and max bandwidth, of our implementation and NPP when convolving with a $3 \times 3$ filter. The results are shown in
+Figure \ref{fig:2dmemanaly}.
 
 We can see that as the input size increases, memory throughput and max bandwidth of our implementation exceeds that of NPP, the turning point ($1K \times 1K$ in Figure \ref{fig:2dmemanaly}) is the same as that of speedups in Figure \ref{fig:2druntimef3c12080}, which means that memory performance has a strong relationship with the performance of 2D convolutions. Next, we give a detailed analysis of why the memory throughput and max bandwidth of our implementation is low for small input sizes.
 
