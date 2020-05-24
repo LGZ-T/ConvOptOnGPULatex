@@ -41,10 +41,11 @@ generate one output channel.
 
 
 \subsection{Performance Report}
-We run each test case ten times on an unloaded machine and report the averaged running time. We found little variance during
-execution runs, less than 2\%.  The data type is 32-bit (single-precision) floating point, and all the data are organized as 4D tensors
-$(N,C,H,$ and $W)$. In this work, we test 2D, multi-channel 2D and depth-wise convolutions with two filters sizes, $3 \times 3$ and $5
-\times 5$, because these are commonly used filter sizes.
+We run each test case ten times on an unloaded machine and report the averaged running time. We found little variance during execution
+runs, less than 2\%.  All the CNNs used in evaluation use the standard 32-bit (single-precision) floating point numbers, and the data are
+organized as 4D tensors $(N,C,H,$ and $W)$, where $N$, $C$, $H$, and $W$ are the batch size, channel, height, and width, respectively. In
+this work, we test 2D, multi-channel 2D and depth-wise convolutions with two filters sizes, $3 \times 3$ and $5 \times 5$, because these
+are commonly used filter sizes.
 %
 %\subsection{Notations}
 %Throughout the evaluation, we use $I$, $F$, and $O$ to represent the input, the filter, and the output respectively, $N$, $C$, $H$, and $W$
