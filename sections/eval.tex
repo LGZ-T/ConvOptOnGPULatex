@@ -59,15 +59,14 @@ alternative methods by delivering the overall best performance.
 \subsection{Single-Channel 2D Convolution\label{sec:ex2dc}}
 \begin{figure*}
 \centering
-\subfloat[][Speedups when using $3 \times 3$ filter]{\includegraphics[width=0.85\columnwidth,height=4.5cm]{./figure/2d_conv_f3.eps}
+\subfloat[][Speedups when using $3 \times 3$ filter]{\includegraphics[width=0.85\columnwidth]{./figure/2d_conv_f3.eps}
 	\label{fig:2druntimef3c12080}}
 \hspace{0em}
-\subfloat[][Speedups when using a $3 \times 3$ filter]{\includegraphics[width=0.85\columnwidth,height=4.5cm]{./figure/2d_conv_f5.eps}
+\subfloat[][Speedups when using a $3 \times 3$ filter]{\includegraphics[width=0.85\columnwidth]{./figure/2d_conv_f5.eps}
 	\label{fig:2druntimef5c12080}}
-	
-\caption{Speedups of 2D convolutions of four implementations over GEMM-im2col when using a $3 \times 3$ (a) and a $5 \times 5$ filter (b).}
-\label{fig:2druntime}
-\vspace{-3mm}
+
+\vspace{-1mm}	\caption{Speedups of 2D convolutions of four implementations over GEMM-im2col when using a $3 \times 3$ (a) and a $5 \times
+5$ filter (b).} \label{fig:2druntime} \vspace{-3mm}
 \end{figure*}
 
 
@@ -311,7 +310,7 @@ to denote the batch size, the channel, the height, and the width, respectively.
 	\label{fig:multic3runtime2080}}
 \vspace{-2mm}
 \caption{Speedups of our approach and cuDNN over GEMM-im2col for one (left) and three (right) input channels.} \label{fig:multi2druntime}
-\vspace{-2mm}
+\vspace{-5mm}
 \end{figure*}
 
 
