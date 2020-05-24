@@ -27,11 +27,15 @@ Intel Xeon E5-2697 CPU with 252GB memory, running Linux kernel v4.15.0. We use C
 We apply our approach to three representative convolution operations, single-channel 2D convolution, depth-wise convolution and
 multi-channel 2D convolution, described as follows.
 
-\mypara{Single-channel 2D convolution.} {\color{red}One single-channel 2D filter is used to convolve in both horizontal and vertical directions in 2D spatial domain.}
+\mypara{Single-channel 2D convolution.} This applies a single-channel 2D filter to convolve the input in both horizontal and vertical
+directions in a 2D spatial domain.
 
-\mypara{Depth-wise convolution.} {\color{red}A bank of single-channel 2D filters are used to convolve with one multi-channel 2D input and 2D convolution is performed between one filter and the corresponding input channel.}
+\mypara{Depth-wise convolution.} This applies a bank of single-channel 2D filters to convolve with one multi-channel 2D input, e.g., an
+image of three colour channels, R, G and B. We apply a 2D convolution filter to each of the input channel.
 
-\mypara{Multi-channel 2D convolution.} {\color{red}A bank of multi-channel 2D filters are used to convolve with one multi-channel 2D input and 2D convolution is performed between one filter channel and the corresponding input channel. Additionally, sum up results across channels to generate one output channel.}
+\mypara{Multi-channel 2D convolution.} This applies a bank of multi-channel 2D filters convolve with one multi-channel 2D input. The 2D
+convolution is performed between one filter channel and the corresponding input channel, and the results are sum up across channels to
+generate one output channel.
 
 
 \subsection{Performance Report} We run each test case ten times on an unloaded machine and report the averaged running time. We found

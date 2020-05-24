@@ -1,7 +1,7 @@
 \section{Our Approach}
 \label{sec:strategies} In this section, we describe our two optimizations, column reuse (Section \ref{sec:creuse}) and row reuse (Section
 \ref{sec:rowreuse}), for reducing GPU memory transactions for convolution operations. In Section \ref{sec:together}, we show how the two
-optimization can be used together. 
+optimization can be used together.
 
 \subsection{Preliminaries}
 
@@ -89,7 +89,10 @@ $iTemp[1]$. Finally, we use the shuffle instruction to exchange the elements amo
 
 
 \begin{algorithm}[t!]
-\tcp{$iTemp$ contains input elements either loaded from global memory or through \emph{shuffle} instructions.}
+\small
+
+\tcp{$iTemp$: Buffer for storing input elements loaded from memory or generated through  \emph{shuffle} instructions.}
+%\tcp{$iTemp$ contains input elements either loaded from global memory or through \emph{shuffle} instructions.}
 \KwIn{$iTemp$}
 	\KwOut{$iTemp$}
 	$tid \gets threadIdx.x$\;
@@ -109,9 +112,14 @@ indexing $1$ in $shfl\_xor(iTemp[1],2)$ of our working example. By doing so, we 
 all the thread-local variables into the fast GPU registers (that have access latency of 1 to 2 cycles as opposed to 500 cycles when the
 data are stored in the local memory). Since steps 4 and 5 of our implementation (Figure \ref{fig:optalgo2}) adopt a similar procedure as
 step 3 in Figure \ref{fig:optalgo1}, we can adapt Algorithm \ref{algo:basic} to obtain Algorithm \ref{algo:basic2} with minor
-modifications. {\color{red}The main distinction between two algorithms is that four threads are involved to exchange the elements in step 3, whereas only two adjacent threads are involved in step 4 and 5. Therefore, the shift amounts for each thread (Line 3) should be recalculated, and the arguments of the shuffle instruction (Line 6) should be changed.} For this working example, Algorithms \ref{algo:basic} and \ref{algo:basic2} respectively
-reduce the number of memory transactions from 5 to 2 and 25 to 10 when 5 and 25 input elements are loaded. This reduction greatly improves
-the performance of the convolution.
+modifications.The main distinction between the two algorithms comes from how we process steps 3 – 5 shown in Figure \ref{fig:optalgo2}.
+Specifically, we use four threads to exchange the elements in step 3 for Algorithm \ref{algo:basic1}, but use only two adjacent threads in
+step 4 and 5 for Algorithm \ref{algo:basic2}. To adapt to the change of the number of threads used, we recalculate the shift offset for
+each thread (Line 3 of both algorithms) and change the arguments of the shuffle instruction (Line 6 in both algorithms).
+
+
+For this working example, Algorithms \ref{algo:basic} and \ref{algo:basic2} respectively reduce the number of memory transactions from 5 to
+2 and 25 to 10 when 5 and 25 input elements are loaded. This reduction greatly improves the performance of the convolution.
 
 \subsubsection{Generalization} While we have described our approach using a concrete working example with a pre-defined filter size, our
 algorithms can be generalized to filters with an arbitrary size. To apply our approach to a filter of size $n \times n$, we will first
@@ -134,6 +142,7 @@ with one overlap column. Each $n \times 5$ and $n \times 3$ filters can be proce
 
 
 \begin{algorithm}[t!]
+\small
 	\KwIn{$iTemp$}
 	\KwOut{$iTemp$}
 	$tid \gets threadIdx.x$\;
@@ -217,6 +226,7 @@ than $F_H$ output elements. Code at lines 6-11 process the rows that are needed 
 
 
 \begin{algorithm}[t!]
+\small
 	\KwIn{$row$, $index$, $filter$, $Out$}
 	\KwOut{$Out$}
 	\If{$index \textless F_H-1$}{
