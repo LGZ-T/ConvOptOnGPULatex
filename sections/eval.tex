@@ -24,10 +24,10 @@ Intel Xeon E5-2697 CPU with 252GB memory, running Linux kernel v4.15.0. We use C
 \end{itemize}
 
 \subsection{Use Cases}
-We apply our approach to three representative convolution operations, single-channel 2D convolution, depth-wise convolution and
+We apply our approach to three representative convolution operations, 2D convolution, depth-wise convolution and
 multi-channel 2D convolution, described as follows.
 
-\mypara{Single-channel 2D convolution.} This applies a single-channel 2D filter to convolve the input in both horizontal and vertical
+\mypara{2D convolution.} This applies a single-channel 2D filter to convolve the input in both horizontal and vertical
 directions in a 2D spatial domain. This is a classical and a widely used 2D convolution implementation.
 
 \mypara{Depth-wise convolution.} This applies a bank of single-channel 2D filters to convolve with one multi-channel 2D input, e.g., an
@@ -57,7 +57,7 @@ are commonly used filter sizes.
 alternative methods by delivering the overall best performance.
 
 
-\subsection{Single-Channel 2D Convolution\label{sec:ex2dc}}
+\subsection{2D Convolution\label{sec:ex2dc}}
 \begin{figure*}
 \centering
 \subfloat[][Speedups when using $3 \times 3$ filter]{\includegraphics[width=0.85\columnwidth]{./figure/2d_conv_f3.eps}
@@ -72,7 +72,7 @@ alternative methods by delivering the overall best performance.
 
 
 \subsubsection{Setup}
-In this experiment, we compare our approach against the single-channel 2D convolution implementation from cuDNN, im2col, ArrayFire, and
+In this experiment, we compare our approach against the 2D convolution implementations from cuDNN, GEMM-im2col, ArrayFire, and
 NPP. As cuDNN provides multiple implementations, we empirically choose the fastest version, denoted as cuDNN-fastest, for evaluation. We
 apply each method to images with sizes ranging from $256 \times 256$ to $4K \times 4K$. We set the batch size, channel, height, and width
 of the input to be 1.
@@ -117,7 +117,7 @@ the performance of 2D convolutions.
 
 
 The reason why our approach gives lower memory throughput and achieves lower maximum bandwidth on small input sizes over NPP is explained
-as follows. For single-channel 2D convolution, only one filter is used to convolve with one single-channel input feature map, which
+as follows. For 2D convolution, only one filter is used to convolve with one single-channel input feature map, which
 requires much less computation compared to, e.g., the depth-wise or multi-channel 2D convolutions. Therefore, memory performance has a huge
 impact on the performance of 2D convolutions. Our row reuse algorithm performs better when a thread operates on more rows of output.
 However, the more rows a thread compute on, the fewer warps and thread blocks we can generate. Without enough warps issuing memory
