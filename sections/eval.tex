@@ -3,7 +3,7 @@
 \section{Experimental Setup}
 
 \subsection{Evaluation Platforms} We evaluate our approach on and NVIDIA RTX 2080Ti GPU, which integrates 4350 CUDA cores for floating
-point computation  and 4350 CUDA core for integer operations. The GPU has a 96KB L1 cache and shared memory. The host machine has a 2.30GHz
+point computation  and 4350 CUDA cores for integer operations. The GPU has a 96KB L1 cache and shared memory. The host machine has a 2.30GHz
 Intel Xeon E5-2697 CPU with 252GB memory, running Linux kernel v4.15.0. We use CUDA Toolkit version 10.2.
 
 
@@ -28,14 +28,14 @@ We apply our approach to three representative convolution operations, 2D convolu
 multi-channel 2D convolution, described as follows.
 
 \mypara{2D convolution.} This applies a single-channel 2D filter to convolve the input in both horizontal and vertical
-directions in a 2D spatial domain. This is a classical and a widely used 2D convolution implementation.
+directions in a 2D spatial domain. This is a classical and widely used 2D convolution implementation.
 
 \mypara{Depth-wise convolution.} This applies a bank of single-channel 2D filters to convolve with one multi-channel 2D input, e.g., an
-image of three colour channels, R, G and B. We apply a 2D convolution filter to each of the input channel. This technique has been widely
+image of three colour channels, R, G and B. We apply a 2D convolution filter to each of the input channels. This technique has been widely
 used in embedded CNNs, including MobileNetv2 \cite{Sandler_2018_CVPR}, EfficientNet \cite{tan2019efficientnet} and ShuffleNetv2
 \cite{Ma_2018_ECCV}.
 
-\mypara{Multi-channel 2D convolution.} This applies a bank of multi-channel 2D filters convolve with one multi-channel 2D input. The 2D
+\mypara{Multi-channel 2D convolution.} This applies a bank of multi-channel 2D filters to convolve with one multi-channel 2D input. The 2D
 convolution is performed between one filter channel and the corresponding input channel, and the results are sum up across channels to
 generate one output channel.
 
@@ -44,7 +44,7 @@ generate one output channel.
 We run each test case ten times on an unloaded machine and report the averaged running time. We found little variance during execution
 runs, less than 2\%.  All the CNNs used in evaluation use the standard 32-bit (single-precision) floating point numbers, and the data are
 organized as 4D tensors $(N,C,H,$ and $W)$, where $N$, $C$, $H$, and $W$ are the batch size, channel, height, and width, respectively. In
-this work, we test 2D, multi-channel 2D and depth-wise convolutions with two filters sizes, $3 \times 3$ and $5 \times 5$, because these
+this work, we test 2D, multi-channel 2D and depth-wise convolutions with two filter sizes, $3 \times 3$ and $5 \times 5$, because these
 are commonly used filter sizes.
 %
 %\subsection{Notations}
@@ -60,10 +60,10 @@ alternative methods by delivering the overall best performance.
 \subsection{2D Convolution\label{sec:ex2dc}}
 \begin{figure*}
 \centering
-\subfloat[][Speedups when using $3 \times 3$ filter]{\includegraphics[width=0.85\columnwidth]{./figure/2d_conv_f3.eps}
+\subfloat[][$3 \times 3$ filter]{\includegraphics[width=0.85\columnwidth]{./figure/2d_conv_f3.eps}
 	\label{fig:2druntimef3c12080}}
 \hspace{0em}
-\subfloat[][Speedups when using a $3 \times 3$ filter]{\includegraphics[width=0.85\columnwidth]{./figure/2d_conv_f5.eps}
+\subfloat[][$5 \times 5$ filter]{\includegraphics[width=0.85\columnwidth]{./figure/2d_conv_f5.eps}
 	\label{fig:2druntimef5c12080}}
 
 \vspace{-1mm}	\caption{Speedups of 2D convolutions of four implementations over GEMM-im2col when using a $3 \times 3$ (a) and a $5 \times
@@ -82,11 +82,11 @@ of the input to be 1.
  Figure
 \ref{fig:2druntime} reports the speedups of cuDNN, ArrayFire, NPP and our approach over GEMM-im2col. While cuDNN has been heavily optimized
 for NVIDIA GPUs, it does not show a notable performance advantage. When using a $3 \times 3$ filter, our approach gives the best overall
-speedup of 6.5x (up to 9.7x for the largest input), which translates to an improvement of  more than 30\% over the second-best method, NPP.
+speedup of 5.4$\times$ (up to 9.7$\times$ for the largest input), which translates to an improvement of  more than 30\% over the second-best method, NPP.
 We note that our approach is based on the standard 2D direct convolution by applying the column and row reuse algorithms. Therefore, the
 performance gain is mainly attributed to the reduction of the number of memory transactions. When using a $5 \times 5$ filter, our approach
 achieves a better overall speedup of $7.7\times$. A $5 \times 5$ filter has four overlapped columns and rows (instead of just one
-overlapped column and row on width and height dimensions when using a $3 \times 3$ filter). The larger number of overlapped data thus give
+overlapped column and row on width and height dimensions when using a $3 \times 3$ filter). The larger number of overlapped data thus gives
 more room for performance optimization when using our column and row reuse algorithms. Our approach achieves the best overall performance
 and demonstrates significant performance advantages when processing large input.
 
@@ -100,7 +100,7 @@ and demonstrates significant performance advantages when processing large input.
 \subfloat[][Maximum bandwidth]{\includegraphics[width=0.85\columnwidth]{./figure/2dmembandwidth.eps}
 	\label{fig:2dmaxband}}
 	
-\caption{Memory throughput (a) and maximum memory bandwidth (b) of NPP and our implementation for the filter of size $3 \times 3$.}
+\caption{Memory throughput (a) and maximum bandwidth (b) of NPP and our implementation for the filter of size $3 \times 3$.}
 \label{fig:2dmemanaly}
 \vspace{-5mm}
 \end{figure}
@@ -122,36 +122,19 @@ requires much less computation compared to, e.g., the depth-wise or multi-channe
 impact on the performance of 2D convolutions. Our row reuse algorithm performs better when a thread operates on more rows of output.
 However, the more rows a thread compute on, the fewer warps and thread blocks we can generate. Without enough warps issuing memory
 requests, the memory throughput and maximum bandwidth will reduce significantly, which leads to slower performance over NPP. As the input
-size increases, we can allocate more thread blocks and more warps per thread block. With enough memory requests and reduction on redundant
-memory transactions, we can increase the memory throughput and max bandwidth to improve the performance of 2D convolution.
-
-
-
-%Our approach achieves the best speedups in six out of ten test cases. NPP achieves the best results on small image sizes, whereas our
-%implementation demonstrates the best results on large image sizes. We use \emph{nvidia compute} to collect memory profiles, including
-%memory throughput and max bandwidth, of our implementation and NPP when convolving with a $3 \times 3$ filter. The results are shown in
-%Figure \ref{fig:2dmemanaly}.
-%
-%We can see that as the input size increases, memory throughput and max bandwidth of our implementation exceeds that of NPP, the turning point ($1K \times 1K$ in Figure \ref{fig:2dmemanaly}) is the same as that of speedups in Figure \ref{fig:2druntimef3c12080}, which means that memory performance has a strong relationship with the performance of 2D convolutions. Next, we give a detailed analysis of why the memory throughput and max bandwidth of our implementation is low for small input sizes.
-%
-%When performing 2D convolutions, only one filter is used to convolve with one single-channel input feature map, which requires much less computation than depth-wise convolutions. Therefore, the memory performance has a huge impact on the performance of 2D convolutions. The proposed row reuse algorithm performs better when a thread calculates more rows of output. However, the more rows each thread calculates, the less warps and thread blocks we can generate. Without enough warps issuing memory requests, the memory throughput and max bandwidth can reduce a lot, which can slow down our implementations. As the input size increases, we can allocate more thread blocks and more warps per thread block. With enough memory requests and reduction on redundant memory transactions, we can increase the memory throughput and max bandwidth, and thus improve the performance of our implementation.
-%
-%The average speedup of our implementation for $5 \times 5$ filter is $7.7\times$, which is better than the speedup of $5.4\times$ for $3 \times 3$ filter. The key reason for the improvement is that, for $3 \times 3$ filter, there is only one overlapped column and row on width and height dimensions. While for $5 \times 5$ filter, there are four overlapped columns and rows, therefore column and row reuse algorithms can be used more efficiently compared with  that for the $3 \times 3$ filter.
-
-
-
-
+size increases, we can allocate more thread blocks and more warps per thread block. With enough memory requests and a reduction in redundant
+memory transactions, we can increase the memory throughput and max bandwidth to improve the performance of 2D convolutions.
 
 \subsubsection{Summary} Overall, our optimization algorithms can greatly reduce the number of memory transactions and improve the performance of 2D
-convolutions. Compared with state-of-the-art image processing libraries, NPP, our approach achieves average speedups of 1.3$\times$ and
-1.28$\times$ when using a $3 \times 3$ and $5 \times 5$ filters, respectively.
+convolutions. Compared with state-of-the-art image processing libraries, NPP, our approach achieves average speedups of 1.4$\times$ and
+1.3$\times$ when using a $3 \times 3$ and $5 \times 5$ filters, respectively.
 
 \subsection{Depth-wise Convolution}
 \label{sec:depconvexp}
 
 \begin{table}[]
 \caption{Layer configurations of depth-wise  convolutions$^{\dag}$.}
-\label{tab:3dconvconfigs}
+\label{tab:depconvconfigs}
 \centering
 \rowcolors{2}{}{Gray}
 \begin{threeparttable}
@@ -159,19 +142,19 @@ convolutions. Compared with state-of-the-art image processing libraries, NPP, ou
 \toprule
 & \textbf{$I_N$} & \textbf{$I_C$} & \textbf{$I_H \times I_W$ }&  \textbf{$F_H \times F_W$} \\
 \midrule
-\textbf{CONV1} & 512  & 32    & 112*112 & $3 \times 3$, $5 \times 5$  \\
-\textbf{CONV2} & 512  & 96    & 112*112  &$3 \times 3$, $5 \times 5$   \\
-\textbf{CONV3} & 512  & 144   & 56*56  &$3 \times 3$, $5 \times 5$    \\
-\textbf{CONV4} & 512  & 160    & 56*56  &$3 \times 3$, $5 \times 5$    \\
-\textbf{CONV5} & 512  & 192   & 28*28  &$3 \times 3$, $5 \times 5$    \\
-\textbf{CONV6} & 512  & 240   & 28*28  &$3 \times 3$, $5 \times 5$    \\
-\textbf{CONV7} & 512  & 256   & 28*28  &$3 \times 3$, $5 \times 5$    \\
-\textbf{CONV8} & 512  & 384   & 14*14  &$3 \times 3$, $5 \times 5$    \\
-\textbf{CONV9} & 512  & 480   & 14*14  &$3 \times 3$, $5 \times 5$    \\
-\textbf{CONV10} & 512  & 672  & 14*14 &$3 \times 3$, $5 \times 5$     \\
-\textbf{CONV11} & 512  &672  & 7*7 & $3 \times 3$, $5 \times 5$      \\
-\textbf{CONV12} & 512  &960  & 7*7 & $3 \times 3$, $5 \times 5$      \\
-\textbf{CONV13} & 512  &1152  & 7*7 & $3 \times 3$, $5 \times 5$      \\
+\textbf{CONV1} & 512  & 32    & 112$\times$112 & $3 \times 3$, $5 \times 5$  \\
+\textbf{CONV2} & 512  & 96    & 112$\times$112  &$3 \times 3$, $5 \times 5$   \\
+\textbf{CONV3} & 512  & 144   & 56$\times$56  &$3 \times 3$, $5 \times 5$    \\
+\textbf{CONV4} & 512  & 160    & 56$\times$56  &$3 \times 3$, $5 \times 5$    \\
+\textbf{CONV5} & 512  & 192   & 28$\times$28  &$3 \times 3$, $5 \times 5$    \\
+\textbf{CONV6} & 512  & 240   & 28$\times$28  &$3 \times 3$, $5 \times 5$    \\
+\textbf{CONV7} & 512  & 256   & 28$\times$28  &$3 \times 3$, $5 \times 5$    \\
+\textbf{CONV8} & 512  & 384   & 14$\times$14  &$3 \times 3$, $5 \times 5$    \\
+\textbf{CONV9} & 512  & 480   & 14$\times$14  &$3 \times 3$, $5 \times 5$    \\
+\textbf{CONV10} & 512  & 672  & 14$\times$14 &$3 \times 3$, $5 \times 5$     \\
+\textbf{CONV11} & 512  &672  & 7$\times$7 & $3 \times 3$, $5 \times 5$      \\
+\textbf{CONV12} & 512  &960  & 7$\times$7 & $3 \times 3$, $5 \times 5$      \\
+\textbf{CONV13} & 512  &1152  & 7$\times$7 & $3 \times 3$, $5 \times 5$      \\
 \bottomrule
 \end{tabular}
 \footnotesize
@@ -200,10 +183,10 @@ $3\times 3$ (a) and a $5\times 5$ filter (b).} \label{fig:3druntime}
 \subsubsection{Setup} In this experiment, we compare our approach against the depth-wise
 convolution implementations of cuDNN. Specifically, we compare to seven algorithms in cuDNN, including IMPLICIT\_GEMM (implicit),
 IMPLICIT\_PRECOMP\_GEMM (precomp), GEMM (gemm), FFT (fft), FFT\_TILING (tiling), WINOGRAD (winograd) and WINOGRAD\_NONFUSED (nonfused). As
-Winograd is not applicable  to a $5 \times 5$ filter, we do not report performance of Winograd when using a $5 \times 5$ filter. As a
+Winograd is not applicable  to a $5 \times 5$ filter, we do not report the performance of Winograd when using a $5 \times 5$ filter. As a
 baseline, we implement a simple depth-wise convolution. We use the convolutional layer configurations that apply depth-wise convolution
 from three popular embedded models, MobileNetv2, ShuffleNetv2 and EfficientNet. We report the performance when the input and output batch
-sizes are set to 512, but we observe similar performance when using a different batch size. Table \ref{tab:3dconvconfigs} gives the layer
+sizes are set to 512, but we observe similar performance when using a different batch size. Table \ref{tab:depconvconfigs} gives the layer
 configurations used in this experiment.
 
 
@@ -225,14 +208,14 @@ configurations used in this experiment.
 %Then, we set the number of the batch size to 512 ($I_N=O_N=512$). Other batch sizes demonstrate a similar performance because all tested implementations have a linear scale as the batch size. The exact configuration is presented in Table \ref{tab:3dconvconfigs}.
 
 \subsubsection{Overall results}
-Figure \ref{fig:3druntime} shows that our approach gives the best speedup. Our approach delivers an average speedup of $4.5\times$ and
+Figure \ref{fig:3druntime} shows that our approach gives the best speedups. Our approach delivers an average speedup of $4.5\times$ and
 $7.6\times$ for the $3 \times 3$ and $5 \times 5$ filters, respectively. The implicit algorithm is the fastest algorithm in cuDNN in all
 test cases. It achieves an average speedup of $2.8\times$ and $1.8\times$ for the $3 \times 3$ and $5 \times 5$ filters, respectively.
 Other algorithms of cuDNN except implicit algorithm perform poorly in all test cases. Since that cuDNN is a closed source, we cannot
-investigate the source code for further analysis. We hypothesize that FFT- and Winograd- based algorithms focus on reduction of computation
+investigate the source code for further analysis. We hypothesize that FFT- and Winograd- based algorithms focus on the reduction of computation
 and trades memory performance for speed. Precomp and gemm algorithms need extra memory operations to compute output elements. Moreover,
 depth-wise convolution is more sensitive to memory performance than multi-channel 2D convolution. Consequently, these algorithms are not suitable for
-depth-wise convolutions. Over all, our approach improves \emph{implicit} by $1.5\times$ (up o $2\times$) and $2\times$ (up to $4.5\times$)
+depth-wise convolutions. Overall, our approach improves implicit by $1.5\times$ (up o $2\times$) and $4\times$ (up to $4.5\times$)
 when using a $3 \times 3$ and $5 \times 5$ filter respectively.
 
 %
@@ -259,13 +242,13 @@ when using a $3 \times 3$ and $5 \times 5$ filter respectively.
 
 \subsubsection{Further analysis}
 Figure \ref{fig:depwisememanaly} reports the measured memory throughput and maximum memory bandwidth for our approach and the fast cuDNN
-\emph{implicit} algorithm when using a $3 \times 3$ filter. Our approach achieves $1.5 \times$ higher memory throughput and maximum
-bandwidth compared with the \emph{implicit} algorithm. This suggests that our reuse algorithms can improve memory performance significantly, which
-thus lead to better computational performance.
+implicit algorithm when using a $3 \times 3$ filter. Our approach achieves $1.5 \times$ higher memory throughput and maximum
+bandwidth compared with the implicit algorithm. This suggests that our reuse algorithms can improve memory performance significantly, which
+thus leads to better computational performance.
 
 
 \subsubsection{Summary}
-Our approach can significantly improve the memory throughput and maximum bandwidth, which leads to faster computation time when performing
+Our approach can significantly improve memory throughput and maximum bandwidth, which leads to faster computation time when performing
 depth-wise convolutions.  Compared to the fastest available algorithms in cuDNN, which is the state-of-the-art convolution library, our
 approach achieves an average speedup of $1.5\times$ and $4\times$ when using a $3 \times 3$ and $5 \times 5$ filter, respectively.
 
@@ -315,14 +298,14 @@ to denote the batch size, the channel, the height, and the width, respectively.
 \end{figure*}
 
 
-\subsubsection{Setup} In this experiment, we compare our approach against the multi-channel 2D convolution implementations in cuDNN and use GEMM-im2col as the baseline. Since our work focuses on optimizing memory transactions of convolutions but not operations on input channels, we apply our approach to convolutions with one and three input channels, which are typically used in the first few layers of a CNN. {\color{red}Notice that, when applied to a single-channel input, depth-wise convolution uses exactly one filter whereas multi-channel 2D convolution can use one or more filters}. We use the layer configurations four popular CNN models,
+\subsubsection{Setup} In this experiment, we compare our approach against the multi-channel 2D convolution implementations in cuDNN and use GEMM-im2col as the baseline. Since our work focuses on optimizing memory transactions of convolutions but not operations on input channels, we apply our approach to convolutions with one and three input channels, which are typically used in the first few layers of a CNN. Notice that, when applied to a single-channel input, depth-wise convolution uses exactly one filter, whereas multi-channel 2D convolution can use one or more filters. We use the layer configurations from four popular CNN models,
 namely, AlexNet \cite{Krizhevsky2012ImageNet}, VGG \cite{SimonyanZ14a}, ResNet \cite{HeZRS16} and GoogleLeNet \cite{SzegedyLJSRAEVR15}. We
 use $3 \times 3$ and $5 \times 5$ filters with a batch size of 128. Table \ref{tab:3dconvconfigs} lists the layer configurations used in
 this experiment.
 
 \subsubsection{Results} Figure \ref{fig:multi2druntime} shows that our
 implementation achieves an average speedup of 19.5$\times$ and 25.6$\times$ over GEMM-im2col for one and three input channels,
-respectively. This translates to an improvement of 1.23$\times$ and 1.13$\times$ over the fastest algorithm in cuDNN, for one and three
+respectively. This translates to an improvement of 1.3$\times$ and 1.1$\times$ over the fastest algorithm in cuDNN, for one and three
 input channels, respectively. Since our approach does not optimize for input channels, it does not give performance improvement for layer
-configurations that have a large number of channels. This can be improved by {\color{red}careful optimizations on input channels}. Nonetheless, our approach significantly boosts the performance for convolution layers with a small number of channels (which is the
+configurations that have a large number of channels. This can be improved by careful optimizations on input channels. Nonetheless, our approach improves the performance of convolution layers with a small number of channels (which is the
 typical case for many CNNs).

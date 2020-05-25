@@ -16,8 +16,8 @@ operations.
 
 To apply our approach to 2D convolution, we first divide the output into sub-blocks. Each sub-block contains exactly $n$ columns (in this
 work, $n = 32$, which is the default warp size of our GPU platform). The only exception is the last sub-block, which may contain less than
-$n$ columns. If a sub-block contains more than $k$ rows ($k=56$ in this work), we then further breakdown the sub-block along the hight
-dimension. By doing so, each GPU thread block will process one or multiple sub-blocks, and each warp will compute one sub-block. As a
+$n$ columns. If a sub-block contains more than $k$ rows ($k=56$ in this work), we then further breakdown the sub-block along the height
+dimension. Each GPU thread block will process one or multiple sub-blocks, and each warp will compute one sub-block. As a
 result, the threads within the same warp will process the adjacent columns of one sub-block.
 
 
@@ -50,13 +50,13 @@ result, the threads within the same warp will process the adjacent columns of on
 \end{algorithm}
 
 Figure \ref{fig:overalldesign} shows the mapping process of GPU threads to output elements. In this example, we slide a $3 \times 3$ filter
-over an $8 \times 8$ input.  Given that 2D convolutions typically produce an output image that has the same size as the input image, the
+over an $8 \times 8$ input.  Given that 2D convolutions typically produce an output image with the same size as the input image, the
 input image should be padded. To reduce the memory pressure, we do not actually allocate GPU memory space for the padded elements. Instead,
 we use different methods to calculate the edge and inner elements of the output. The edge and inner elements are represented by the shaded
 and dashed squares in Figure \ref{fig:overalldesign}, respectively.
 
 
-In this example, we assume each warp contain four threads (Figure \ref{fig:overalldesign}). Therefore, we will divide the inner elements
+In this example, we assume each warp contains four threads (Figure \ref{fig:overalldesign}). Therefore, we will divide the inner elements
 into multiple sub-blocks and each sub-block contains four columns so that a column can be processed by one of the four GPU threads within a
 wrap. In our case, we will have two sub-blocks, where sub-block 0 contains four columns, but sub-block 1 only contains two columns. To
 utilize the threads within a warp, we divide elements of the last two columns evenly among the four threads.
@@ -68,5 +68,5 @@ loads the filter into shared memory and divides the filter into a combination of
 calculates the address of the first input element it needs (Lines 6). For each output element and sub-filter, each thread loads
 corresponding input elements into $iTemp$ and passes it to Algorithms \ref{algo:basic} and \ref{algo:basic2} to fill the row vector $iTemp$
 (Line 10). Then, each thread passes the filled vector $iTemp$ to Algorithm \ref{algo:rowreuse} to calculate multiple output elements and
-store results in register array $sum$ (Line 11). Finally, when the calculation of one output element is completed, we write the
+store results in the register array $sum$ (Line 11). Finally, when the calculation of one output element is completed, we write the
 corresponding result in $sum$ into the result array $O$ (Line 13).

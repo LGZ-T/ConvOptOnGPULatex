@@ -8,14 +8,13 @@ highly optimized on GPUs. Despite some duplicate input elements involved in the 
 
 FFT- and Winograd-based convolutions can reduce computational complexity and improve convolution performance. Mathieu et al.
 \cite{mathieu2013fast} proposed an FFT-based convolution to compute convolutions as pointwise products in the Fourier domain and reuse the
-transformed input data, which significantly reduce the complexity of the convolution. However, FFT-based convolution is more suitable for large filters than
+transformed input data, which significantly reduces the complexity of the convolution. However, FFT-based convolution is more suitable for large filters than
 for small ones. Because padding the filters to the same size as the input data is necessary, and  the latter (e.g., $3 \times 3$ filters) needs
 more memory than the former. Lavin et al. \cite{lavin2016fast} used Winograd's minimal filtering algorithm to
 accelerate the convolution on GPU. This algorithm can reduce the arithmetic complexity of convolution by up to four times compared with
 direct convolution. However, Winograd's algorithm is only suitable for small filters due to its numerical instability.
 Zhen et al. \cite{Zhen2018Optimizing} extended Winograd's algorithm to support any filter size. However, the traditional and extended Winograd-based
-algorithms need to transform the input and filter before performing matrix multiplication, and both require more operations compared with
-the FFT algorithm.
+algorithms need to transform the input and filter before performing matrix multiplication, and both require more operations than the FFT algorithm.
 
 Transforming the input and filter before performing matrix multiplication incurs a large memory overhead, which can outweigh the
 performance gains obtained through lowering the computational complexity. Therefore, recent studies have looked into minimizing the memory
@@ -24,5 +23,5 @@ lowering scheme to reduce the redundancy in the lowered matrix and then performe
 However, this algorithm still needs to transform the input and filter tensors into lowered matrixes to compute the convolution. Iandola et
 al. \cite{Iandola2014Communication} reduced memory communication of 2D convolutions on GPU. They also prefetched the image regions to the
 registers. While their method uses fewer threads, each thread operates on a larger number of data items. As a result, their method does not
-reduce the number of global memory transactions. Unlike \cite{Iandola2014Communication}, our approach promote register use and can
+reduce the number of global memory transactions. Unlike \cite{Iandola2014Communication}, our approach promotes register use and can
 significantly reduce the number of memory accesses.

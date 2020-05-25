@@ -32,7 +32,7 @@ both CUDA and OpenCL and hence is applicable to mainstream GPUs) to exchange ele
 group). In this way, we can avoid reloading the same elements shared among different threads. We further extend the shuffle instructions to
 facilitate dynamic indexing, which is not supported in the previous study \cite{vasilache2014fast}. The second technique targets row reuse
 by multiplying one input row with multiple rows of a convolutional kernel (or filter) to compute multiple output elements. This strategy
-improves the data locality of elements within a row, thereby reducing the number of memory transactions in comparison with that of the
+improves the data locality of elements within a row, reducing the number of memory transactions compared with that of the
 existing convolution processing pipeline. By reducing the number of memory transactions, our approach thus can improve the performance for
 convolution operations.
 
