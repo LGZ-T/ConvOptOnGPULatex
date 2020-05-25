@@ -97,7 +97,7 @@ and demonstrates significant performance advantages when processing large input.
 \subfloat[][Memory throughput]{\includegraphics[width=0.85\columnwidth]{./figure/2dmemthroughput.eps}
 	\label{fig:2dmemthr}}
 
-\subfloat[][Maximum memory bandwidth]{\includegraphics[width=0.85\columnwidth]{./figure/2dmembandwidth.eps}
+\subfloat[][Maximum bandwidth]{\includegraphics[width=0.85\columnwidth]{./figure/2dmembandwidth.eps}
 	\label{fig:2dmaxband}}
 	
 \caption{Memory throughput (a) and maximum memory bandwidth (b) of NPP and our implementation for the filter of size $3 \times 3$.}
@@ -315,7 +315,7 @@ to denote the batch size, the channel, the height, and the width, respectively.
 \end{figure*}
 
 
-\subsubsection{Setup} In this experiment, we compare our approach against the multi-channel 2D convolution implementations in cuDNN and use GEMM-im2col as the baseline. Since our work focuses on optimizing memory transactions of convolutions but not operations on input channels, we apply our approach to convolutions with one and three input channels, which are typically used in the first few layers of a CNN. We use the layer configurations four popular CNN models,
+\subsubsection{Setup} In this experiment, we compare our approach against the multi-channel 2D convolution implementations in cuDNN and use GEMM-im2col as the baseline. Since our work focuses on optimizing memory transactions of convolutions but not operations on input channels, we apply our approach to convolutions with one and three input channels, which are typically used in the first few layers of a CNN. {\color{red}Notice that, when applied to a single-channel input, depth-wise convolution uses exactly one filter whereas multi-channel 2D convolution can use one or more filters}. We use the layer configurations four popular CNN models,
 namely, AlexNet \cite{Krizhevsky2012ImageNet}, VGG \cite{SimonyanZ14a}, ResNet \cite{HeZRS16} and GoogleLeNet \cite{SzegedyLJSRAEVR15}. We
 use $3 \times 3$ and $5 \times 5$ filters with a batch size of 128. Table \ref{tab:3dconvconfigs} lists the layer configurations used in
 this experiment.
@@ -324,6 +324,5 @@ this experiment.
 implementation achieves an average speedup of 19.5$\times$ and 25.6$\times$ over GEMM-im2col for one and three input channels,
 respectively. This translates to an improvement of 1.23$\times$ and 1.13$\times$ over the fastest algorithm in cuDNN, for one and three
 input channels, respectively. Since our approach does not optimize for input channels, it does not give performance improvement for layer
-configurations that have a large number of channels (e.g., CONV10 and CONV11). This can be improved by \FIXME{Explain how you can improve
-this.}. Nonetheless, our approach significantly boosts the performance for convolution layers with a small number of channels (which is the
+configurations that have a large number of channels. This can be improved by {\color{red}careful optimizations on input channels}. Nonetheless, our approach significantly boosts the performance for convolution layers with a small number of channels (which is the
 typical case for many CNNs).
