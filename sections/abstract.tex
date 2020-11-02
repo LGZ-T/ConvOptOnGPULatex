@@ -1,17 +1,15 @@
 \begin{abstract}
-Convolution computation is a common operation in deep neural networks (DNNs) and is often responsible for performance bottlenecks during
-training and inferencing.  Existing approaches for accelerating convolution operations aim to reduce computational complexity. However,
-these strategies often increase the memory footprint with extra memory accesses, thereby leaving much room for performance improvement.
-%
-This paper presents a novel approach to optimize memory access for convolution operations, specifically targeting GPU execution. Our
-approach leverages two optimization techniques to reduce the number of memory operations for convolution operations performed on the
-width and height dimensions. For convolution computations on the width dimension, we exploit shuffle instructions to exchange the
-overlapped columns of the input for reducing the number of memory transactions. For convolution operations on the height dimension, we
-multiply each overlapped row of the input with multiple rows of a filter to compute multiple output elements to improve the data locality
-of row elements. Our approach is simple yet effective and can work on existing CUDA and OpenCL standards without hardware modification.
-%
-We apply our approach to three representative convolutional operations, 2D convolution, depth-wise convolution and multi-channel 2D convolution on an NVIDIA 2080Ti GPU. For 2D
-convolution, our approach delivers over 2x faster performance than the state-of-the-art image processing libraries. For depth-wise
+Depthwise separable convolution has been widely used in many deep neural networks (DNNs).
+It decomposes standard 2D convolution into depthwise convolution and pointwise convolution, which greatly reduces the computational cost and yet maintain the representational power of 2D convolution.
+However, when performing training or inference in small batch sizes (e.g., 64, 32, 16), depthwise separable convolution can not utilize the GPU efficiently due to low arithmetic intensity. 
+
+In this work, we present two novel approaches to optimize memory access and GPU utilization for depthwise and pointwise convolutions respectively. 
+Arithmetic intensity of depthwise convolution is much lower than 2D convolution, therefore the memory performance has significant impact on the execution time of depthwise convolution. 
+Our approach leverages two optimization techniques named column reuse and row reuse to reduce the number of memory operations for depthwise convolution performed on the width and height dimensions. 
+%For convolution computations on the width dimension, we exploit shuffle instructions to exchange the overlapped columns of the input for reducing the number of memory transactions. For convolution operations on the height dimension, we multiply each overlapped row of the input with multiple rows of a filter to compute multiple output elements to improve the data locality of row elements. Our approach is simple yet effective and can work on existing CUDA and OpenCL standards without hardware modification.
+To improve the performance of pointwise convolution, we distribute input channels among threads to increase the GPU utilization.
+
+We compare our optimized depthwise convolution and pointwise convolution with the implementations of cuDNN on an NVIDIA 2080Ti GPU. Experiments show that our approach delivers over 2x faster performance than the state-of-the-art image processing libraries. For depth-wise
  and multi-channel 2D convolutions, we obtain up to $4\times$ and $2\times$ speedups over the quickest algorithm of cuDNN. 
 
 \end{abstract}

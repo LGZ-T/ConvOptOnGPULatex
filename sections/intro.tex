@@ -1,44 +1,39 @@
 \section{Introduction}
-Convolution is a fundamental building block for many application tasks, including image and video processing and machine learning models.
-Convolution can be performed on multiple dimensions, but 2D, depth-wise and multi-channel 2D convolutions are among the most frequently used application
-scenarios. Specifically, 2D convolution is often used in image filtering, frame
-interpolation~\cite{Perrot2014Fine,Ma2014Optimized,Rudi2015Image,Niklaus2017Video},  the multi-channel 2D convolution is at the core of Convolutional Neural Networks (CNNs)
-\cite{Krizhevsky2012ImageNet,SimonyanZ14a,HeZRS16,SzegedyLJSRAEVR15} and the depth-wise convolution is the building block of many embedded CNNs
-\cite{Sandler_2018_CVPR,Ma_2018_ECCV,tan2019efficientnet}. However, convolution operations are computation and memory intensive
-\cite{cavigelli2015accelerating}, and account for nearly 90\% of the overall runtime \cite{Li2016Performance} for representative image and
-machine learning processing tasks. Therefore, there is a critical need for accelerating convolution operations.
+Nowadays, many researchers construct the fundamental building block of their DNNs with depthwise separable convolution initially introduced in \cite{sifre2014rigid}  to reduce the computational cost of DNNs. 
+This kind of DNNs, including MobileNet \cite{Sandler_2018_CVPR,howard2019searching}, EfficientNet \cite{tan2019efficientnet}, ShuffleNet \cite{Ma_2018_ECCV}, has been widely used in image classification, object detection and  semantic segmentation.
+Depthwise separable convolution decomposes 2D convolution into depthwise convolution and pointwise convolution, which greatly reduces the computational cost of 2D convolution. 
 
+When applying fast fourier transform (FFT) \cite{vasilache2014fast} and winograd \cite{lavin2016fast} methods to depthwise convolution, there is no speedups compared with general matrix multiplication. 
+The reason is that depthwise convolution has much lower arithmetic intensity than 2D convolution and memory performance dominates its execution time. 
+However, both FFT and Winograd methods focus on reducing arithmetic operations of convolution by sacrificing memory performance, which makes them unsuitable for depthwise convolution.
+For pointwise convolution, FFT and Winograd methods are not suitable too because FFT favors large filter sizes and Winograd is only applicable to $3 \times 3$ filter.
+In summary, general matrix multiplication (GEMM) \cite{Vasudevan2017Parallel,Chellapilla2006High} method is the most suitable algorithm for depthwise and pointwise convolutions.
 
+The state-of-the-art GEMM-based method is implicit GEMM implemented by cuDNN \cite{ChetlurWVCTCS14}.
+{\color{red}we need to talk about why small batches are important.}
+Though it is extremely fast for depthwise and pointwise convolutions, there is still opportunities to improve the performance of both convolutions when performing training or inference in small batches (e.g., 64, 32, 16).
+\begin{itemize}
+    \item Depthwise convolution is bounded by memory performance and memory bandwidth is one of the most important gating factors for performance \cite{cudaperformance}. 
+    However, the implicit GEMM of cuDNN achieves only 60\% of theoretical memory bandwidth, which significantly degrades the performance of depthwise convolution.
+    \item When performing training or inference in small batches, pointwise convolution of cuDNN can not utilize GPU efficiently.
+    The reason is that cuDNN let each thread process many output elements to overlap memory operations, which needs only some of CUDA cores to process all output elements. 
+\end{itemize}
+To improve the performance of depthwise separable convolution, we design two approaches targeting memory and utilization optimizations for depthwise and pointwise convolutions respectively. 
 
-A wide range of techniques have been proposed to accelerate convolution operations
-\cite{Iandola2014Communication,vasilache2014fast,lavin2016fast,cho2017mec,Zhen2018Optimizing,Vasudevan2017Parallel,Chellapilla2006High,zhang2015dwarfcode}.
-Among these methods, general matrix multiplication (GEMM) \cite{Vasudevan2017Parallel,Chellapilla2006High}, fast fourier transform (FFT)
-\cite{vasilache2014fast} and winograd \cite{lavin2016fast} methods are the broadly adopted ones;  all of which follow a three-step
-processing pipeline. The algorithms first transform the input and a filter (which is applied on the input) into two matrices. Then, fast
-matrix multiplication algorithms \cite{karstadt2017matrix,scott2015matrix} are performed on the two matrices before finally converting the
-result into the output. However, this processing pipeline can incur many GPU global memory transactions (or
-memory accesses) during the transformation phase due to the involvement of matrix multiplications and duplicate elements of the transformed
-matrices. Unfortunately, GPU global memory accessing is typically expensive. For example, on an NVIDIA GPU, the global memory accessing
-latency is 16.7x longer than that of the shared memory. As a result, the large number of global memory transactions introduced by
-convolution operations lead to longer processing time and could become the bottleneck for both model training and inferencing.  This
-phenomenon is a serious problem for the commonly used distributed memory architecture on high-end GPUs, where memory access is often
-responsible for the whole-system performance bottleneck. Therefore, prior optimization techniques leave a large room for improvement when
-executing convolution operations on GPUs.
+To improve the memory performance of depthwise convolution, we introduce two novel optimization techniques for operations performed on columns and rows. 
+The first technique exploits column reuse by utilizing shuffle instructions (supported by both CUDA and OpenCL and hence is applicable to mainstream GPUs) to exchange elements among threads within the same GPU warp (or working group). 
+In this way, we can avoid reloading the same elements shared among different threads. 
+We further extend the shuffle instructions to facilitate dynamic indexing, which is not supported in the previous study \cite{vasilache2014fast}. 
+The second technique targets row reuse by multiplying one input row with multiple rows of a convolutional kernel (or filter) to compute multiple output elements. 
+This strategy improves the data locality of elements within a row, reducing the number of memory transactions compared with that of the
+existing convolution processing pipeline. 
+By reducing the number of memory transactions, our approach thus can improve the performance for depthwise convolution.
 
-
-This study aims to optimize the memory performance involved when executing convolution operations on GPUs. To this end, we introduce two novel optimization techniques
-for operations performed on columns and rows. The first technique exploits column reuse by utilizing shuffle instructions (supported by
-both CUDA and OpenCL and hence is applicable to mainstream GPUs) to exchange elements among threads within the same GPU warp (or working
-group). In this way, we can avoid reloading the same elements shared among different threads. We further extend the shuffle instructions to
-facilitate dynamic indexing, which is not supported in the previous study \cite{vasilache2014fast}. The second technique targets row reuse
-by multiplying one input row with multiple rows of a convolutional kernel (or filter) to compute multiple output elements. This strategy
-improves the data locality of elements within a row, reducing the number of memory transactions compared with that of the
-existing convolution processing pipeline. By reducing the number of memory transactions, our approach thus can improve the performance for
-convolution operations.
-
-We apply our optimization techniques to 2D,  depth-wise and multi-channel 2D convolution operations and evaluate them on an NVIDIA 2080Ti GPU. We compare
-our approach against a range of highly optimized  deep neural network (DNN) libraries, including cuDNN \cite{ChetlurWVCTCS14}. Experimental
-results show that our approach delivers over 4$\times$ faster performance over the best-performing competitive strategy.
+To increase GPU utilization for pointwise convolution, the simplest way is to let each thread process less output elements and more threads to involve. 
+But this will let threads suffer from long global memory access latency since there is not enough arithmetic operations to overlap it.
+To address this problem, we distribute input channels within a warp and at the end of calculation use a parallel segmented reduction to get the final result. A key consideration here is that how to decide how many threads to process one output element. We design an algorithm to calculate the exact number. 
+Thus, each warp calculates less output elements and there is still enough arithmetic operations to overlap memory operations. 
+Experimental results show that our approach delivers over 4$\times$ faster performance over the best-performing competitive strategy.
 
 This paper makes the following technical contributions:
 \begin{itemize}
