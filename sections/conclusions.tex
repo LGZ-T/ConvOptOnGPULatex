@@ -1,10 +1,11 @@
 \section{Conclusion}
-We have presented a novel approach to optimize the memory access for convolution computation on GPUs. Our approach improves the data
-locality for convolutional operations performed on the row and column directions to reduce the memory access. Our techniques utilize the
-common GPU shuffle operations supported by mainstream GPU programming models, including CUDA and OpenCL, and do not require hardware
-modifications. We evaluate our approach by applying it to 2D, depth-wise and multi-channel 2D convolutions and evaluate it on an NVIDIA RTX
-2080Ti GPU platform. We compare our approach against a wide range of heavily optimized convolution algorithms. Experimental results show
-that our approach consistently outperforms the competing methods by delivering the best overall performance for the three types of
+We have presented two novel approaches to optimize the memory performance and SM utilization for depthwise and pointwise convolutions respectively. 
+Our approach improves the data locality for convolutional operations performed on the row and column directions to reduce the memory access. 
+Our techniques utilize the common GPU shuffle operations supported by mainstream GPU programming models, including CUDA and OpenCL, and do not require hardware modifications.
+For pointwise convolution, the main problem is low SM utilization because cuDNN uses a fixed block strategy for all pointwise convolutions. We design a dynamic block strategy and meanwhile hide the memory access latency. 
+We evaluate our approach on an NVIDIA RTX 2080Ti GPU platform. 
+We compare our approach against a wide range of heavily optimized convolution algorithms. 
+Experimental results show that our approach consistently outperforms the competing methods by delivering the best overall performance for the three types of
 convolution tasks.
 
 

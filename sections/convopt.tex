@@ -14,7 +14,7 @@ operations. We take the widely used 2D convolution as an example to illustrate h
 operations.
 
 
-To apply our approach to 2D convolution, we first divide the output into sub-blocks. Each sub-block contains exactly $n$ columns (in this
+To apply our approach to depthwise convolution, we first divide the output into sub-blocks. Each sub-block contains exactly $n$ columns (in this
 work, $n = 32$, which is the default warp size of our GPU platform). The only exception is the last sub-block, which may contain less than
 $n$ columns. If a sub-block contains more than $k$ rows ($k=56$ in this work), we then further breakdown the sub-block along the height
 dimension. Each GPU thread block will process one or multiple sub-blocks, and each warp will compute one sub-block. As a
