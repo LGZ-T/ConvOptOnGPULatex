@@ -1,6 +1,6 @@
 \section{Optimizing Pointwise Convolution}
 \label{sec:pwconv}
-In this section, we demonstrate the workflow of our dynamic blocking strategy as shown in Figure \ref{fig:pwflow} and Algorithm \ref{algo:pwalgo}. 
+In this section, we demonstrate the workflow of our dynamic blocking strategy as shown in Figure \ref{fig:pwworkflow} and Algorithm \ref{algo:pwalgo}. 
 The whole workflow consists of two stages. 
 
 In the first stage, our approach operates in a top-down fashion. 
@@ -20,14 +20,14 @@ Baed on both considerations, we decide to set $Warp_{num}=4$.
 In our experiments, this value is good enough to provide a satisfied performance.
 
 %this may not be important as i think
-%The second parameter is the number of thread blocks that can run concurrently in an SM, denoted as $Block_{num}$.
-%We use three values, 2, 4 and 6, for this parameter, denoted as $Block_{Num}=\{2, 4, 6\}$. 
-%There are two reasons for these choices: 
-%(1) when $Block_{num}=1$, there are only 4 warps in an SM. 
-%As each thread can use up to 256 registers, a thread block can use at most $4*32*256=32768$ registers, which is only 50\% of registers of an SM.
-%To avoid wasting hardware resources, we set $Block_{num}>1$; 
-%(2) when $Block_{num}>6$, each thread can use at most 70 registers and thus requires careful optimization on register usage to avoid register spills.
-%In our experiments, $Block_{num}=\{2, 4\}$ are the most commonly used values.
+The second parameter is the number of thread blocks that can run concurrently in an SM, denoted as $Block_{num}$.
+We use two values, 2, 4 and 6, for this parameter, denoted as $Block_{Num}=\{2, 4, 6\}$. 
+There are two reasons for these choices: 
+(1) when $Block_{num}=1$, there are only 4 warps in an SM. 
+As each thread can use up to 256 registers, a thread block can use at most $4*32*256=32768$ registers, which is only 50\% of registers of an SM.
+To avoid wasting hardware resources, we set $Block_{num}>1$; 
+(2) when $Block_{num}>6$, each thread can use at most 70 registers and thus requires careful optimization on register usage to avoid register spills.
+In our experiments, $Block_{num}=\{2, 4\}$ are the most commonly used values.
 
 Now we demonstrate the workflow of 4-level hierarchical partitioning.
 In our design, we can either distribute filter channels or input channels across threads. 
@@ -43,26 +43,39 @@ Therefore, the height of an SM tile in layout \textbf{\emph{L1}} is $SM_{H}=SM_{
 
 Now we get the height and width of an SM tile, {\color{red}the next step}is to partition the SM tile into block tiles.
 We use the aforementationed partition method to divide the SM tile into block tiles, then the width of the block tile can be calculated as $Block_{W}=\{SM_W/2,SM_W\}$.
+The heigh of the block tile will be determined in the second stage.
+We use a fixed $2\times2$ layout to partition a block tile into 4 warp tiles, and the width of the warp tile is $Warp_{W}=Block_{W}/2$.
 As mentioned earlier, each SM contains $Block_{num}$ thread blocks. 
-We first divide each SM tile into $Block_{num}$ block tiles, and the height of a block tile is $Block_{H}=SM_{size}/Block_{num}/Block_{W}$.
-To calculate the height of the SM tile, we first assume that each SM tile only contains 2 block tiles and the height of a block tile is $Block_{H}=SM_{size}/2/Block_{W}$.
+We assume that each SM tile is divided into $Block_{num}$ block tiles, then the height of a block tile and a warp tile are $InitBlock_{H}=SM_{size}/Block_{num}/Block_{W}$ and $InitWarp_{H}=Block_{H}/2$ respectively. Since the height of block and warp tile can be modified, we label both notation with $Init$. 
 
+\subsection{Distribute Channels Over Threads}
+In this stage, we iterate over all candidate channel sizes and calculate two metrics for aritemetic intensity and thread block number with the constraints of register and shared memory.
 
+To increase the arithmetic intensity, we need to distribute channels over threads. The most important cosideration is how to determine the number of threads that collaborate one output element. We use 6 values for the channel count, denoted as $C_{num}=\{1,2,4,8,16,32\}$. 
+Figure \ref{fig:pwworkflow} demonstrates that we use 8 threads to calculate 8 channels of one output element at the same time. 
 
+For each option of $C_{num}$, we calculate how many elements a warp can process at the same time, denoted as $Ele_{count}=32/C_{num}$. 
+Then we get the number of elements each thread needs to process, denoted as $T_{num}=WarpTile_W/Ele_{count}$.
+When calculating the same amount of output elements, square blocking uses the least load instructions. 
+Therefore, we try to set the height of the thread tile to $T_{num}$.
+First, we compare the value of $T_{num}$ with $InitWarp_H$.
+If $T_{num}>InitWarp_H$, meaning there is not enough output elements to construct a square tile, we set $Warp_H=InitWarp_H$, otherwise, set $Warp_H=T_{num}$.
+Then update $Block_H=2*Warp_H$.
 
-For each block number, there are two block tile layout, a column of block tiles or a row of block tiles. 
-Then the height and width of a block tile can be denoted as $BlockTile_W=\{F_H, \frac{F_H}{2}\}$, $BlockTile_H=\frac{SM_{tile}}{BlockTile_W}$.
-
-After deciding the number of thread blocks and warps, we can calculate the size of a block tile as $B_{tile}=\frac{SM_{tile}}{Num_{block}}$ and warp tile as $W_{tile}=\frac{B_{tile}}{Num_{warp}}$.
-The warp tile layout is fixed as a $2\times2$ matrix, and the height and width can be calculated as $WarpTile_H=\frac{BlockTile_H}{2}$ and $WarpTile_W=\frac{BlockTile_W}{2}$.
-
-Now we demonstrate how to distribute input channels among a warp and calculate the exact shape of each tile.
-To map input channels to threads, we need to decide how many threads of a warp calculate continous channels of one output element, denoted as $C_{num}$. 
-Figure \ref{fig:pwflow} demonstrates that we use 8 threads to calculate 8 channels of one output element at the same time. 
-As there are 32 threads in a warp, we have 6 choices for $C_{num}$, which are $C_{num}=\{1,2,4,8,16,32\}$.
-
-For each option of $C_{num}$, we calculate how many filters a warp can process at the same time, denoted as $F_{count}=\frac{32}{C_{num}}$. Then we get the number filters each thread needs to process, denoted as $T_{filter}=\frac{WarpTile_W}{F_{count}}$.
-Based on these informantion and hardward constraints, we choose a combination of $Num_{block}$, block tile layout, and $C_{num}$ to maxmize the aritemetic intensity of a therad.
+Now we describe the constraints on registers and shared memory. Based on $Block_{num}$, we calculate the number of registers each thread can use and the size of shared memory each thread block can use, denoted as $Limit_R=65536/(Block_{num}*4*32)$ and $Limit_S=64*1024B/Block_{num}$ respectively.
+The constraints can be formulated as follows:
+\begin{equation}\nonumber
+R_{o}=WarpTile_H*T_{num},R_{tmpf}=\frac{C_{num}*BlockTile_W}{128}
+\end{equation}
+\begin{equation}\nonumber
+R_{f}=WarpTile_H,R_{i}=T_{num},R_{tmpi}=\frac{C_{num}*BlockTile_H}{128}
+\end{equation}
+\begin{equation}
+R_{o}+R_{i}+R_{f}+R_{tmpf}+R_{tmpi}+const \leq Limit_R
+\end{equation}
+\begin{equation}
+(BlockTile_H+BlockTile_W)*C_{num}*4*2 \leq Limit_S
+\end{equation}
 \begin{figure}
 	\centering
     \includegraphics[width=\columnwidth]{./figure/pwworkflow.eps}
@@ -109,3 +122,13 @@ Based on these informantion and hardward constraints, we choose a combination of
         \caption{Pointwise Convolution Optimization}
         \label{algo:pwalgo}
 \end{algorithm}
+
+We use two metrics, arithmetic intensity and thread block number, to select the best combinations. Two metrics are represented with notation $M_{A}$ and $M_{B}$, and can be calculated as follows:
+\begin{equation}
+    M_{A}=\frac{WarpTile_H*T_{num}*Iter}{R_{tmpf}+R_{tmpi}}
+\end{equation}
+\begin{equation}
+    M_{B}=\frac{SM_H}{Block_H}*\frac{SM_W}{Block_W}*SM_{num}
+\end{equation}
+
+We first choose the best combination based on $M_{A}$, if two $M_{A}$ are close enough, then we choose the combination with smallest $M_{B}$. 
