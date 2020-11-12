@@ -50,36 +50,42 @@ For the layout \textbf{\emph{L2}}, we halve the filter dimension if $F_N \geq 24
 Last, we halve both dimensions of each block tile and generate $2 \times 2$ warp tiles. The height and widht of a warp tile are represented as $Warp_H$ and $Warp_W$ respectively.
 
 \subsection{Distribute Channels Over Threads}
+{\color{red}illustrate the max number of filters and inputs a thread can process}
 In this stage, we iterate over all candidate combinations of channel count and $Warp_H$, and select the combination that leads to optimial SM utilization and arithmetic intensity.
 
-First, we describe how to determine the candidates for channel count and $Warp_H$ with layout \textbf{\emph{L1}}. Layout \textbf{\emph{L2}} has a similar process.
-Assume that we distribute 8 channels across threads, which means that 8 threads will load 8 channels of the filter into registers. 
-Therefore, 32 threads of a warp can load 8 channels of $32/8=4$ filters  at the same time.
-To increase the arithmetic intensity, we need to distribute channels over threads. The most important cosideration is how to determine the number of threads that collaborate one output element. We use 6 values for the channel count, denoted as $C_{num}=\{1,2,4,8,16,32\}$. 
-Figure \ref{fig:pwworkflow} demonstrates that we use 8 threads to calculate 8 channels of one output element at the same time. 
+Now we describe how to determine the candidates for channel count and $Warp_H$ with layout \textbf{\emph{L1}}. Layout \textbf{\emph{L2}} has a similar process.
+Assume that we distribute 8 channels ($C_{num}=8$) across 8 threads, which means that 8 threads will load 8 channels of the same filter into registers. 
+Therefore, 32 threads of a warp can load 32 channels of $32/8=4$ filters at the same time, we denote this number as $F_{num}=32/C_{num}$.
+And then the number of filters each thread needs to process can be calculated with $T_F=Warp_H/F_{num}$.
+To fully utilize a warp, the channel count should be a power of 2.
+Thus, the condidates for channel count are $C_{num}=\{1,2,4,8,16,32\}$.
 
-For each option of $C_{num}$, we calculate how many elements a warp can process at the same time, denoted as $Ele_{count}=32/C_{num}$. 
-Then we get the number of elements each thread needs to process, denoted as $T_{num}=WarpTile_W/Ele_{count}$.
-When calculating the same amount of output elements, square blocking uses the least load instructions. 
-Therefore, we try to set the height of the thread tile to $T_{num}$.
-First, we compare the value of $T_{num}$ with $InitWarp_H$.
-If $T_{num}>InitWarp_H$, meaning there is not enough output elements to construct a square tile, we set $Warp_H=InitWarp_H$, otherwise, set $Warp_H=T_{num}$.
-Then update $Block_H=2*Warp_H$.
+Next, we demonstrate how to determine the candidates for $Warp_H$ based on the size of input dimension, $I_N \times I_H \times I_W$.
+If the size of input dimension is large, we prefer to choose large $Warp_H$ because using small $Warp_H$ will generate more thread blocks and results in multiple loads of shared filters.
+If the size of input dimension is small, we prefer to choose small $Warp_H$ because using large $Warp_H$ will generate a few thread blocks and result in SM underutilization.
+Since each thread loads at most 12 input elements, we set the upper limit of large $Warp_H$ to 12 and lower limit to $12/2=6$. 
+Therefore, the condidates for large $Warp_H$ are $Warp_H=\{6,7,8,9,10,11,12\}$.
+The candidates for small $Warp_H$ are $Warp_H=\{2,3,4,5,6,7,8\}$.
+In our experiments, there is no clear boundry between large and small candidate sets of $Warp_H$, therefore we let both sets overlap in the middle values.
+The boundry between large and small size of input dimension is experimentally determined as $I_N \times I_H \times I_W=16 \times 14 \times 14$.
 
-Now we describe the constraints on registers and shared memory. Based on $Block_{num}$, we calculate the number of registers each thread can use and the size of shared memory each thread block can use, denoted as $Limit_R=65536/(Block_{num}*4*32)$ and $Limit_S=64*1024B/Block_{num}$ respectively.
+When searching for the optimal combinations, we only consider combinations that staisfy hardware constraints, including registers and shared memroy.
+Based on $Block_{num}$, we calculate the number of registers each thread can use and the size of shared memory each thread block can use, denoted as $Limit_R=65536/(Block_{num}*4*32)$ and $Limit_S=64*1024B/Block_{num}$ respectively.
+Each thread calculates $Warp_H \times T_{num}$ output elements and thus needs $R_O=Warp_H \times T_{num}$, $R_I=Warp_H$ and $R_F=T_{num}$ registers to store output elemnts, input elements and filter elements respectively.
+In cases where the computation workload is small, we try to let each thread accumulates $Warp_H*T_{num}$ output elements $k \in \{1,2,3,4\}$ times.
 The constraints can be formulated as follows:
 \begin{equation}\nonumber
-R_{o}=WarpTile_H*T_{num},R_{tmpf}=\frac{C_{num}*BlockTile_W}{128}
-\end{equation}
-\begin{equation}\nonumber
-R_{f}=WarpTile_H,R_{i}=T_{num},R_{tmpi}=\frac{C_{num}*BlockTile_H}{128}
+R_{LF}=\frac{C_{num}*k*Block_W}{128},R_{LI}=\frac{C_{num}*k*Block_H}{128}
 \end{equation}
 \begin{equation}
-R_{o}+R_{i}+R_{f}+R_{tmpf}+R_{tmpi}+const \leq Limit_R
+    \label{fo:limitr}
+R_O+R_I+R_F+R_{LF}+R_{LI}+para \leq Limit_R
 \end{equation}
 \begin{equation}
-(BlockTile_H+BlockTile_W)*C_{num}*4*2 \leq Limit_S
+    \label{fo:limits}
+(Block_H+Block_W)*C_{num}*k*4*2 \leq Limit_S
 \end{equation}
+where $R_{LF}$ and $R_{LI}$ are number of registers used to store filter and input elements loaded from global memroy respectively, $para$ is the number of additioal registers allocated by the compilter. The values of $k$ and $para$ for each kernel are determined through an off-line method. 
 \begin{figure*}
 	\centering
     %\includegraphics[width=\columnwidth]{./figure/pwworkflow1.eps}
@@ -128,12 +134,31 @@ R_{o}+R_{i}+R_{f}+R_{tmpf}+R_{tmpi}+const \leq Limit_R
         \label{algo:pwalgo}
 \end{algorithm}
 
-We use two metrics, arithmetic intensity and thread block number, to select the best combinations. Two metrics are represented with notation $M_{A}$ and $M_{B}$, and can be calculated as follows:
+To guide the search for the optimal combination of $Block_{num}$, $C_{num}$ and $Warp_H$, we use two metrics named SM utilization ($SM_{util}$) and the difference between $Warp_H$ and $T_{num}$ ($D$).
+Two metrics can be calculated as follows:
 \begin{equation}
-    M_{A}=\frac{WarpTile_H*T_{num}*Iter}{R_{tmpf}+R_{tmpi}}
+    SM_{util}=\frac{F_N}{Block_W}*\frac{I_N*I_H*I_W}{2*Warp_H}
+    \label{fo:smutil}
 \end{equation}
 \begin{equation}
-    M_{B}=\frac{SM_H}{Block_H}*\frac{SM_W}{Block_W}*SM_{num}
+    D = |Warp_H-T_{num}|
+    \label{fo:diff}
 \end{equation}
+We will demonstrate how to select the combinations based on bath metrics in the next section.
 
-We first choose the best combination based on $M_{A}$, if two $M_{A}$ are close enough, then we choose the combination with smallest $M_{B}$. 
+\subsection{Putting Togtther}
+We first choose the layout of output and partition the output into block tiles based on the number of fitlers ($F_N$) and choose the candidate set for $Warp_H$ based on the size of input dimension ($I_N*I_H*I_W$).
+Then we iterate over all combinations of $Block_{num}$, $C_{num}$ and $Warp_H$, and keep the combinations that satisfy the constraints $Limit_R$ (Formula \ref{fo:limitr}) and $Limit_S$ (Formula \ref{fo:limits}).
+
+Next, we calculate values of $SM_{util}$ (Formula \ref{fo:smutil}) for all satisfied combinations and select the optimal combination with following steps:
+\begin{enumerate}[Step 1]
+    \item If all values of $SM_{util}$ are greater than or equal to 1, we select the combinations that possess the smallest and close to the smallest values.
+    The reason is that when $SM_{util}$ is greater than or equal to 1, all SMs are utilized, in which case we want to reduce the number of thread blocks to reduce the number of loads of shared filters or inputs between multiple thread blocks.
+    \item If there are values of $SM_{util}$ less than 1, we first collect the combinations that posess this kind of values. Then, among these combinations, we select the combinations that possess the biggest and close to the biggest values.
+    The reason is that when $SM_{util}$ is less than 1, there are idle SMs, in which case we want to increase $SM_{util}$ to fully utilize SMs. We do not want $SM_{util}$ to exceed 1 becuase that will incure more memory operations.
+    \item Among candidate combinations collected in Step 1 or Step 2, we select the combination with the smallest value of $D$ (Formula \ref{fo:diff}).
+    We prefer smaller values of $D$ becusae the values of $Warp_H$ and $T_{num}$ are more close, we can use less memory operations to generate the same amount of output elements.
+\end{enumerate}
+
+In stage 3, we choose the pointwise convolution kernel based on the selected combination of $Block_{num}$, $C_{num}$ and $Warp_H$. In this kernel, each thread block first loads channels of corresponding inputs and filters into shared memory. Then, each thread accumulates output elements. Meanwhile, each thread corraporates to load next $k*C_{num}$ channels into another shared memory. And repeat the process until all channles have been accumulated to output elments.
+Finally, use a warp level segmented parallel reduction to reduce results in different channels into the final result and write to global memory.  

@@ -7,18 +7,11 @@ point computation  and 4350 CUDA cores for integer operations. The GPU has a 96K
 Intel Xeon E5-2697 CPU with 252GB memory, running Linux kernel v4.15.0. We use CUDA Toolkit version 10.2.
 
 
-\subsection{Competing Methods} We compare our approach against the following state-of-the-art image and convolution libraries:
+\subsection{Competing Methods} We compare our approach against the following state-of-the-art convolution libraries:
 \begin{itemize}
   \item \textbf{cuDNN version 7.6.4}. cuDNN is a state-of-the-art convolution implementation that supports all kinds of convolutions including depthwise and pointwise convolutions on GPU. 
-  Moreover, cuDNN can execute GEMM-, FFT- and Winograd-based convolutions.
+  Moreover, cuDNN can execute GEMM-, FFT- and Winograd-based convolutions. We take cuDNN GEMM implementation as a baseline for pointwise convolution.
   \item \textbf{Direct implementation of depthwise convolution}. We implement a direct depthwise convolution without using the proposed reuse algorithms. We take this implementation as a baseline for depthwise convolution.
- % \item \textbf{ArrayFire \cite{Yalamanchili2015}, version 3.6.4}. ArrayFire is a popular image and signal processing library. This
- %     library implements 2D convolutions on GPU. ArrayFire uses Just In Time compiling for standard arithmetic operations. Thus, the
- %     first run of an ArrayFire application takes longer than the second run. In the experiment, we run ArrayFire twice in each test and
- %     record the second runtime.
- %\item \textbf{NVIDIA Performance Primitives (NPP)}. This is an image and signal processing library. We use NPP for 2D convolutions only.
-  \item \textbf{GEMM-im2col}. We extract the implementation of the GEMM-im2col from Caffe \cite{jia2014caffe} and take it as a baseline
-      for the pointwise convolutions.
 \end{itemize}
 
 \subsection{Use Cases}
