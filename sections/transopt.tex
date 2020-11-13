@@ -170,7 +170,6 @@ reuse algorithm. When sliding the filter over the input image along the height d
 
 \subsubsection{Standard convolution} Assume we use one thread to calculate one column of output elements. For the working example given in Figure
 \ref{fig:rowreuse}, the convolution will be computed as follows:
-
 \begin{gather*}
   out_0=row_{i0} \cdot row_{f0} + row_{i1} \cdot row_{f1} + row_{i2} \cdot row_{f2} \\
 out_{1}=row_{i1} \cdot row_{f0} + row_{i2} \cdot row_{f1} + row_{i3} \cdot row_{f2} \\

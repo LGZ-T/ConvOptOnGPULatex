@@ -237,38 +237,38 @@ Compared to the fastest available algorithms in cuDNN, which is the state-of-the
 \begin{threeparttable}
 \begin{tabular}{lrrrrr}
 \toprule
-& \textbf{$I_N$} & \textbf{$I_C=F_C$} & \textbf{$I_H \times I_W$} & \textbf{$F_N$} & \textbf{$F_H \times F_W$} \\
+& \textbf{$I_N$} & \textbf{$I_C=F_C$} & \textbf{$I_H \times I_W$} & \textbf{$F_N \times F_H \times F_W$} \\
 \midrule
-\textbf{CV1}  & 1,8,16,32,64,128  & 16    & $56\times 56$   & 8   & $1\times 1$\\
-\textbf{CV2}  & 1,8,16,32,64,128  & 8     & $56\times 56$   & 16  & $1\times 1$\\
+\textbf{CV1}  & 1,8,16,32,64,128  & 16    & $56\times 56$   & $8 \times 1\times 1$\\
+\textbf{CV2}  & 1,8,16,32,64,128  & 8     & $56\times 56$   & $16 \times 1\times 1$\\
 %\textbf{CONV3}  & 1,8,16,32,64,128  & 16    & $56\times 56$   & 16  & $1\times 1$\\
-\textbf{CV3}  & 1,8,16,32,64,128  & 16    & $56\times 56$   & 72  & $1\times 1$\\
-\textbf{CV4}  & 1,8,16,32,64,128  & 72    & $28\times 28$   & 24  & $1\times 1$\\
+\textbf{CV3}  & 1,8,16,32,64,128  & 16    & $56\times 56$   & $72 \times 1\times 1$\\
+\textbf{CV4}  & 1,8,16,32,64,128  & 72    & $28\times 28$   & $24 \times 1\times 1$\\
 %\textbf{CONV6}  & 1,8,16,32,64,128  & 24    & $28\times 28$   & 88  & $1\times 1$\\
 %\textbf{CONV7}  & 1,8,16,32,64,128  & 88    & $28\times 28$   & 24  & $1\times 1$\\
-\textbf{CV5}  & 1,8,16,32,64,128  & 24    & $28\times 28$   & 96  & $1\times 1$\\
-\textbf{CV6}  & 1,8,16,32,64,128  & 96    & $14\times 14$   & 24  & $1\times 1$\\
-\textbf{CV7} & 1,8,16,32,64,128  & 24    & $14\times 14$   & 96  & $1\times 1$\\
+\textbf{CV5}  & 1,8,16,32,64,128  & 24    & $28\times 28$   & $96 \times 1\times 1$\\
+\textbf{CV6}  & 1,8,16,32,64,128  & 96    & $14\times 14$   & $24 \times 1\times 1$\\
+\textbf{CV7} & 1,8,16,32,64,128  & 24    & $14\times 14$   & $96  \times 1\times 1$\\
 %\textbf{CONV11} & 1,8,16,32,64,128  & 96    & $14\times 14$   & 32  & $1\times 1$\\
-\textbf{CV8} & 1,8,16,32,64,128  & 32    & $14\times 14$   & 192 & $1\times 1$\\
-\textbf{CV9} & 1,8,16,32,64,128  & 192   & $14\times 14$   & 48  & $1\times 1$\\
+\textbf{CV8} & 1,8,16,32,64,128  & 32    & $14\times 14$   & $192 \times 1\times 1$\\
+\textbf{CV9} & 1,8,16,32,64,128  & 192   & $14\times 14$   & $48  \times 1\times 1$\\
 %\textbf{CONV14} & 1,8,16,32,64,128  & 48    & $14\times 14$   & 192 & $1\times 1$\\
 %\textbf{CONV15} & 1,8,16,32,64,128  & 192   & $14\times 14$   & 32  & $1\times 1$\\
 %\textbf{CONV16} & 1,8,16,32,64,128  & 32    & $14\times 14$   & 96  & $1\times 1$\\
-\textbf{CV10} & 1,8,16,32,64,128  & 96    & $14\times 14$   & 40  & $1\times 1$\\
-\textbf{CV11} & 1,8,16,32,64,128  & 40    & $14\times 14$   & 120 & $1\times 1$\\
-\textbf{CV12} & 1,8,16,32,64,128  & 120   & $14\times 14$   & 32  & $1\times 1$\\
+\textbf{CV10} & 1,8,16,32,64,128  & 96    & $14\times 14$   & $40 \times 1\times 1$\\
+\textbf{CV11} & 1,8,16,32,64,128  & 40    & $14\times 14$   & $120 \times 1\times 1$\\
+\textbf{CV12} & 1,8,16,32,64,128  & 120   & $14\times 14$   & $32 \times 1\times 1$\\
 %\textbf{CONV20} & 1,8,16,32,64,128  & 32    & $14\times 14$   & 120 & $1\times 1$\\
 %\textbf{CONV21} & 1,8,16,32,64,128  & 120   & $14\times 14$   & 40  & $1\times 1$\\
-\textbf{CV13} & 1,8,16,32,64,128  & 40    & $14\times 14$   & 240 & $1\times 1$\\
-\textbf{CV14} & 1,8,16,32,64,128  & 240   & $7\times 7$     & 64  & $1\times 1$\\
-\textbf{CV15} & 1,8,16,32,64,128  & 64    & $7\times 7$     & 240 & $1\times 1$\\
+\textbf{CV13} & 1,8,16,32,64,128  & 40    & $14\times 14$   & $240 \times 1\times 1$\\
+\textbf{CV14} & 1,8,16,32,64,128  & 240   & $7\times 7$     & $64  \times 1\times 1$\\
+\textbf{CV15} & 1,8,16,32,64,128  & 64    & $7\times 7$     & $240 \times 1\times 1$\\
 %\textbf{CONV25} & 1,8,16,32,64,128  & 240   & $7\times 7$     & 72  & $1\times 1$\\
-\textbf{CV16} & 1,8,16,32,64,128  & 72    & $7\times 7$     & 432 & $1\times 1$\\
-\textbf{CV17} & 1,8,16,32,64,128  & 432   & $7\times 7$     & 112 & $1\times 1$\\
-\textbf{CV18} & 1,8,16,32,64,128  & 112   & $7\times 7$     & 432 & $1\times 1$\\
-\textbf{CV19} & 1,8,16,32,64,128  & 432   & $7\times 7$     & 72  & $1\times 1$\\
-\textbf{CV20} & 1,8,16,32,64,128  & 432   & $7\times 7$     & 1024& $1\times 1$\\
+\textbf{CV16} & 1,8,16,32,64,128  & 72    & $7\times 7$     & $432 \times 1\times 1$\\
+\textbf{CV17} & 1,8,16,32,64,128  & 432   & $7\times 7$     & $112 \times 1\times 1$\\
+\textbf{CV18} & 1,8,16,32,64,128  & 112   & $7\times 7$     & $432 \times 1\times 1$\\
+\textbf{CV19} & 1,8,16,32,64,128  & 432   & $7\times 7$     & $72 \times 1\times 1$\\
+\textbf{CV20} & 1,8,16,32,64,128  & 432   & $7\times 7$     & $1024 \times 1\times 1$\\
 
 \bottomrule
 \end{tabular}
@@ -298,32 +298,32 @@ In all configurations of pointwise convolution, cuDNN implicit performs best amo
 Table \ref{tab:pwconv} lists the layer configurations used in this experiment.
 
 \subsubsection{Overall results} Figure \ref{fig:pwexectime} shows the speedups of cuDNN implicit and our approach over cuDNN gemm.
-Our approach achieves the best performance for CONV1-CONV? convolutions.
-For CONV?, which uses 1024 filters to convolve with the input, our approach performs poorly compared to cuDNN gemm and cuDNN implicit.
-Overall, our implementation achieves an average speedup of ?$\times$ and ?$\times$ over cuDNN gemm. 
-This translates to an improvement of ?$\times$ over the fastest algorithm in cuDNN.
+Our approach achieves the best performance for layers of CV1-CV19.
+For the layer CV20, which uses 1024 filters to convolve with the input, our approach performs poorly compared to cuDNN gemm and cuDNN implicit.
+Overall, our implementation and cuDNN implicit achieve an average speedup of $2.8\times$ and $1.5\times$ over cuDNN gemm. 
+This translates to an improvement of $2\times$ over cuDNN implicit, which is the fastest algorithm in cuDNN for pointwise convolution.
 
 \subsubsection{Further analysis}
 \begin{figure}
     \centering
-    \subfloat[][Ratios of SM utilization of implicit and ours to the sum of both utilizations.]{\includegraphics[width=0.9\columnwidth]{./figure/pwsmutil.eps}\label{fig:pwsmutil}}
+    \subfloat[][SM utilizations of cuDNN implicit and our approach.]{\includegraphics[width=\columnwidth]{./figure/pwsmutil.eps}\label{fig:pwsmutil}}
     \qquad
     \vspace{5mm}
-    \subfloat[][Ratios of executed LDG (load from global memory) instruction counts of implicit and ours to the sum of both counts.]{\includegraphics[width=0.9\columnwidth]{./figure/pwldginst.eps}\label{fig:pwldginst}}
+    \subfloat[][{\color{red}normalized}Ratios of executed LDG (load from global memory) instruction counts of cuDNN implicit to our approach.]{\includegraphics[width=\columnwidth]{./figure/pwldginst.eps}\label{fig:pwldginst}}
     \vspace{-4mm}
-    \caption{LDG instruction counts and SM utilization of pointwise convolutions with a batch size of 32. 
-    Other configurations have the similar ratios.}
-    \label{fig:pwratio}
+    \caption{SM utilizations and ratios of executed LDG instruction counts for pointwise convolutions with a batch size of 32.}
+    \label{fig:pwinfo}
 \end{figure}
-Figure \ref{fig:pwratio} reports the measured LDG (load from global memory) instruction counts and SM utilization for the cuDNN implicit algorithm and our approach when using a batch size of 32. Other configurations have the similar performance. 
+Figure \ref{fig:pwinfo} reports the measured SM utilizations and ratios of executed LDG instruction counts of cuDNN implicit to our approach when using a batch size of 32. Other configurations have the similar performance. 
 
-Given a specific layer configuration of pointwise convolution, our approach will create more thread blocks, which leads to a higher SM utilization, and also keeps a certain amount of computation for each thread to hide global memory access laytency.
-We can see in Figure \ref{fig:pwsmutil} that out approach has an average of $1.9\times$ higher SM utilization compared to cuDNN implicit. 
-The performance gain of our approach is mainly attributed to the hgiger SM utilization.
-As can be seen in Figure \ref{fig:pwldginst}, the number of executed LDG instructions of our approach is ?$\times$ higher than cuDNN implicit. 
-The reason is that we create more thread blocks and the input or the filter which is shared by multiple thread blocks will be loaded multiple times, therefore our approach will have a higher LDG instruction count than cuDNN implicit.
-But this sideeffect will be eleminated by the increased SM utilization.
-
+Given a specific layer configuration of pointwise convolution, our approach will try to create a sutiable number of thread blocks to saturate GPU. 
+A potential performance issue is that more thread blocks may incure more reloads of filters or inputs which are shared between thread blocks. 
+As shown in Figure \ref{fig:pwldginst}, our approach needs more than $2\times$ LDG instructions than cuDNN implicit in some cases.
+In contrary to the memory performance, the overall performance of our approach is $2\times$ faster than cuDNN implicit.
+There are two reasons for the performance gain of our approach. (1) Our approach exhibits a much higher SM utilization than cuDNN implicit.
+We can see in Figure \ref{fig:pwsmutil} that our approach has an average of $1.9\times$ higher SM utilization compared to cuDNN implicit.
+When executing pointwise convolution with a batch size of 128 or below, cuDNN implicit can not utilize SMs efficiently because of its fixed blocking strategy. 
+Based on our dynamic blocking strategy, we improve SM utilization which leads to performance improvement for pointwise convolution.
 
 \begin{figure*}
     \centering
@@ -332,14 +332,21 @@ But this sideeffect will be eleminated by the increased SM utilization.
     \label{fig:stalllongscore}
 \end{figure*}
 
+(2) We use double buffer and multiple accumulations of output to hide memory access laytency.
+Figure \ref{fig:stalllongscore} shows the average number of cycles each warp spends on waiting for the global operation to complete. 
+We implement a simple pointwise without laytency hiding, denoted as simple. 
+We can see that our approach can significantly reduce the memory access laytency compared to the simple implementation.
+To further reduce memory access laytency, we need assembly level optimizaition which is not the focus of this work.
+\subsubsection{Summary} We use dynamic blocking strategy to improve SM utilization and use double buffer and multiple accumulations to hide memory access latency. With both methods, we achieve an average speedup of $2\times$ over cuDNN implicit.
+
 
 \subsection{Inference Performance}
 \label{sec:inferexp}
 \subsubsection{Setup} In this experiment, we apply our depthwise and pointwise convolutions on the inference of MobileNetv2 for batch sizes of 1, 8, 16, 32, 64 and 128.
 We use caffe framework to implement MobileNetv2 and made some modifications to the source code of caffe before performing experiments. 
-First, we replace the implementation of batchnormalization and depthwise convolffution layers with cuDNN implementations. 
+First, we replace the implementation of batchnormalization and depthwise convolution layers with cuDNN implementations. 
 To perform the experiment, we first run the inference with cuDNN implementation and then replace the cuDNN with our implemnetation.
-We test using batch sizes of 1, 8 16, 32, 64 and 128 and record the end-to-end runtime.
+
 \subsubsection{Overall result}
 \begin{table}[]
     \caption{Experiments for inference using MobileNetv2}

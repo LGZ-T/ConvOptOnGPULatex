@@ -1,48 +1,48 @@
 \section{Optimizing Pointwise Convolution}
 \label{sec:pwconv}
-In this section, we demonstrate the workflow of our dynamic blocking strategy as shown in Figure \ref{fig:pwworkflow} and Algorithm \ref{algo:pwalgo}. 
+In this section, we demonstrate the workflow of our dynamic blocking size method as shown in Figure \ref{fig:pwworkflow} and Algorithm \ref{algo:pwalgo}. 
 The whole workflow consists of two stages. 
 
 In the first stage, our approach operates in a top-down fashion. 
-We use a 3-level hierarchical partitioning method to decompose the output into three levels of tiles, including block level tiles, warp level tiles and thread level tiles. 
-There are two main considerations when decomposing the output. First, how tiles are arranged in its upper level tile, and second, the height and width of each tile with the specified layout.
+We use a 2-level hierarchical partitioning method to decompose the output into two levels of tiles, including block tiles and warp tiles. 
+The main consideration when decomposing the output is the layout of tiles in each level.
 
-In the second stage, we calculate the exact height and width of thread level tiles. 
-Given the number of output elements in each tile and hardware resources constraints, we iterate over all possible configurations of tile height and width of each level and choose the configuration that maxmize the performance most.
+In the second stage, we distribute channels of input or filter across threads within the same warp.
+We iterate over all combinations of channel number and dimension size and choose the combination that maxmizes the performance most as well as satisfies hardware resources constraints.
 
 Now we give a detailed description of how each stage works.
-\subsection{3-Level Hierarchical Partitioning}
-In order to make it easier to understand the workflow of this stage, we first describe two important constant parameters and how we determine their values.
+\subsection{2-Level Hierarchical Partitioning}
+In order to make it easier to understand the workflow of this stage, we first describe two important variables and how we determine their values.
 
-The first parameter is the number of warps in a thread block, denoted as $Warp_{num}$.
+The first variable is the number of warps in a thread block, denoted as $Warp_{num}$.
 In order to determin the warp number, we need to consider: (1) small warp number will decrease the opportunity to hide the memory access latency at the warp level;
 (2) large warp number will dcrease the number of thread blocks and may lead to SM underutilization.
 Baed on both considerations, we decide to set $Warp_{num}=4$.
 In our experiments, this value is good enough to provide a satisfied performance.
 
 %this may not be important as i think
-The second parameter is the number of thread blocks that can run concurrently on an SM.
-We use two values, 2 and 4, for this parameter, denoted as $Block_{num}=\{2, 4\}$. 
+The second variable is the number of thread blocks that can run concurrently on an SM.
+We use two values, 2 and 4, for this variable, denoted as $Block_{num}=\{2, 4\}$. 
 There are two reasons for these choices: 
 (1) when $Block_{num}=1$ and $Warp_{num}=4$, there are only 4 warps in an SM. 
-As each thread can use up to 256 registers, a thread block can use at most $4*32*256=32768$ registers, which is only half of 65536 registers of an SM.
+As each thread can use up to 256 registers, a thread block can use at most $4*32*256=32768$ registers, which is only half of registers of an SM (on RTX 2080Ti, each SM contains 65536 registers).
 To avoid wasting hardware resources, we set $Block_{num}>1$; 
 (2) when partitioning the output with the configuration of 4 thread blocks per SM, we encounter cases in which 5 or 6 thread blocks are actually running concurrently on an SM. 
-This is because in some cases, each thread block requires very few hardware resources and more than 4 thread blocks can run concurrently on one SM.
-Therefore, when searching for the best configurations, we only need $Block_{num}=\{2,4\}$.
+This is because in some cases, each thread block requires very few hardware resources and more than 4 thread blocks can run concurrently on an SM.
+Therefore, when searching for the best combination, we only need $Block_{num}=\{2,4\}$.
 
-Now we demonstrate the workflow of our 3-level hierarchical partitioning.
-In Figure \ref{fig:pwworkflow}, we show two logical layouts of output, $F_N$ and $I_N \times I_H \times I_W$ represent the filter and input dimensions of the output respectively.
+Now we demonstrate the workflow of our 2-level hierarchical partitioning method.
+In Figure \ref{fig:pwworkflow}, we show two logical layouts of the output, $F_N$ and $I_N \times I_H \times I_W$ represent the filter and input dimensions of the output respectively.
 In the first level, we partition the output based on the number of filters, $F_N$.
-When $F_N \ge 48$, we choose layout \textbf{\emph{L1}} and distribute filter channels across threads of the same warp. 
+When $F_N \ge 48$, we choose layout \textbf{\emph{L1}} and distribute filter channels across threads within the same warp. 
 Otherwise, we choose layout \textbf{\emph{L2}} and distribute input channels.
 The rationale behind this choice can be described as follows. 
 The number of filters, $F_N$, is fixed once the structure of a CNN is determined. 
 But the dimension of the input will be affected by the batch size, $I_N$, during inference and training.
-For the sake of simplicity, we design and implement our dynamic partitioning startegy to utilize layout \textbf{\emph{L1}} whenever there are enough filters to be distributed across threads.
-We will explain later in this section why we choose 48 as the boundry of layout \textbf{\emph{L1}} and \textbf{\emph{L2}}.
+For the sake of simplicity, we design our partition method to utilize layout \textbf{\emph{L1}} whenever there are enough filters to be distributed across threads.
+We will explain why we choose $F_N=48$ as the boundry of layout \textbf{\emph{L1}} and \textbf{\emph{L2}} later in this section.
 
-Next, we partition both layouts of output into block tiles along the filter dimension. 
+Next, we partition the output into block tiles along the filter dimension. 
 For the layout \textbf{\emph{L1}}, we halve the filter dimension if $F_N \geq 512$. 
 The reason is that if we let each block tile process excessive amount of filters, there will be few options for channel number{\color{red}explain this in previous text} when distributing channels across threads. 
 This may cause our dynamic partitioning startegy to find a sub-optimal configuration for pointwise convolution.
