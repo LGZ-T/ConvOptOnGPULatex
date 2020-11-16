@@ -51,7 +51,7 @@ result, the threads within the same warp will process the adjacent columns of on
 
 Figure \ref{fig:overalldesign} shows the mapping process of GPU threads to output elements. In this example, we slide a $3 \times 3$ filter
 over an $8 \times 8$ input.  Given that 2D convolutions typically produce an output image with the same size as the input image, the
-input image should be padded. To reduce the memory pressure, we do not actually allocate GPU memory space for the padded elements. Instead,
+input image should be padded. To reduce the memory pressure, we do not allocate GPU memory space for the padded elements. Instead,
 we use different methods to calculate the edge and inner elements of the output. The edge and inner elements are represented by the shaded
 and dashed squares in Figure \ref{fig:overalldesign}, respectively.
 

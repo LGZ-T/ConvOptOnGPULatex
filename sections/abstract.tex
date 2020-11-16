@@ -1,18 +1,18 @@
 \begin{abstract}
-In recent years, depthwise separable convolution has been used in many convolutntial neural networks (CNNs) to reduce the computational cost of standard 2D convolution.
-It splits the computation into depthwise convolution and pointwise convolution.
-However, the state-of-the-art implementation of depthwise separable convolution in cuDNN is inefficient when batch size falls to 128 or below due to low computational workload of depthwise separable convolution. 
+In recent years, depthwise separable convolutions have been used in many convolutional neural networks (CNNs) to reduce the computational cost of standard 2D convolutions.
+Depthwise separable convolution splits the computation into depthwise convolution and pointwise convolution.
+However, state-of-the-art implementations of depthwise separable convolution in cuDNN are inefficient when batch size falls to 128 or below due to the low computational workload of depthwise separable convolution. 
 
 In this work, we present two novel approaches to improve memory performance and GPU utilization for depthwise and pointwise convolutions, respectively. 
-(1) Depthwise convolution possesses a much lower computational workload than standard 2D convolution, therefore memory performance has a significant impact on its runtime. 
+(1) Depthwise convolution possesses a much lower computational workload than standard 2D convolution, and therefore memory performance has a significant impact on its runtime. 
 Our approach leverages two optimization techniques named column reuse and row reuse to reduce the number of memory operations for depthwise convolution performed on the width and height dimensions. 
 %For convolution computations on the width dimension, we exploit shuffle instructions to exchange the overlapped columns of the input for reducing the number of memory transactions. For convolution operations on the height dimension, we multiply each overlapped row of the input with multiple rows of a filter to compute multiple output elements to improve the data locality of row elements. Our approach is simple yet effective and can work on existing CUDA and OpenCL standards without hardware modification.
-(2) Pointwise convolution in cuDNN exhibits low GPU utilization when using a batch size of 128 or below due to the fixed blocking size without considering the total amount of computation. 
-We design a dynamic blocking size method to increase GPU utilization of pointwise convolution, but also keeps a certain amount of computation for each thread to hide memory access latency by distributing channels across threads.
+(2) Pointwise convolution in cuDNN exhibits low GPU utilization when using a batch size of 128 or below due to the fixed block size without considering the total amount of computation. 
+We design a dynamic block size method which not only increases GPU utilization of pointwise convolution by distributing channels across threads but also keeps a certain amount of computation for each thread to hide memory access latency.
 
-We compare our optimized depthwise convolution and pointwise convolution with the implementations of cuDNN on an NVIDIA 2080Ti GPU. 
+We compare our optimized depthwise convolution and pointwise convolution with the implementations of cuDNN on an NVIDIA RTX 2080Ti GPU. 
 Experiments show that our approach delivers over $3\times$ and $2\times$ faster performance than cuDNN for depthwise and pointwise convolutions, respectively. 
-We also apply our implementations on Caffe framework to test the inference time of MobileNetV2 with batch sizes of 128 and below, results show that we improve the inference performance by 13\% on average.
+We also apply our implementations on caffe framework to test the inference time of MobileNetV2 with batch sizes of 128 and below, results show that we improve the inference performance by 12.19\% on average.
 \end{abstract}
 
 %% End of generated code

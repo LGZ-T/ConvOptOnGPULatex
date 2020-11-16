@@ -1,13 +1,7 @@
 \section{Optimizing Depthwise Convolution}
-\label{sec:strategies} In this section, we describe our two optimizations, column reuse (Section \ref{sec:creuse}) and row reuse (Section \ref{sec:rowreuse}), for reducing GPU memory transactions for depthwise convolution. 
-%In Section \ref{sec:together}, we show how the two optimization techniques can be used together.
-%Then we describe how to distribute input channels among threads within a warp and how many threads to process one output element for pointwise convolution (Section {\color{red}}).
+\label{sec:strategies} In this section, we describe our two optimizations, column reuse (Section \ref{sec:creuse}) and row reuse (Section \ref{sec:rowreuse}), for reducing GPU memory transactions for depthwise convolution.
+Throughout the paper, we use $I$, $F$, and $O$ to represent the input, the filter, and the output respectively, $N$, $C$, $H$, and $W$ to denote the batch size, the channel, the height, and the width, respectively.
 
-%\subsection{Preliminaries}
-%
-%Our approach optimizes convolution operations on GPUs by reusing column and row elements. Throughout the paper, we use $I$, $F$, and $O$ to
-%represent the input, the filter, and the output respectively, $N$, $C$, $H$, and $W$ to denote the batch size, the channel, the height, and
-%the width, respectively.
 \subsection{Column Reuse Optimization}
 \label{sec:creuse}
 
@@ -22,70 +16,59 @@
 \subfloat[Our approach: each thread retrieves its second and fourth elements from corresponding threads.]{\includegraphics[width=0.3\textwidth,height=3.2cm]{./figure/optalgo2.eps}
 	\label{fig:optalgo2}}
 
-\caption{Illustration of direct and optimized convolution. We use a $5 \times 5$ filter  and each thread calculates the convolution for one
+\caption{Illustration of direct and optimized convolutions. We use a $5 \times 5$ filter  and each thread calculates the convolution for one
 output element. This example shows how a thread processes the first 5 corresponding input elements.} \label{fig:corealgo}
 \end{figure*}
 
-\mypara{Working example.} We use the depthwise convolution with only one channel shown in Figure \ref{fig:twostrategies} as a working example to explain our
-column reuse method. 
-Here, we slide a $5 \times 5$ filter over a $6 \times 11$ input to produce a $2 \times 7$ output. 
+\mypara{Working example.} We use the depthwise convolution with only one channel shown in Figure \ref{fig:twostrategies} as a working example to explain our column reuse method. 
+Here, we slide a $5 \times 5$ filter over a $6 \times 11$ input with stride 1 to produce a $2 \times 7$ output.
+Our column reuse method can also be applied to depthwise convolutions with stride 2. 
 In this example, each thread calculates one column of the output. 
-Two parallel threads 0 and 1 will execute code to slide the filter along the width
-dimension, where both threads load two overlapped regions from the input image (thereby generating four duplicate columns). Similarly,
-there will be another thread (thread 6 in this example) to slide the filter along the height dimension, which will load two overlapped
-regions and generates four duplicate rows.
+Two parallel threads 0 and 1 will execute code to slide the filter along the width dimension, where both threads load two overlapped regions from the input image (thereby generating four duplicate columns). 
+Similarly, there will be another thread (thread 6 in this example) to slide the filter along the height dimension, which will load two overlapped regions and generates four duplicate rows.
 
-
-
-\subsubsection{Standard convolution} Figure \ref{fig:directalgo} shows a standard depthwise convolution operation, operating on a single-channel input. Here, each thread loads the first corresponding input elements from the GPU global memory. Given that the
-indices of these elements are contiguous, i.e., 0, 1, 2, and 3 in this example, concurrent access to these elements will be coalesced to
-form a single memory transaction. As a result, each step will incur one memory transaction, five for the five steps (steps 1-5) as shown in
-Figure \ref{fig:directalgo}. After completing step 5, each pair of adjacent threads will have four duplicate input elements, corresponding
-to the duplicate columns in Figure \ref{fig:twostrategies}. Specifically, input elements 1, 2 and 3 loaded in step 2 would have already
-been loaded by threads $t1$, $t2$ and $t3$ in the previous step (Figure \ref{fig:directalgo}). The repeated load to these elements leads to
-redundant memory accesses and unnecessary memory access overhead. Even the elements may be prefetched to the L1 cache before the next step,
-access to the L1 cache still takes around 30 cycles on a GPU. To reduce the memory overhead, we would like to avoid such redundant memory
-accesses.
-
+\subsubsection{Standard convolution} Figure \ref{fig:directalgo} shows a standard depthwise convolution operation, operating on a single-channel input. 
+Here, each thread loads the first corresponding input elements from the GPU global memory. 
+Given that the indices of these elements are contiguous, i.e., 0, 1, 2, and 3 in this example, concurrent access to these elements will be coalesced to form a single memory transaction. 
+As a result, each step will incur one memory transaction, five for the five steps (steps 1-5) as shown in Figure \ref{fig:directalgo}. 
+After completing step 5, each pair of adjacent threads will have four duplicate input elements, corresponding to the duplicate columns in Figure \ref{fig:twostrategies}. 
+Specifically, input elements 1, 2 and 3 loaded in step 2 would have already been loaded by threads $t1$, $t2$ and $t3$ in the previous step (Figure \ref{fig:directalgo}). 
+The repeated load to these elements leads to redundant memory accesses and unnecessary memory access overhead. 
+Even the elements may be prefetched to the L1 cache before the next step, access to the L1 cache still takes around 30 cycles on a GPU. 
+To reduce the memory overhead, we would like to avoid such redundant memory accesses.
 
 \subsubsection{An optimized version} To eliminate the redundant loads, we could use the shuffle instructions to exchange input elements among
-different threads.   Figure \ref{fig:optalgo1} depicts such an optimization. Specifically, in steps 1 and 2 of Figure \ref{fig:optalgo1},
-each thread loads the corresponding first and fifth input elements from the global memory. In step 3, each thread utilizes the shuffle
-instruction to retrieve the third element from another thread. For example, threads $t0$ and $t1$ could retrieve the third element from
-threads $t2$ and $t3$, respectively, and provide the fifth element (dashed squares in step 2) for both threads. Similarly, threads $t2$ and
-$t3$ retrieve the third element from threads $t0$ and $t1$, respectively, and provide the first element (dashed squares in step 1) for
-threads $t0$ and $t1$. Using the CUDA shuffle instruction, this exchange process can be implemented as $shfl\_xor(iTemp[i],2)$, where
-$iTemp$ is a thread-local array used to store the five input elements, and $i$ is the location in the local array. In our case, threads
-$t0$ and $t1$ will supply the fifth element, hence $i=4$. Similarly, threads $t2$ and $t3$ will provide the first element, thus $i=0$.
+different threads.   
+Figure \ref{fig:optalgo1} depicts such an optimization. 
+Specifically, in steps 1 and 2 of Figure \ref{fig:optalgo1}, each thread loads the corresponding first and fifth input elements from the global memory. 
+In step 3, each thread utilizes the shuffle instruction to retrieve the third element from another thread. 
+For example, threads $t0$ and $t1$ could retrieve the third element from threads $t2$ and $t3$, respectively, and provide the fifth element (dashed squares in step 2) for both threads. 
+Similarly, threads $t2$ and $t3$ retrieve the third element from threads $t0$ and $t1$, respectively, and provide the first element (dashed squares in step 1) for threads $t0$ and $t1$. 
+Using the CUDA shuffle instruction, this exchange process can be implemented as $shfl\_xor(iTemp[i],2)$, where $iTemp$ is a thread-local array used to store the five input elements, and $i$ is the location in the local array. 
+In our case, threads $t0$ and $t1$ will supply the fifth element, hence $i=4$. 
+Similarly, threads $t2$ and $t3$ will provide the first element, thus $i=0$.
 
-
-
-While this version reduces the redundant memory accesses compared to a standard convolution implementation, there is still room for
-improvement. The problem is that the shuffle instruction $shfl\_xor(iTemp[i],2)$ now becomes a bottleneck because $iTemp$ is accessed
-through dynamic indexing. Since the indices and the access pattern to $iTemp$ are not available at compile-time, the compiler cannot decide
-which of the elements in $iTemp$ will be frequently accessed and has to place $iTemp$ in the local memory which would still incur an access
-latency of around 500 cycles. If we can promote register allocation for $iTemp$, we can then further improve the performance of
-convolution.
-
+While this version reduces the redundant memory accesses compared to a standard convolution implementation, there is still room for improvement. 
+The problem is that the shuffle instruction $shfl\_xor(iTemp[i],2)$ now becomes a bottleneck because $iTemp$ is accessed through dynamic indexing. 
+Since the indices and the access pattern to $iTemp$ are not available at compile-time, the compiler cannot decide which of the elements in $iTemp$ will be frequently accessed and has to place $iTemp$ in the local memory which would still incur an access latency of around 500 cycles. 
+If we can promote register allocation for $iTemp$, we can then further improve the performance of convolution.
 
 \subsubsection{Our approach}
-Our column reuse approach (Figure \ref {fig:optalgo2}) converts dynamic indexing to static array access. This strategy promotes register
-allocation, leading to better performance over the optimized version shown in Figure \ref{fig:optalgo1}.
+Our column reuse approach (Figure \ref {fig:optalgo2}) converts dynamic indexing to static array access. 
+This strategy promotes register allocation, leading to better performance over the optimized version shown in Figure \ref{fig:optalgo1}.
 
-Our approach is described in Algorithms \ref{algo:basic} and \ref{algo:basic2},
-where the first algorithm is used for step 3, and the later is used for steps 4 and 5. Note that these two algorithms can be used for
-different sized convolution kernels, for which we will discuss in Section \ref {sec:rowreuse}.
+Our approach is described in Algorithms \ref{algo:basic} and \ref{algo:basic2}, where the first algorithm is used for step 3, and the latter is used for steps 4 and 5. 
+Note that these two algorithms can be used for different sized convolution kernels, for which we will discuss in Section \ref {sec:rowreuse}.
 
-Figure \ref{fig:exchange} shows the process of Algorithm \ref{algo:basic}. Here, we first load the corresponding first and fifth input elements
-into $iTemp$ before passing it to Algorithm \ref{algo:basic}. Then, we pack two 32-bit elements into a 64-bit variable $exchange$, where
-$iTemp[4]$ and $iTemp[0]$ are the high and low 32 bits, respectively (Line 2).  As threads $t0$ and $t1$ will provide the fifth element of
-the data they load, which are the high 32 bits of $exchange$, we right shift $exchange$ for both threads by an offset of 32 to place
-$iTemp[4]$ in the low 32 bits. Turning our attention to threads $t2$ and $t3$ that will provide the first element of the data they loaded.
-Since the elements are already the low 32 bits of $exchange$, we right shift $exchange$ in both threads by an offset of 0. The number of
-places to be shifted for each thread is calculated based on the thread ID (Line 3). Next, we unpack $exchange$ into $iTemp[2]$ (high 32
-bits) and $iTemp[1]$ (low 32 bits) (Line 5). By doing so, we can retrieve the element a thread needs to supply from a fixed location,
-$iTemp[1]$. Finally, we use the shuffle instruction to exchange the elements among the threads (Line 6).
-
+Figure \ref{fig:exchange} shows the process of Algorithm \ref{algo:basic}. 
+Here, we first load the corresponding first and fifth input elements into $iTemp$ before passing it to Algorithm \ref{algo:basic}. 
+Then, we pack two 32-bit elements into a 64-bit variable $exchange$, where $iTemp[4]$ and $iTemp[0]$ are the high and low 32 bits, respectively (Line 2).  
+As threads $t0$ and $t1$ will provide the fifth element of the data they load, which are the high 32 bits of $exchange$, we right shift $exchange$ for both threads by an offset of 32 to place $iTemp[4]$ in the low 32 bits. 
+Turning our attention to threads $t2$ and $t3$ that will provide the first element of the data they loaded.
+Since the elements are already the low 32 bits of $exchange$, we right shift $exchange$ in both threads by an offset of 0. 
+The number of places to be shifted for each thread is calculated based on the thread ID (Line 3). 
+Next, we unpack $exchange$ into $iTemp[2]$ (high 32 bits) and $iTemp[1]$ (low 32 bits) (Line 5). By doing so, we can retrieve the element a thread needs to supply from a fixed location, $iTemp[1]$. 
+Finally, we use the shuffle instruction to exchange the elements among the threads (Line 6).
 
 \begin{algorithm}[t!]
 \small
@@ -106,30 +89,23 @@ $iTemp[1]$. Finally, we use the shuffle instruction to exchange the elements amo
 	
 \end{algorithm}
 
-Using Algorithm \ref{algo:basic}, we can replace the compile-time undecidable dynamic index $i$ in $shfl\_xor(iTemp[i],2)$ with static
-indexing $1$ in $shfl\_xor(iTemp[1],2)$ of our working example. By doing so, we promote register allocation by allowing the compiler to put
-all the thread-local variables into the fast GPU registers (that have access latency of 1 to 2 cycles as opposed to 500 cycles when the
-data are stored in the local memory). Since steps 4 and 5 of our implementation (Figure \ref{fig:optalgo2}) adopt a similar procedure as
-step 3 in Figure \ref{fig:optalgo1}, we can adapt Algorithm \ref{algo:basic} to obtain Algorithm \ref{algo:basic2} with minor
-modifications. The main distinction between the two algorithms comes from how we process steps 3-5 shown in Figure \ref{fig:optalgo2}.
-Specifically, we use four threads to exchange the elements in step 3 for Algorithm \ref{algo:basic}, but use only two adjacent threads in
-step 4 and 5 for Algorithm \ref{algo:basic2}. To adapt to the change of the number of threads used, we recalculate the shift offset for
-each thread (Line 3 of both algorithms) and change the arguments of the shuffle instruction (Line 6 in both algorithms).
+Using Algorithm \ref{algo:basic}, we can replace the compile-time undecidable dynamic index $i$ in $shfl\_xor(iTemp[i],2)$ with static indexing $1$ in $shfl\_xor(iTemp[1],2)$ of our working example. 
+By doing so, we promote register allocation by allowing the compiler to put all the thread-local variables into the fast GPU registers (that have access latency of 1 to 2 cycles as opposed to 500 cycles when the data are stored in the local memory). 
+Since steps 4 and 5 of our implementation (Figure \ref{fig:optalgo2}) adopt a similar procedure as step 3 in Figure \ref{fig:optalgo1}, we can adapt Algorithm \ref{algo:basic} to obtain Algorithm \ref{algo:basic2} with minor modifications. 
+The main distinction between the two algorithms comes from how we process steps 3-5 shown in Figure \ref{fig:optalgo2}.
+Specifically, we use four threads to exchange the elements in step 3 for Algorithm \ref{algo:basic}, but use only two adjacent threads in steps 4 and 5 for Algorithm \ref{algo:basic2}. 
+To adapt to the change of the number of threads used, we recalculate the shift offset for each thread (Line 3 of both algorithms) and change the arguments of the shuffle instruction (Line 6 in both algorithms).
 
-
-For this working example, Algorithms \ref{algo:basic} and \ref{algo:basic2} respectively reduce the number of memory transactions from 5 to
-2 and 25 to 10 when 5 and 25 input elements are loaded. This reduction greatly improves the performance of the convolution.
+For this working example, Algorithms \ref{algo:basic} and \ref{algo:basic2} respectively reduce the number of memory transactions from 5 to 2 and 25 to 10 when 5 and 25 input elements are loaded. 
+This reduction greatly improves the performance of the convolution.
 
 \subsubsection{Generalization} While we have described our approach using a concrete working example with a pre-defined filter size, our
-algorithms can be generalized to filters with an arbitrary size. To apply our approach to a filter of size $n \times n$, we will first
-divide the filter into a number of $n \times 5$ sub-filters. Next, we divide the remaining columns into a number of $n \times 3$ sub-filters
-with some overlap columns. For example, a $7 \times 7$ filter can be divided into a $7 \times 5$ sub-filter and a $7 \times 3$ sub-filter
-with one overlap column. Each $n \times 5$ and $n \times 3$ filters can be processed by Algorithm \ref{algo:basic} and Algorithm
-\ref{algo:basic2}.
-
-
-
-
+algorithms can be generalized to filters with an arbitrary size. 
+To apply our approach to a filter of size $n \times n$, we will first
+divide the filter into several $n \times 5$ sub-filters. 
+Next, we divide the remaining columns into several $n \times 3$ sub-filters with some overlap columns. 
+For example, a $7 \times 7$ filter can be divided into a $7 \times 5$ sub-filter and a $7 \times 3$ sub-filter with one overlap column. 
+Each $n \times 5$ and $n \times 3$ filters can be processed by Algorithm \ref{algo:basic} and Algorithm \ref{algo:basic2}.
 
 
 \begin{figure}[t!]
@@ -138,7 +114,6 @@ with one overlap column. Each $n \times 5$ and $n \times 3$ filters can be proce
 \caption{Convert dynamic indexing of array $iTemp$ into static indexing, allowing  $iTemp$ to be allocated in registers instead of the local memory.}
 \label{fig:exchange}
 \end{figure}
-
 
 \begin{algorithm}[t!]
 \small
@@ -164,30 +139,26 @@ with one overlap column. Each $n \times 5$ and $n \times 3$ filters can be proce
 \label{fig:rowreuse}
 \end{figure}
 
-\mypara{Working example.} Consider the standard convolution example shown in Figure \ref{fig:rowreuse} as a working example for our row
-reuse algorithm. When sliding the filter over the input image along the height dimension, it produces a column of elements as the output.
+\mypara{Working example.} Consider the standard convolution example shown in Figure \ref{fig:rowreuse} as a working example for our row reuse algorithm. 
+When sliding the filter over the input image along the height dimension, it produces a column of elements as the output.
 
-
-\subsubsection{Standard convolution} Assume we use one thread to calculate one column of output elements. For the working example given in Figure
-\ref{fig:rowreuse}, the convolution will be computed as follows:
+\subsubsection{Standard convolution} Assume we use one thread to calculate one column of output elements. 
+For the working example given in Figure \ref{fig:rowreuse}, the convolution will be computed as follows:
 \begin{gather*}
   out_0=row_{i0} \cdot row_{f0} + row_{i1} \cdot row_{f1} + row_{i2} \cdot row_{f2} \\
 out_{1}=row_{i1} \cdot row_{f0} + row_{i2} \cdot row_{f1} + row_{i3} \cdot row_{f2} \\
 out_{2}=row_{i2} \cdot row_{f0} + row_{i3} \cdot row_{f1} + row_{i4} \cdot row_{f2}
 \end{gather*}
 
-The above equations suggest that $row_{i1}$ and $row_{i3}$ are loaded twice, and $row_{i2}$ is loaded three times; nine rows should be
-loaded in total. The redundant loads to the same read-only row thus incur extra memory transactions and additional overhead.
-
-
+The above equations suggest that $row_{i1}$ and $row_{i3}$ are loaded twice, and $row_{i2}$ is loaded three times; nine rows should be loaded in total. 
+The redundant loads to the same read-only row thus incur extra memory transactions and additional overhead.
 
 \subsubsection{Our optimization}
-To remove redundant loads to the same row, we redesign the execution flow of the convolution. Specifically, after loading a row from the
-input, we compute the number of output elements that depend on the loaded row. For our working example, the computation of element $out_0$
-in the output column would depend on $row_{i0}$. Similarly, output elements $out_0$ and $out_1$ will need $row_{i1}$. With this information
-in place, we use the loaded row to perform inner product with corresponding rows of the filter to calculate the output elements whose
-outcomes depending on the loaded row. Our approach translates the execution flow of the working example presented in Figure \ref
-{fig:rowreuse} to:
+To remove redundant loads to the same row, we redesign the execution flow of the convolution. 
+Specifically, after loading a row from the input, we compute the number of output elements that depend on the loaded row. 
+For our working example, the computation of element $out_0$ in the output column would depend on $row_{i0}$. 
+Similarly, output elements $out_0$ and $out_1$ will need $row_{i1}$. With this information in place, we use the loaded row to perform inner products with corresponding rows of the filter to calculate the output elements whose outcomes depending on the loaded row. 
+Our approach translates the execution flow of the working example presented in Figure \ref {fig:rowreuse} to:
 
 \begin{equation}\nonumber
 \begin{aligned}
@@ -208,20 +179,14 @@ load\ row_{i4}:
 \end{aligned}	
 \end{equation}
 
+In this new implementation, we would only issue loads to five rows to calculate the output elements. 
+Compared to the nine loads required by the standard convolution implementation, we reduce the number of loads to row elements by nearly half.  
+We note that although the number of accesses to the output column $out$ is increased, the overhead is negligible because $out$ is much smaller than multiple rows and hence can be stored in registers.
 
-
-In this new implementation, we would only issue loads to five rows to calculate the output elements. Compared to the nine loads required by
-the standard convolution implementation, we reduce the number of loads to row elements by nearly half.  We note that although the number of
-accesses to the output column $out$ is increased, the overhead is negligible because $out$ is much smaller than multiple rows and hence can
-be stored in registers.
-
-We describe a general solution for row reuse in Algorithm \ref{algo:rowreuse}, where $row$ denotes the row loaded from the input, $index$
-denotes the index of $row$, $filter$ denotes the vector of filter rows and $filter[i]$ means the $i$th row of the filter. Pseudo code at
-Lines 1-5 process the first $F_H-1$ rows ($row_{i0}$ and $row_{i1}$ in Figure \ref{algo:rowreuse}) that are needed by less
-than $F_H$ output elements. Code at lines 6-11 process the rows needed by exact $F_H$ output elements (e.g., $row_{i2}$ in Figure
-\ref{algo:rowreuse}). Finally, code at Lines 12-17 process the last $F_H-1$ rows, which are needed by less than $F_H$ output elements
-(e.g., $row_{i3}$ and $row_{i4}$ in Figure \ref{algo:rowreuse}).
-
+We describe a general solution for row reuse in Algorithm \ref{algo:rowreuse}, where $row$ denotes the row loaded from the input, $index$ denotes the index of $row$, $filter$ denotes the vector of filter rows and $filter[i]$ means the $i$th row of the filter. 
+Pseudo code at Lines 1-5 process the first $F_H-1$ rows ($row_{i0}$ and $row_{i1}$ in Figure \ref{algo:rowreuse}) that are needed by less than $F_H$ output elements. 
+Code at lines 6-11 process the rows needed by exact $F_H$ output elements (e.g., $row_{i2}$ in Figure \ref{algo:rowreuse}). 
+Finally, code at Lines 12-17 process the last $F_H-1$ rows, which are needed by less than $F_H$ output elements (e.g., $row_{i3}$ and $row_{i4}$ in Figure \ref{algo:rowreuse}).
 
 \begin{algorithm}[t!]
 \small
@@ -246,6 +211,5 @@ than $F_H$ output elements. Code at lines 6-11 process the rows needed by exact 
 	\label{algo:rowreuse}
 \end{algorithm}
 
-Algorithm \ref{algo:rowreuse} is designed to eliminate redundant loads to the same row introduced by sliding a filter over the input along
-the height dimension. By loading each row of the input just once, our approach greatly reduces the number of memory transactions for
-convolution operations.
+Algorithm \ref{algo:rowreuse} is designed to eliminate redundant loads to the same row introduced by sliding a filter over the input along the height dimension. 
+By loading each row of the input just once, our approach greatly reduces the number of memory transactions for convolution operations.
