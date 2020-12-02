@@ -2,9 +2,12 @@
 
 \section{Experimental Setup}
 
-\subsection{Evaluation Platforms} We evaluate our approach on an NVIDIA RTX 2080Ti GPU, which integrates 4350 CUDA cores for floating
-point computation  and 4350 CUDA cores for integer operations. The GPU has a 96KB L1 cache and shared memory. The host machine has a 2.30GHz
-Intel Xeon E5-2697 CPU with 252GB memory, running Linux kernel v4.15.0. We use CUDA Toolkit version 10.2.
+\subsection{Evaluation Platforms} We evaluate our approach on two platforms. 
+One is NVIDIA RTX 2080Ti GPU (2080Ti), which integrates 4350 CUDA cores for floating point computation and 4350 CUDA cores for integer operations. 
+The GPU has a 64KB shared memory. 
+The host machine has a 2.30GHz Intel Xeon E5-2697 CPU with 252GB memory, running Linux kernel v4.15.0. We use CUDA Toolkit version 10.2.
+The other is NVIDIA Jetson AGX Xavier GPU (Xavier), which integrates 512 Volta cores and 48KB shared memory.
+The host machine has an 8-core Arm CPU with 32GB memory, running Linux kernel v4.15.0. We use CUDA Toolkit 10.0. 
 
 
 \subsection{Competing Methods} We compare our approach against the following state-of-the-art convolution libraries:
@@ -30,14 +33,14 @@ We found little variance during execution runs, less than 2\%.
 All the convolutions used in evaluation use the standard 32-bit (single-precision) floating point numbers, and the data are organized as 4D tensors $(N,C,H,$ and $W)$, where $N$, $C$, $H$, and $W$ are the batch size, channel, height, and width, respectively. 
 In this work, we first test depthwise convolution with two filter sizes, $3 \times 3$ and $5 \times 5$, because these are commonly used filter sizes. 
 Then we report the performance of pointwise convolution. 
-Lastly, we apply our optimized depthwise and pointwise convolutions on MobileNetv2 and report the performance of inference.
+Lastly, we apply our optimized depthwise and pointwise convolutions on MobileNetv2 and report the performance of inference and training.
 %
 %\subsection{Notations}
 %Throughout the evaluation, we use $I$, $F$, and $O$ to represent the input, the filter, and the output respectively, $N$, $C$, $H$, and $W$
 %to denote the batch size, the channel, the height, and the width, respectively.
 
 \section{Experimental Results}
-\label{exp} In this section, we report our results for depthwise convolution (Section \ref{sec:depconvexp}), pointwise convolution (Section \ref{sec:pwconvexp}) and inference of MobileNetV2 (Section \ref{sec:inferexp}), showing that our approach consistently outperforms alternative methods by delivering the overall best performance.
+\label{exp} In this section, we report our results for depthwise convolution (Section \ref{sec:depconvexp}), pointwise convolution (Section \ref{sec:pwconvexp}) and inference and training of MobileNetV2 (Section \ref{sec:inferexp}), showing that our approach consistently outperforms alternative methods by delivering the overall best performance.
 
 
 %\subsection{2D Convolution\label{sec:ex2dc}}
@@ -116,7 +119,7 @@ Lastly, we apply our optimized depthwise and pointwise convolutions on MobileNet
 \label{sec:depconvexp}
 
 \begin{table}[]
-\caption{Layer configurations of depthwise  convolutions$^{\dag}$.}
+\caption{Layer configurations of depthwise  convolutions.}
 \label{tab:depconvconfigs}
 \centering
 \rowcolors{2}{}{Gray}
@@ -137,11 +140,6 @@ Lastly, we apply our optimized depthwise and pointwise convolutions on MobileNet
 
 \bottomrule
 \end{tabular}
-\footnotesize
-\begin{tablenotes}
-\item[\dag] We use $I$, $F$, $O$ and $S$ to represent the input, the filter, the output and the stride respectively, $N$, $C$, $H$, and $W$
-to denote the batch size, the channel, the height, and the width, respectively.
-\end{tablenotes}
 \end{threeparttable}
 \vspace{-5mm}
 \end{table}
@@ -149,16 +147,17 @@ to denote the batch size, the channel, the height, and the width, respectively.
 
 \begin{table}[]
 \setlength{\tabcolsep}{3.8pt}
-\caption{Layer configurations of depthwise convolutions$^{\dag}$.}
-\label{tab:dwconv}
+\caption{Speedups of depthwise convolutions with a $3 \times 3$ filter on two platforms. We use ${\dag}$ and ${*}$ to denote speedups of cuDNN and ours over the baseline implementation respectively.}
+\label{tab:dwconvf3}
 %\rowcolors{2}{}{Gray}
 \begin{threeparttable}
 \begin{tabular}{c|cccccc|cccccc}
 \toprule
-&\multicolumn{6}{c|}{Speedups on RTX2080Ti} & \multicolumn{6}{c}{Speedups on Jetson Xavier}\\
+&\multicolumn{6}{c|}{Speedups on 2080Ti} & \multicolumn{6}{c}{Speedups on Xavier}\\
 
 \midrule
-Batch Size& \textbf{1} & \textbf{8} & \textbf{16}& \textbf{32} & \textbf{64} & \textbf{128} & \textbf{1} & \textbf{8} & \textbf{16}& \textbf{32} & \textbf{64} & \textbf{128}\\
+Batch& \textbf{1} & \textbf{8} & \textbf{16}& \textbf{32} & \textbf{64} & \textbf{128} & \textbf{1} & \textbf{8} & \textbf{16}& \textbf{32} & \textbf{64} & \textbf{128}\\
+\hline
 CV1$^{\dag}$&0.9 &2.1 &2.8 &3.0 &3.3 &3.5 &2.9 &2.5 &2.5 &2.5 &2.4 &2.5 \\
 CV1$^{*}$&\textbf{3.3} &\textbf{4.4} &\textbf{4.2} &\textbf{4.1} &\textbf{4.1} &\textbf{4.0} &\textbf{5.6} &\textbf{3.1} &\textbf{3.5} &\textbf{3.4} &\textbf{3.4} &\textbf{3.5} \\
 \hline
@@ -193,16 +192,17 @@ CV9$^{*}$&\textbf{2.5} &\textbf{4.4} &\textbf{5.7} &\textbf{7.4} &\textbf{8.7} &
 
 \begin{table}[]
 \setlength{\tabcolsep}{3.8pt}
-\caption{Layer configurations of depthwise convolutions$^{\dag}$.}
-\label{tab:dwconv}
+\caption{Speedups of depthwise convolutions with a $5 \times 5$ filter on two platforms. We use ${\dag}$ and ${*}$ to denote speedups of cuDNN and ours over the baseline implementation respectively.}
+\label{tab:dwconvf5}
 %\rowcolors{2}{}{Gray}
 \begin{threeparttable}
 \begin{tabular}{c|cccccc|cccccc}
 \toprule
-&\multicolumn{6}{c|}{Speedups on RTX2080Ti} & \multicolumn{6}{c}{Speedups on Jetson Xavier}\\
+&\multicolumn{6}{c|}{Speedups on 2080Ti} & \multicolumn{6}{c}{Speedups on Xavier}\\
 
 \midrule
-Batch Size& \textbf{1} & \textbf{8} & \textbf{16}& \textbf{32} & \textbf{64} & \textbf{128} & \textbf{1} & \textbf{8} & \textbf{16}& \textbf{32} & \textbf{64} & \textbf{128}\\
+Batch& \textbf{1} & \textbf{8} & \textbf{16}& \textbf{32} & \textbf{64} & \textbf{128} & \textbf{1} & \textbf{8} & \textbf{16}& \textbf{32} & \textbf{64} & \textbf{128}\\
+\hline
 CV1$^{\dag}$&1.1 &1.4 &1.4 &1.5 &1.5 &1.5 &1.5 &1.2 &1.2 &1.1 &1.0 &1.0 \\
 CV1$^{*}$&\textbf{3.5} &\textbf{6.1} &\textbf{6.3} &\textbf{6.5} &\textbf{6.5} &\textbf{6.5} &\textbf{3.3} &\textbf{3.0} &\textbf{4.4} &\textbf{4.4} &\textbf{4.7} &\textbf{4.5} \\
 \hline
@@ -268,7 +268,7 @@ Table \ref{tab:depconvconfigs} gives the layer configurations used in this exper
 %Then, we set the number of the batch size to 512 ($I_N=O_N=512$). Other batch sizes demonstrate a similar performance because all tested implementations have a linear scale as the batch size. The exact configuration is presented in Table \ref{tab:3dconvconfigs}.
 
 \subsubsection{Overall results}
-Figure \ref{fig:dwruntime} shows that our approach gives the best speedups. 
+Table \ref{tab:dwconvf3} and \ref{tab:dwconvf5} show that our approach gives the best speedups. 
 Our approach delivers an average speedup of $5.4\times$ and $7.8\times$ for the $3 \times 3$ and $5 \times 5$ filters, respectively. 
 The implicit algorithm achieves an average speedup of $2.8\times$ and $2.1\times$ for the $3 \times 3$ and $5 \times 5$ filters, respectively.
 Other algorithms of cuDNN perform poorly in all test cases. 

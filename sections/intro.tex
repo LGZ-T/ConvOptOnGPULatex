@@ -33,8 +33,11 @@ By reducing the number of memory transactions, our approach thus can improve the
 To increase GPU utilization for pointwise convolution, we propose a dynamic block size method. 
 Previous work \cite{li2019coordinated} employs a heuristic method to select the best block size for general matrix multiplication (GEMM) operation. 
 But there is a major restriction when applying their method to convolution operations.
- 
-we first decrease the computational workload of each thread and create more thread blocks to saturate GPU. 
+When converting the convolution operation into GEMM, the resultant matrix size is usually smaller than the expected matrix size.
+Then they try to combine multiple convolutions that can be calculated concurrently into one GEMM kernel to increase the computation workload.
+This is possible for CNNs which has multiple parallel convolutions within the same layer (e.g. inception layers in GoogleNet \cite{szegedy2015going}).
+But many other CNNs must perform convolution operations one by one to ensure correctness, which makes their method unsuitable in these CNNs.
+In our dynamic block size method, we first decrease the computational workload of each thread and create more thread blocks to saturate GPU. 
 But this simple method will let each thread suffer from long global memory access latency since there are not enough arithmetic operations to hide the latency.
 To address this problem, we design a dynamic block size method that distributes input or filter channels across threads within a warp. 
 

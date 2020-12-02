@@ -37,7 +37,7 @@ First, we describe how to partition a block tile into warp tiles, and second, ho
 We halve both dimensions of each block tile and generate $2 \times 2$ warp tiles. 
 The height and width of a warp tile are represented as $Warp_H$ and $Warp_W$ respectively.
 In our design, when $Warp_H > 12$, we need assembly level optimizations like the work in \cite{yan2020optimizing,yan2020demystifying} for some configurations of pointwise convolution to avoid register spills.
-But in this work, we focus on a higher level rather than assembly level optimizations, and thus set $Warp_H \leq 12$.
+But in this work, we focus on higher level rather than assembly level optimizations, and thus set $Warp_H \leq 12$.
 
 To divide the output into block tiles, we use two logical layouts of the output, \textbf{\emph{L1}} and \textbf{\emph{L2}}, as shown in Figure \ref{fig:pwworkflow}. 
 $F_N$ and $I_N \times I_H \times I_W$ represent the filter and input dimensions of the output respectively.
@@ -47,7 +47,7 @@ The number of filters, $F_N$, is fixed once the structure of a CNN is determined
 But the size of the input dimension will be affected by the batch size, $I_N$, during inference and training.
 Therefore, it is easier to distribute channels of filters than inputs in our approach.
 For the sake of simplicity, we design our partition method to utilize layout \textbf{\emph{L1}} whenever there are enough filters to be distributed across threads.
-Specifically, when $F_N \ge 48$, we choose layout \textbf{\emph{L1}} and distribute filter channels across threads within the same warp. 
+Specifically, when $F_N \ge 48$, we choose layout \textbf{\emph{L1}} and distribute filter channels across threads within a warp. 
 Otherwise, we choose layout \textbf{\emph{L2}} and distribute input channels.
 The boundary of $F_N = 48$ is determined as follows.
 Figure \ref{fig:pwworkflow} demonstrates that in layout \textbf{\emph{L2}}, the maxmial value of $F_N$ is $4 \times Warp_H$ and $Warp_H \leq 12$, therefore we have $F_N \leq 48$ in layout \textbf{\emph{L2}}.
@@ -71,7 +71,7 @@ To fully utilize a warp, $C_{num}$ should be a power of 2.
 Thus, condidates for $C_{num}$ are $C_{num}=\{1,2,4,8,16,32\}$.
 
 Next, we demonstrate how to determine the candidates for $Warp_H$ based on the size of the input dimension, $I_N \times I_H \times I_W$.
-If the size of the input dimension is large, we prefer to choose a large $Warp_H$ because using small $Warp_H$ will generate more thread blocks and results in multiple loads of shared filters.
+If the size of the input dimension is large, we prefer to choose a large $Warp_H$ because using small $Warp_H$ will generate more thread blocks and results in multiple loads of shared filters \cite{jia2020enabling, zheng2020flextensor}.
 If the size of the input dimension is small, we prefer to choose small $Warp_H$ because using a large $Warp_H$ will generate a few thread blocks and result in SM underutilization.
 Since each thread loads at most 12 input elements ($Warp_H<12$), we set the upper limit of large $Warp_H$ to 12 and the lower limit to $12/2=6$. 
 Therefore, the condidates for large $Warp_H$ are $Warp_H=\{6,7,8,9,10,11,12\}$.
