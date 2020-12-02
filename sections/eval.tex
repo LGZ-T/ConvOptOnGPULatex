@@ -146,18 +146,107 @@ to denote the batch size, the channel, the height, and the width, respectively.
 \vspace{-5mm}
 \end{table}
 
-\begin{figure*}
-\centering
-	
-\subfloat[][$3\times 3$ filter]{\includegraphics[width=\columnwidth]{./figure/depthwise_speedup_3f.eps}
-	\label{fig:f3dwruntime2080}}
-\subfloat[][$5\times 5$ filter]{\includegraphics[width=\columnwidth]{./figure/depthwise_speedup_5f.eps}
-	\label{fig:f5dwruntime2080}}
 
-\vspace{-2mm} \caption{Speedups of our approach and cuDNN implicit algorithm over the baseline implementation of the depthwise convolution when using a
-$3\times 3$ (a) and a $5\times 5$ filter (b).} \label{fig:dwruntime}
-\vspace{-2mm}
-\end{figure*}
+\begin{table}[]
+\setlength{\tabcolsep}{3.8pt}
+\caption{Layer configurations of depthwise convolutions$^{\dag}$.}
+\label{tab:dwconv}
+%\rowcolors{2}{}{Gray}
+\begin{threeparttable}
+\begin{tabular}{c|cccccc|cccccc}
+\toprule
+&\multicolumn{6}{c|}{Speedups on RTX2080Ti} & \multicolumn{6}{c}{Speedups on Jetson Xavier}\\
+
+\midrule
+Batch Size& \textbf{1} & \textbf{8} & \textbf{16}& \textbf{32} & \textbf{64} & \textbf{128} & \textbf{1} & \textbf{8} & \textbf{16}& \textbf{32} & \textbf{64} & \textbf{128}\\
+CV1$^{\dag}$&0.9 &2.1 &2.8 &3.0 &3.3 &3.5 &2.9 &2.5 &2.5 &2.5 &2.4 &2.5 \\
+CV1$^{*}$&\textbf{3.3} &\textbf{4.4} &\textbf{4.2} &\textbf{4.1} &\textbf{4.1} &\textbf{4.0} &\textbf{5.6} &\textbf{3.1} &\textbf{3.5} &\textbf{3.4} &\textbf{3.4} &\textbf{3.5} \\
+\hline
+CV2$^{\dag}$&1.6 &2.7 &3.0 &3.3 &3.6 &3.8 &3.1 &2.6 &2.6 &3.2 &3.0 &3.2 \\
+CV2$^{*}$&\textbf{3.1} &\textbf{4.5} &\textbf{4.0} &\textbf{4.2} &\textbf{3.8} &\textbf{3.9} &\textbf{4.5} &\textbf{4.0} &\textbf{4.2} &\textbf{4.8} &\textbf{4.6} &\textbf{5.1} \\
+\hline
+CV3$^{\dag}$&1.2 &2.2 &2.7 &3.0 &3.3 &3.5 &2.9 &2.5 &2.8 &2.9 &2.7 &2.9 \\
+CV3$^{*}$&\textbf{2.2} &\textbf{4.0} &\textbf{4.6} &\textbf{4.8} &\textbf{4.7} &\textbf{4.5} &\textbf{4.2} &\textbf{3.0} &\textbf{4.0} &\textbf{4.2} &\textbf{4.9} &\textbf{5.1} \\
+\hline
+CV4$^{\dag}$&1.6 &2.7 &3.2 &3.7 &4.0 &4.2 &3.2 &1.8 &2.4 &2.4 &2.8 &2.8 \\
+CV4$^{*}$&\textbf{2.7} &\textbf{4.7} &\textbf{5.6} &\textbf{5.7} &\textbf{5.2} &\textbf{5.2} &\textbf{3.4} &1.7 &\textbf{4.1} &\textbf{4.5} &\textbf{5.1} &\textbf{5.3} \\
+\hline
+CV5$^{\dag}$&1.1 &2.0 &2.6 &3.8 &4.7 &5.6 &2.7 &2.2 &4.6 &3.8 &3.5 &4.8 \\
+CV5$^{*}$&\textbf{2.5} &\textbf{5.0} &\textbf{6.8} &\textbf{8.6} &\textbf{10.7} &\textbf{12.4} &\textbf{4.0} &\textbf{4.5} &\textbf{7.0} &\textbf{4.2} &\textbf{6.4} &\textbf{7.9} \\
+\hline
+CV6$^{\dag}$&0.8 &1.9 &2.5 &3.4 &3.9 &4.6 &2.9 &2.9 &3.6 &4.2 &4.8 &3.8 \\
+CV6$^{*}$&\textbf{2.0} &\textbf{4.5} &\textbf{6.2} &\textbf{7.9} &\textbf{9.6} &\textbf{11.2} &\textbf{4.7} &\textbf{4.8} &2.7 &\textbf{4.3} &\textbf{6.7} &\textbf{6.7} \\
+\hline
+CV7$^{\dag}$&1.1 &1.9 &2.5 &2.9 &3.4 &3.9 &3.6 &3.1 &2.9 &2.8 &3.3 &2.9 \\
+CV7$^{*}$&\textbf{2.4} &\textbf{4.9} &\textbf{5.6} &\textbf{6.7} &\textbf{7.5} &\textbf{8.0} &2.4 &\textbf{3.7} &\textbf{3.4} &\textbf{4.6} &\textbf{3.6} &\textbf{4.7} \\
+\hline
+CV8$^{\dag}$&1.1 &1.9 &2.3 &2.6 &2.9 &3.2 &3.1 &2.1 &3.0 &2.9 &2.6 &2.5 \\
+CV8$^{*}$&\textbf{2.6} &\textbf{4.5} &\textbf{5.0} &\textbf{5.8} &\textbf{6.4} &\textbf{6.5} &\textbf{3.4} &\textbf{4.1} &\textbf{3.4} &\textbf{4.3} &\textbf{2.9} &\textbf{3.9} \\
+\hline
+CV9$^{\dag}$&1.0 &1.9 &2.4 &3.3 &4.2 &4.8 &3.7 &1.7 &2.4 &4.6 &4.7 &5.2 \\
+CV9$^{*}$&\textbf{2.5} &\textbf{4.4} &\textbf{5.7} &\textbf{7.4} &\textbf{8.7} &\textbf{10.0} &\textbf{4.3} &\textbf{1.8} &\textbf{3.3} &3.9 &\textbf{5.6} &4.8 \\
+
+\bottomrule
+\end{tabular}
+\end{threeparttable}
+\end{table}
+
+\begin{table}[]
+\setlength{\tabcolsep}{3.8pt}
+\caption{Layer configurations of depthwise convolutions$^{\dag}$.}
+\label{tab:dwconv}
+%\rowcolors{2}{}{Gray}
+\begin{threeparttable}
+\begin{tabular}{c|cccccc|cccccc}
+\toprule
+&\multicolumn{6}{c|}{Speedups on RTX2080Ti} & \multicolumn{6}{c}{Speedups on Jetson Xavier}\\
+
+\midrule
+Batch Size& \textbf{1} & \textbf{8} & \textbf{16}& \textbf{32} & \textbf{64} & \textbf{128} & \textbf{1} & \textbf{8} & \textbf{16}& \textbf{32} & \textbf{64} & \textbf{128}\\
+CV1$^{\dag}$&1.1 &1.4 &1.4 &1.5 &1.5 &1.5 &1.5 &1.2 &1.2 &1.1 &1.0 &1.0 \\
+CV1$^{*}$&\textbf{3.5} &\textbf{6.1} &\textbf{6.3} &\textbf{6.5} &\textbf{6.5} &\textbf{6.5} &\textbf{3.3} &\textbf{3.0} &\textbf{4.4} &\textbf{4.4} &\textbf{4.7} &\textbf{4.5} \\
+\hline
+CV2$^{\dag}$&1.0 &1.5 &1.6 &1.6 &1.6 &1.6 &1.9 &1.2 &1.1 &1.1 &1.0 &1.1 \\
+CV2$^{*}$&\textbf{2.5} &\textbf{6.3} &\textbf{6.2} &\textbf{6.7} &\textbf{6.3} &\textbf{6.6} &\textbf{4.8} &\textbf{4.3} &\textbf{6.6} &\textbf{7.9} &\textbf{8.3} &\textbf{8.6} \\
+\hline
+CV3$^{\dag}$&1.2 &1.5 &1.7 &1.8 &1.9 &2.0 &1.4 &1.6 &1.4 &1.3 &1.3 &1.3 \\
+CV3$^{*}$&\textbf{2.4} &\textbf{4.9} &\textbf{6.2} &\textbf{6.9} &\textbf{7.2} &\textbf{7.5} &\textbf{4.0} &\textbf{3.1} &\textbf{3.4} &\textbf{7.1} &\textbf{7.4} &\textbf{8.3} \\
+\hline
+CV4$^{\dag}$&1.2 &2.0 &2.2 &2.3 &2.5 &2.5 &2.4 &1.6 &1.5 &1.4 &1.3 &1.3 \\
+CV4$^{*}$&\textbf{2.9} &\textbf{6.7} &\textbf{8.1} &\textbf{9.3} &\textbf{9.1} &\textbf{9.0} &\textbf{3.2} &\textbf{4.6} &\textbf{5.3} &\textbf{6.9} &\textbf{6.3} &\textbf{6.1} \\
+\hline
+CV5$^{\dag}$&1.2 &2.1 &2.7 &3.6 &4.1 &4.6 &3.1 &2.3 &2.6 &2.5 &2.2 &2.0 \\
+CV5$^{*}$&\textbf{2.8} &\textbf{6.5} &\textbf{8.1} &\textbf{12.7} &\textbf{15.6} &\textbf{18.7} &\textbf{3.6} &\textbf{4.7} &\textbf{7.7} &\textbf{3.9} &\textbf{8.3} &\textbf{9.0} \\
+\hline
+CV6$^{\dag}$&1.2 &1.8 &2.5 &3.2 &3.6 &3.8 &2.8 &1.8 &1.9 &2.0 &1.9 &1.8 \\
+CV6$^{*}$&\textbf{2.7} &\textbf{5.8} &\textbf{8.5} &\textbf{11.3} &\textbf{12.6} &\textbf{16.4} &\textbf{3.8} &\textbf{5.1} &\textbf{6.6} &\textbf{4.5} &\textbf{6.0} &\textbf{9.6} \\
+\hline
+CV7$^{\dag}$&1.1 &1.8 &2.4 &2.6 &2.9 &3.1 &1.6 &1.9 &1.5 &1.6 &1.5 &1.5 \\
+CV7$^{*}$&\textbf{2.6} &\textbf{6.0} &\textbf{8.3} &\textbf{9.3} &\textbf{11.6} &\textbf{12.0} &\textbf{3.6} &\textbf{5.5} &\textbf{5.5} &\textbf{5.3} &\textbf{7.3} &\textbf{7.9} \\
+\hline
+CV8$^{\dag}$&1.2 &1.7 &2.1 &2.2 &2.4 &2.5 &3.8 &1.7 &1.6 &1.4 &1.4 &1.2 \\
+CV8$^{*}$&\textbf{2.9} &\textbf{5.9} &\textbf{7.4} &\textbf{8.9} &\textbf{9.9} &\textbf{9.6} &\textbf{8.6} &\textbf{5.0} &\textbf{3.1} &\textbf{6.3} &\textbf{7.1} &\textbf{7.8} \\
+\hline
+CV9$^{\dag}$&1.2 &1.9 &2.5 &3.0 &3.5 &3.8 &2.7 &2.0 &2.3 &2.1 &2.1 &2.1 \\
+CV9$^{*}$&\textbf{3.1} &\textbf{5.5} &\textbf{8.1} &\textbf{10.4} &\textbf{12.7} &\textbf{14.4} &\textbf{4.3} &\textbf{4.7} &\textbf{6.6} &\textbf{5.1} &\textbf{7.9} &\textbf{9.1} \\
+
+\bottomrule
+\end{tabular}
+\end{threeparttable}
+\end{table}
+
+%\begin{figure*}
+%\centering
+%	
+%\subfloat[][$3\times 3$ filter]{\includegraphics[width=\columnwidth]{./figure/depthwise_speedup_3f.eps}
+%	\label{fig:f3dwruntime2080}}
+%\subfloat[][$5\times 5$ filter]{\includegraphics[width=\columnwidth]{./figure/depthwise_speedup_5f.eps}
+%	\label{fig:f5dwruntime2080}}
+%
+%\vspace{-2mm} \caption{Speedups of our approach and cuDNN implicit algorithm over the baseline implementation of the depthwise convolution when using a
+%$3\times 3$ (a) and a $5\times 5$ filter (b).} \label{fig:dwruntime}
+%\vspace{-2mm}
+%\end{figure*}
 
 
 \subsubsection{Setup} In this experiment, we compare our approach against the depthwise convolution implementations of cuDNN. Specifically, we compare to seven algorithms in cuDNN, including IMPLICIT\_GEMM (implicit), IMPLICIT\_PRECOMP\_GEMM (precomp), GEMM (gemm), FFT (fft), FFT\_TILING (tiling), WINOGRAD (winograd) and WINOGRAD\_NONFUSED (nonfused). 
@@ -279,14 +368,97 @@ to denote the batch size, the channel, the height, and the width, respectively.
 \end{threeparttable}
 \end{table}
 
-\begin{figure}
-\centering
-	
-\subfloat{\includegraphics[width=\columnwidth,height=13cm]{./figure/pwexectime.eps}}
-\vspace{-2mm}
-\caption{Speedups of cuDNN implicit and our approach over cuDNN gemm} \label{fig:pwexectime}
-\vspace{-5mm}
-\end{figure}
+
+\begin{table}[]
+\setlength{\tabcolsep}{3.8pt}
+\caption{Layer configurations of pointwise convolutions$^{\dag}$.}
+\label{tab:pwconv}
+%\rowcolors{2}{}{Gray}
+\begin{threeparttable}
+\begin{tabular}{c|cccccc|cccccc}
+\toprule
+&\multicolumn{6}{c|}{Speedups on RTX2080Ti} & \multicolumn{6}{c}{Speedups on Jetson Xavier}\\
+
+
+\midrule
+Batch Size& \textbf{1} & \textbf{8} & \textbf{16}& \textbf{32} & \textbf{64} & \textbf{128} & \textbf{1} & \textbf{8} & \textbf{16}& \textbf{32} & \textbf{64} & \textbf{128}\\
+\hline
+CV1$^{\dag}$&1.2 &1.2 &1.3 &1.1 &1.2 &1.4 &1.5 &1.0 &1.0 &1.0 &1.3 &1.5 \\
+CV1$^{*}$&\textbf{4.2} &\textbf{4.1} &\textbf{3.6} &\textbf{2.9} &\textbf{2.6} &\textbf{2.4} &\textbf{3.3} &\textbf{2.3} &\textbf{3.0} &\textbf{2.1} &\textbf{2.4} &\textbf{2.9} \\
+\hline
+CV2$^{\dag}$&1.3 &1.2 &1.3 &1.3 &1.4 &1.4 &2.0 &1.3 &1.2 &1.6 &1.6 &2.0 \\
+CV2$^{*}$&\textbf{4.3} &\textbf{3.7} &\textbf{3.2} &\textbf{2.8} &\textbf{2.3} &\textbf{2.0} &\textbf{3.7} &\textbf{3.0} &\textbf{2.2} &\textbf{2.8} &\textbf{2.4} &\textbf{2.8} \\
+\hline
+CV3$^{\dag}$&1.3 &1.1 &1.2 &1.1 &1.2 &1.2 &1.2 &1.5 &1.5 &1.6 &1.6 &1.9 \\
+CV3$^{*}$&\textbf{3.4} &\textbf{2.2} &\textbf{1.8} &\textbf{1.6} &\textbf{1.6} &\textbf{1.6} &\textbf{3.3} &\textbf{2.5} &\textbf{2.2} &\textbf{2.2} &\textbf{2.2} &\textbf{2.5} \\
+\hline
+CV4$^{\dag}$&1.1 &1.1 &1.2 &1.6 &1.6 &1.9 &1.0 &1.2 &1.2 &1.4 &1.7 &2.0 \\
+CV4$^{*}$&\textbf{3.3} &\textbf{2.9} &\textbf{2.4} &\textbf{2.1} &\textbf{1.7} &1.8 &\textbf{2.2} &\textbf{1.7} &\textbf{1.5} &\textbf{1.5} &1.4 &1.3 \\
+\hline
+CV5$^{\dag}$&1.2 &1.4 &1.5 &1.3 &1.3 &1.1 &1.3 &1.3 &1.7 &1.3 &1.8 &2.1 \\
+CV5$^{*}$&\textbf{3.7} &\textbf{3.3} &\textbf{2.7} &\textbf{2.1} &\textbf{1.8} &\textbf{1.6} &\textbf{2.4} &\textbf{2.3} &\textbf{2.2} &\textbf{1.9} &1.7 &1.7 \\
+\hline
+CV6$^{\dag}$&1.1 &1.2 &1.2 &1.2 &1.4 &1.7 &1.0 &1.4 &1.3 &1.3 &1.3 &1.2 \\
+CV6$^{*}$&\textbf{4.1} &\textbf{3.8} &\textbf{3.5} &\textbf{2.7} &\textbf{2.5} &\textbf{1.9} &\textbf{3.6} &\textbf{3.3} &\textbf{2.3} &\textbf{2.1} &\textbf{2.0} &\textbf{1.8} \\
+\hline
+CV7$^{\dag}$&1.2 &1.2 &1.3 &1.3 &1.5 &1.4 &1.5 &1.4 &1.3 &1.6 &1.3 &1.9 \\
+CV7$^{*}$&\textbf{3.5} &\textbf{3.4} &\textbf{3.4} &\textbf{3.2} &\textbf{2.9} &\textbf{2.2} &\textbf{2.4} &\textbf{2.7} &\textbf{2.6} &\textbf{2.3} &\textbf{1.5} &\textbf{2.2} \\
+\hline
+CV8$^{\dag}$&1.2 &1.3 &1.3 &1.6 &1.5 &1.6 &1.3 &1.3 &1.6 &1.7 &1.9 &2.4 \\
+CV8$^{*}$&\textbf{2.9} &\textbf{2.7} &\textbf{2.7} &\textbf{2.6} &\textbf{2.4} &\textbf{2.3} &\textbf{2.1} &\textbf{2.2} &\textbf{1.9} &\textbf{2.6} &\textbf{2.6} &2.3 \\
+\hline
+CV9$^{\dag}$&1.7 &1.7 &1.7 &2.3 &2.3 &2.4 &0.8 &1.0 &1.3 &1.2 &1.5 &1.7 \\
+CV9$^{*}$&\textbf{4.5} &\textbf{4.8} &\textbf{4.2} &\textbf{4.2} &\textbf{3.2} &\textbf{2.5} &\textbf{2.9} &\textbf{2.1} &\textbf{2.1} &\textbf{1.7} &\textbf{1.6} &1.5 \\
+\hline
+CV10$^{\dag}$&1.2 &1.2 &1.2 &1.2 &1.6 &1.6 &0.9 &1.5 &1.1 &1.2 &1.2 &1.3 \\
+CV10$^{*}$&\textbf{2.8} &\textbf{3.7} &\textbf{3.0} &\textbf{2.8} &\textbf{2.7} &\textbf{2.1} &\textbf{3.3} &\textbf{3.2} &\textbf{2.2} &\textbf{1.7} &\textbf{1.9} &\textbf{1.7} \\
+\hline
+CV11$^{\dag}$&1.2 &1.2 &1.4 &1.4 &1.6 &1.5 &1.4 &1.3 &1.4 &1.2 &1.2 &1.7 \\
+CV11$^{*}$&\textbf{2.9} &\textbf{2.7} &\textbf{3.2} &\textbf{2.5} &\textbf{2.1} &\textbf{1.8} &\textbf{2.5} &\textbf{2.0} &\textbf{2.0} &\textbf{1.8} &\textbf{1.7} &1.5 \\
+\hline
+CV12$^{\dag}$&1.3 &1.3 &1.3 &1.5 &1.6 &1.9 &1.2 &1.2 &1.3 &1.3 &1.3 &1.2 \\
+CV12$^{*}$&\textbf{3.9} &\textbf{3.9} &\textbf{3.6} &\textbf{3.4} &\textbf{2.8} &\textbf{2.1} &\textbf{3.0} &\textbf{2.8} &\textbf{2.0} &\textbf{1.6} &\textbf{1.8} &\textbf{1.6} \\
+\hline
+CV13$^{\dag}$&1.2 &1.4 &1.3 &1.5 &1.5 &1.5 &2.0 &1.4 &1.4 &1.6 &1.7 &2.1 \\
+CV13$^{*}$&\textbf{3.2} &\textbf{2.8} &\textbf{2.5} &\textbf{2.3} &\textbf{1.9} &\textbf{1.7} &\textbf{3.4} &\textbf{2.3} &\textbf{2.0} &\textbf{1.8} &1.7 &1.6 \\
+\hline
+CV14$^{\dag}$&2.0 &2.1 &2.0 &1.9 &2.1 &2.6 &1.3 &1.3 &1.5 &1.4 &1.3 &1.5 \\
+CV14$^{*}$&\textbf{7.4} &\textbf{6.2} &\textbf{5.0} &\textbf{3.7} &\textbf{3.6} &\textbf{2.9} &\textbf{1.4} &\textbf{2.9} &1.5 &\textbf{2.1} &\textbf{1.5} &1.2 \\
+\hline
+CV15$^{\dag}$&1.1 &1.2 &1.2 &1.4 &1.4 &1.5 &1.2 &1.3 &1.2 &1.2 &1.2 &1.1 \\
+CV15$^{*}$&\textbf{3.7} &\textbf{2.8} &\textbf{2.5} &\textbf{2.6} &\textbf{2.2} &\textbf{1.7} &\textbf{3.1} &\textbf{2.3} &\textbf{2.0} &\textbf{1.8} &\textbf{1.8} &0.8 \\
+\hline
+CV16$^{\dag}$&1.2 &1.3 &1.2 &1.4 &1.7 &1.6 &1.3 &1.4 &1.2 &1.5 &1.5 &1.3 \\
+CV16$^{*}$&\textbf{4.3} &\textbf{3.5} &\textbf{2.7} &\textbf{2.1} &\textbf{2.3} &\textbf{1.9} &0.9 &\textbf{2.0} &\textbf{1.9} &1.5 &1.2 &\textbf{1.4} \\
+\hline
+CV17$^{\dag}$&1.8 &2.0 &1.7 &1.7 &2.4 &2.2 &1.2 &1.3 &1.4 &1.3 &1.4 &1.4 \\
+CV17$^{*}$&\textbf{7.2} &\textbf{4.7} &\textbf{3.4} &\textbf{3.4} &\textbf{3.3} &\textbf{2.3} &\textbf{3.1} &1.3 &\textbf{1.6} &1.3 &1.3 &1.4 \\
+\hline
+CV18$^{\dag}$&1.2 &1.3 &1.4 &1.3 &1.9 &1.8 &1.0 &1.1 &1.2 &1.2 &1.4 &1.5 \\
+CV18$^{*}$&\textbf{3.7} &\textbf{3.2} &\textbf{2.6} &\textbf{1.9} &\textbf{2.3} &1.8 &\textbf{3.9} &\textbf{1.9} &\textbf{2.0} &\textbf{1.6} &1.4 &1.3 \\
+\hline
+CV19$^{\dag}$&1.8 &2.0 &1.6 &1.7 &2.2 &2.0 &1.2 &1.5 &1.4 &1.2 &1.2 &1.2 \\
+CV19$^{*}$&\textbf{7.6} &\textbf{5.6} &\textbf{4.5} &\textbf{4.0} &\textbf{3.6} &\textbf{2.7} &\textbf{4.2} &\textbf{1.6} &\textbf{2.1} &\textbf{1.4} &\textbf{1.5} &\textbf{1.4} \\
+\hline
+CV20$^{\dag}$&1.7 &1.5 &2.0 &1.7 &2.0 &1.8 &1.2 &1.1 &1.6 &1.1 &1.2 &1.3 \\
+CV20$^{*}$&0.5 &0.7 &1.0 &1.2 &1.1 &1.1 &0.8 &0.7 &1.2 &0.9 &0.8 &1.0 \\
+
+\bottomrule
+\end{tabular}
+\end{threeparttable}
+\end{table}
+
+
+
+
+%\begin{figure}
+%\centering
+%	
+%\subfloat{\includegraphics[width=\columnwidth,height=13cm]{./figure/pwexectime.eps}}
+%\vspace{-2mm}
+%\caption{Speedups of cuDNN implicit and our approach over cuDNN gemm} \label{fig:pwexectime}
+%\vspace{-5mm}
+%\end{figure}
 
 
 \subsubsection{Setup} In this experiment, we compare our approach against the pointwise convolution implementations in cuDNN and use cuDNN gemm algorithm as the baseline. 
@@ -350,19 +522,43 @@ To experiment, we first run the inference with cuDNN implementation and then rep
 
 \subsubsection{Overall result}
 \begin{table}[]
+\setlength{\tabcolsep}{3.4pt}
     \caption{Experiments for inference using MobileNetv2}
     \label{tab:infertime}
     \centering
-    \rowcolors{2}{}{Gray}
+    %\rowcolors{2}{}{Gray}
     \begin{threeparttable}
-    \begin{tabular}{l|rrrrrr}
+    \begin{tabular}{c|l|rrrrrr}
     \toprule
-    \textbf{batch size} & 1 & 8 & 16& 32 &64 & 128\\
+    &\textbf{batch size} & 1 & 8 & 16& 32 &64 & 128\\
     \midrule
-    \textbf{implicit (ms)} & 10.50  & 11.57 & 16.68 & 25.81 &46.23 &69.67  \\
-    \textbf{ours (ms)} &8.89   &9.81    & 14.68  & 23.3 &40.12 &64.33 \\
-    \textbf{improvement(\%)} &15.33   &15.21    & 11.99  & 9.72 &13.22 &7.66 \\
-    
+    \multirow{3}{*}{\textbf{RTX2080Ti}}&\textbf{cuDNN (ms)} & 7.5  & 8.8 & 9.7 & 14.4 & 19.1 &28.7 \\
+    &\textbf{Ours (ms)} &6.1   &7.1    & 8.0  &12.0 &16.9 &26.3\\
+    &\textbf{Improvement (\%)} &18.6   &19.3    &17.5  & 16.7 &11.5 &8.4 \\
+    \hline
+    \multirow{3}{*}{\textbf{AGX Xavier}}&\textbf{cuDNN (ms)} & 16.6&22.3&32.1&52.6&84.2&140.1  \\
+    &\textbf{Ours (ms)} &13.2&18.9&27.8&44.7&76.1&130.0 \\
+    &\textbf{Improvement (\%)} & 20.5&15.2&13.4&15.0&9.6&7.2 \\
+    \bottomrule
+    \end{tabular}
+    \footnotesize
+    \end{threeparttable}
+    \vspace{-5mm}
+\end{table}
+
+\begin{table}[]
+    \caption{Experiments for inference using MobileNetv2}
+    \label{tab:infertime}
+    \centering
+    %\rowcolors{2}{}{Gray}
+    \begin{threeparttable}
+    \begin{tabular}{c|l|rrrr}
+    \toprule
+    &\textbf{batch size} & 16& 32 &64 & 128\\
+    \midrule
+    \multirow{3}{*}{\textbf{RTX2080Ti}}&\textbf{cuDNN (ms)} & 16.6 & 27.6 & 43,4 &75.36 \\
+    &\textbf{Ours (ms)} & 14.5  &24.1 &39.9 &71.28\\
+    &\textbf{Improvement (\%)} &12.7  &12.7 &8.1 &5.4 \\
     \bottomrule
     \end{tabular}
     \footnotesize

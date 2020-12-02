@@ -1,9 +1,9 @@
 \section{Introduction}
-Nowadays, many researchers construct the fundamental building block of their CNNs with depthwise separable convolution initially introduced in \cite{sifre2014rigid} to reduce the computational cost of standard 2D convolution. 
+\IEEEPARstart{N}{owadays}, many researchers construct the fundamental building block of their CNNs with depthwise separable convolution initially introduced in \cite{sifre2014rigid} to reduce the computational cost of standard 2D convolution. 
 This kind of CNNs, including MobileNet \cite{Sandler_2018_CVPR,howard2019searching}, EfficientNet \cite{tan2019efficientnet} and ShuffleNet \cite{Ma_2018_ECCV}, has been widely used in image classification, object detection and  semantic segmentation.
 Depthwise separable convolution splits the computation of 2D convolution into depthwise convolution and pointwise convolution. 
 
-Many existing optimization techniques for 2D convolution can be applied to depthwise separable convolutions. 
+Many existing optimization techniques \cite{li2016optimizing,Zhen2018Optimizing,enfedaque2014implementation,liu2019optimizing,winter2019adaptive,vasilache2014fast,lavin2016fast,Vasudevan2017Parallel,Chellapilla2006High} for 2D convolution can be applied to depthwise separable convolutions. 
 Among these techniques, fast fourier transform (FFT) \cite{vasilache2014fast}, winograd (Winograd) \cite{lavin2016fast} and general matrix multiplication (GEMM) \cite{Vasudevan2017Parallel,Chellapilla2006High} are broadly adopted ones.
 When applying FFT and Winograd methods to depthwise convolution, we observe little performance improvement compared to the direct implementation. 
 The reason is that depthwise convolution has a much lower computational workload than 2D convolution and memory performance dominates its runtime. 
@@ -30,14 +30,18 @@ The second technique targets row reuse by multiplying one input row with multipl
 This strategy improves the data locality of elements within a row, reducing the number of memory transactions compared with that of the existing convolution processing pipeline. 
 By reducing the number of memory transactions, our approach thus can improve the performance of depthwise convolution.
 
-To increase GPU utilization for pointwise convolution, we first decrease the computational workload of each thread and create more thread blocks to saturate GPU. 
+To increase GPU utilization for pointwise convolution, we propose a dynamic block size method. 
+Previous work \cite{li2019coordinated} employs a heuristic method to select the best block size for general matrix multiplication (GEMM) operation. 
+But there is a major restriction when applying their method to convolution operations.
+ 
+we first decrease the computational workload of each thread and create more thread blocks to saturate GPU. 
 But this simple method will let each thread suffer from long global memory access latency since there are not enough arithmetic operations to hide the latency.
-To address this problem, we design a dynamic block size method that distributes input or filter channels across threads within the same warp. 
+To address this problem, we design a dynamic block size method that distributes input or filter channels across threads within a warp. 
 
 This paper makes the following technical contributions:
 \begin{itemize}
     \item It presents two novel algorithms for column and row reuse (Section \ref{sec:creuse} and \ref{sec:rowreuse}) for depthwise convolution, which improve the data locality and reduce the number of global memory transactions when performing convolution in the column and row direction.
     \item It describes a novel method for transforming dynamic indices into static indices. 
     Our approach enhances register promotion, leading to better performance (Section \ref{exp}).
-    \item It presents a dynamic block size method based on the total computational workload. The proposed method can increase GPU utilization for pointwise convolution and meanwhile hides the global memory access latency. 
+    \item It presents a dynamic block size method based on the total amount of computational workload. The proposed method can increase GPU utilization for pointwise convolution and meanwhile hides the global memory access latency. 
 \end{itemize}

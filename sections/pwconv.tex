@@ -7,7 +7,7 @@ In the first stage, we use a 2-level hierarchical partitioning method to decompo
 Each thread block processes one block tile and each warp processes one warp tile. 
 The main consideration when decomposing the output is the layout of tiles on each level.
 
-In the second stage, we distribute channels of input or filter across threads within the same warp.
+In the second stage, we distribute channels of input or filter across threads within a warp.
 To achieve the best performance, we need to determine the number of channels to be distributed, the height of a warp tile, and the number of thread blocks per SM.
 
 Now we give a detailed description of how each stage works.
@@ -24,18 +24,19 @@ The second variable is the number of thread blocks that can run concurrently on 
 We use two values, 2 and 4, for this variable, denoted as $Block_{num}=\{2, 4\}$. 
 There are two reasons for these choices: 
 (1) when $Block_{num}=1$ and $Warp_{num}=4$, there are only 4 warps in an SM. 
-As each thread can use up to 256 registers, a thread block can use at most $4 \times 32 \times 256=32768$ registers, which is only half of the registers of an SM (on RTX 2080Ti, each SM contains 65536 registers).
+In Nvidia GPUs, each thread can use up to 256 registers and each SM has 65536 registers. 
+Then, a thread block can use at most $4 \times 32 \times 256=32768$ registers, which is only half of the registers of an SM.
 To avoid wasting hardware resources, we set $Block_{num}>1$; 
 (2) when partitioning the output with the configuration of 4 thread blocks per SM ($Block_{num}=4$), we encounter cases in which 5 or 6 thread blocks are actually running concurrently on an SM. 
 This is because in some cases, each thread block requires very few hardware resources and more than 4 thread blocks can run concurrently on an SM.
-Therefore, when searching for the best combination, we only need to set $Block_{num}=\{2,4\}$.
+Therefore, when searching for the best block size, we only need to set $Block_{num}=\{2,4\}$.
 
 Now we demonstrate the workflow of our 2-level hierarchical partitioning method, as shown in Figure \ref{fig:pwworkflow}.
 First, we describe how to partition a block tile into warp tiles, and second, how to partition the output into block tiles.
 
 We halve both dimensions of each block tile and generate $2 \times 2$ warp tiles. 
 The height and width of a warp tile are represented as $Warp_H$ and $Warp_W$ respectively.
-In our design, when $Warp_H > 12$, we need assembly level optimizations like the work in \cite{yan2020optimizing} for some configurations of pointwise convolution to avoid register spills.
+In our design, when $Warp_H > 12$, we need assembly level optimizations like the work in \cite{yan2020optimizing,yan2020demystifying} for some configurations of pointwise convolution to avoid register spills.
 But in this work, we focus on a higher level rather than assembly level optimizations, and thus set $Warp_H \leq 12$.
 
 To divide the output into block tiles, we use two logical layouts of the output, \textbf{\emph{L1}} and \textbf{\emph{L2}}, as shown in Figure \ref{fig:pwworkflow}. 
