@@ -363,84 +363,84 @@ Compared to the fastest available algorithms in cuDNN, our approach achieves an 
 \end{table}
 
 
-\begin{table}[]
-\setlength{\tabcolsep}{3.8pt}
-\caption{Speedups of pointwise convolutions on two platforms. We use ${\dag}$ and ${*}$ to denote speedups of cuDNN and ours over the baseline implementation respectively.}
-\label{tab:pwspeedup}
-%\rowcolors{2}{}{Gray}
-\begin{threeparttable}
-\begin{tabular}{c|cccccc|cccccc}
-\toprule
-&\multicolumn{6}{c|}{Speedups on RTX2080Ti} & \multicolumn{6}{c}{Speedups on Jetson Xavier}\\
-
-
-\midrule
-Batch& \textbf{1} & \textbf{8} & \textbf{16}& \textbf{32} & \textbf{64} & \textbf{128} & \textbf{1} & \textbf{8} & \textbf{16}& \textbf{32} & \textbf{64} & \textbf{128}\\
-\hline
-CV1$^{\dag}$&1.2 &1.2 &1.3 &1.1 &1.2 &1.4 &1.5 &1.0 &1.0 &1.0 &1.3 &1.5 \\
-CV1$^{*}$&\textbf{4.2} &\textbf{4.1} &\textbf{3.6} &\textbf{2.9} &\textbf{2.6} &\textbf{2.4} &\textbf{3.3} &\textbf{2.3} &\textbf{3.0} &\textbf{2.1} &\textbf{2.4} &\textbf{2.9} \\
-\hline
-CV2$^{\dag}$&1.3 &1.2 &1.3 &1.3 &1.4 &1.4 &2.0 &1.3 &1.2 &1.6 &1.6 &2.0 \\
-CV2$^{*}$&\textbf{4.3} &\textbf{3.7} &\textbf{3.2} &\textbf{2.8} &\textbf{2.3} &\textbf{2.0} &\textbf{3.7} &\textbf{3.0} &\textbf{2.2} &\textbf{2.8} &\textbf{2.4} &\textbf{2.8} \\
-\hline
-CV3$^{\dag}$&1.3 &1.1 &1.2 &1.1 &1.2 &1.2 &1.2 &1.5 &1.5 &1.6 &1.6 &1.9 \\
-CV3$^{*}$&\textbf{3.4} &\textbf{2.2} &\textbf{1.8} &\textbf{1.6} &\textbf{1.6} &\textbf{1.6} &\textbf{3.3} &\textbf{2.5} &\textbf{2.2} &\textbf{2.2} &\textbf{2.2} &\textbf{2.5} \\
-\hline
-CV4$^{\dag}$&1.1 &1.1 &1.2 &1.6 &1.6 &1.9 &1.0 &1.2 &1.2 &1.4 &1.7 &2.0 \\
-CV4$^{*}$&\textbf{3.3} &\textbf{2.9} &\textbf{2.4} &\textbf{2.1} &\textbf{1.7} &1.8 &\textbf{2.2} &\textbf{1.7} &\textbf{1.5} &\textbf{1.5} &1.4 &1.3 \\
-\hline
-CV5$^{\dag}$&1.2 &1.4 &1.5 &1.3 &1.3 &1.1 &1.3 &1.3 &1.7 &1.3 &1.8 &2.1 \\
-CV5$^{*}$&\textbf{3.7} &\textbf{3.3} &\textbf{2.7} &\textbf{2.1} &\textbf{1.8} &\textbf{1.6} &\textbf{2.4} &\textbf{2.3} &\textbf{2.2} &\textbf{1.9} &1.7 &1.7 \\
-\hline
-CV6$^{\dag}$&1.1 &1.2 &1.2 &1.2 &1.4 &1.7 &1.0 &1.4 &1.3 &1.3 &1.3 &1.2 \\
-CV6$^{*}$&\textbf{4.1} &\textbf{3.8} &\textbf{3.5} &\textbf{2.7} &\textbf{2.5} &\textbf{1.9} &\textbf{3.6} &\textbf{3.3} &\textbf{2.3} &\textbf{2.1} &\textbf{2.0} &\textbf{1.8} \\
-\hline
-CV7$^{\dag}$&1.2 &1.2 &1.3 &1.3 &1.5 &1.4 &1.5 &1.4 &1.3 &1.6 &1.3 &1.9 \\
-CV7$^{*}$&\textbf{3.5} &\textbf{3.4} &\textbf{3.4} &\textbf{3.2} &\textbf{2.9} &\textbf{2.2} &\textbf{2.4} &\textbf{2.7} &\textbf{2.6} &\textbf{2.3} &\textbf{1.5} &\textbf{2.2} \\
-\hline
-CV8$^{\dag}$&1.2 &1.3 &1.3 &1.6 &1.5 &1.6 &1.3 &1.3 &1.6 &1.7 &1.9 &2.4 \\
-CV8$^{*}$&\textbf{2.9} &\textbf{2.7} &\textbf{2.7} &\textbf{2.6} &\textbf{2.4} &\textbf{2.3} &\textbf{2.1} &\textbf{2.2} &\textbf{1.9} &\textbf{2.6} &\textbf{2.6} &2.3 \\
-\hline
-CV9$^{\dag}$&1.7 &1.7 &1.7 &2.3 &2.3 &2.4 &0.8 &1.0 &1.3 &1.2 &1.5 &1.7 \\
-CV9$^{*}$&\textbf{4.5} &\textbf{4.8} &\textbf{4.2} &\textbf{4.2} &\textbf{3.2} &\textbf{2.5} &\textbf{2.9} &\textbf{2.1} &\textbf{2.1} &\textbf{1.7} &\textbf{1.6} &1.5 \\
-\hline
-CV10$^{\dag}$&1.2 &1.2 &1.2 &1.2 &1.6 &1.6 &0.9 &1.5 &1.1 &1.2 &1.2 &1.3 \\
-CV10$^{*}$&\textbf{2.8} &\textbf{3.7} &\textbf{3.0} &\textbf{2.8} &\textbf{2.7} &\textbf{2.1} &\textbf{3.3} &\textbf{3.2} &\textbf{2.2} &\textbf{1.7} &\textbf{1.9} &\textbf{1.7} \\
-\hline
-CV11$^{\dag}$&1.2 &1.2 &1.4 &1.4 &1.6 &1.5 &1.4 &1.3 &1.4 &1.2 &1.2 &1.7 \\
-CV11$^{*}$&\textbf{2.9} &\textbf{2.7} &\textbf{3.2} &\textbf{2.5} &\textbf{2.1} &\textbf{1.8} &\textbf{2.5} &\textbf{2.0} &\textbf{2.0} &\textbf{1.8} &\textbf{1.7} &1.5 \\
-\hline
-CV12$^{\dag}$&1.3 &1.3 &1.3 &1.5 &1.6 &1.9 &1.2 &1.2 &1.3 &1.3 &1.3 &1.2 \\
-CV12$^{*}$&\textbf{3.9} &\textbf{3.9} &\textbf{3.6} &\textbf{3.4} &\textbf{2.8} &\textbf{2.1} &\textbf{3.0} &\textbf{2.8} &\textbf{2.0} &\textbf{1.6} &\textbf{1.8} &\textbf{1.6} \\
-\hline
-CV13$^{\dag}$&1.2 &1.4 &1.3 &1.5 &1.5 &1.5 &2.0 &1.4 &1.4 &1.6 &1.7 &2.1 \\
-CV13$^{*}$&\textbf{3.2} &\textbf{2.8} &\textbf{2.5} &\textbf{2.3} &\textbf{1.9} &\textbf{1.7} &\textbf{3.4} &\textbf{2.3} &\textbf{2.0} &\textbf{1.8} &1.7 &1.6 \\
-\hline
-CV14$^{\dag}$&2.0 &2.1 &2.0 &1.9 &2.1 &2.6 &1.3 &1.3 &1.5 &1.4 &1.3 &1.5 \\
-CV14$^{*}$&\textbf{7.4} &\textbf{6.2} &\textbf{5.0} &\textbf{3.7} &\textbf{3.6} &\textbf{2.9} &\textbf{1.4} &\textbf{2.9} &1.5 &\textbf{2.1} &\textbf{1.5} &1.2 \\
-\hline
-CV15$^{\dag}$&1.1 &1.2 &1.2 &1.4 &1.4 &1.5 &1.2 &1.3 &1.2 &1.2 &1.2 &1.1 \\
-CV15$^{*}$&\textbf{3.7} &\textbf{2.8} &\textbf{2.5} &\textbf{2.6} &\textbf{2.2} &\textbf{1.7} &\textbf{3.1} &\textbf{2.3} &\textbf{2.0} &\textbf{1.8} &\textbf{1.8} &0.8 \\
-\hline
-CV16$^{\dag}$&1.2 &1.3 &1.2 &1.4 &1.7 &1.6 &1.3 &1.4 &1.2 &1.5 &1.5 &1.3 \\
-CV16$^{*}$&\textbf{4.3} &\textbf{3.5} &\textbf{2.7} &\textbf{2.1} &\textbf{2.3} &\textbf{1.9} &0.9 &\textbf{2.0} &\textbf{1.9} &1.5 &1.2 &\textbf{1.4} \\
-\hline
-CV17$^{\dag}$&1.8 &2.0 &1.7 &1.7 &2.4 &2.2 &1.2 &1.3 &1.4 &1.3 &1.4 &1.4 \\
-CV17$^{*}$&\textbf{7.2} &\textbf{4.7} &\textbf{3.4} &\textbf{3.4} &\textbf{3.3} &\textbf{2.3} &\textbf{3.1} &1.3 &\textbf{1.6} &1.3 &1.3 &1.4 \\
-\hline
-CV18$^{\dag}$&1.2 &1.3 &1.4 &1.3 &1.9 &1.8 &1.0 &1.1 &1.2 &1.2 &1.4 &1.5 \\
-CV18$^{*}$&\textbf{3.7} &\textbf{3.2} &\textbf{2.6} &\textbf{1.9} &\textbf{2.3} &1.8 &\textbf{3.9} &\textbf{1.9} &\textbf{2.0} &\textbf{1.6} &1.4 &1.3 \\
-\hline
-CV19$^{\dag}$&1.8 &2.0 &1.6 &1.7 &2.2 &2.0 &1.2 &1.5 &1.4 &1.2 &1.2 &1.2 \\
-CV19$^{*}$&\textbf{7.6} &\textbf{5.6} &\textbf{4.5} &\textbf{4.0} &\textbf{3.6} &\textbf{2.7} &\textbf{4.2} &\textbf{1.6} &\textbf{2.1} &\textbf{1.4} &\textbf{1.5} &\textbf{1.4} \\
-\hline
-CV20$^{\dag}$&1.7 &1.5 &2.0 &1.7 &2.0 &1.8 &1.2 &1.1 &1.6 &1.1 &1.2 &1.3 \\
-CV20$^{*}$&0.5 &0.7 &1.0 &1.2 &1.1 &1.1 &0.8 &0.7 &1.2 &0.9 &0.8 &1.0 \\
-
-\bottomrule
-\end{tabular}
-\end{threeparttable}
-\end{table}
+%\begin{table}[]
+%\setlength{\tabcolsep}{3.8pt}
+%\caption{Speedups of pointwise convolutions on two platforms. We use ${\dag}$ and ${*}$ to denote speedups of cuDNN and ours over the baseline implementation respectively.}
+%\label{tab:pwspeedup}
+%%\rowcolors{2}{}{Gray}
+%\begin{threeparttable}
+%\begin{tabular}{c|cccccc|cccccc}
+%\toprule
+%&\multicolumn{6}{c|}{Speedups on 2080Ti} & \multicolumn{6}{c}{Speedups on Xavier}\\
+%
+%
+%\midrule
+%Batch& \textbf{1} & \textbf{8} & \textbf{16}& \textbf{32} & \textbf{64} & \textbf{128} & \textbf{1} & \textbf{8} & \textbf{16}& \textbf{32} & \textbf{64} & \textbf{128}\\
+%\hline
+%CV1$^{\dag}$&1.2 &1.2 &1.3 &1.1 &1.2 &1.4 &1.5 &1.0 &1.0 &1.0 &1.3 &1.5 \\
+%CV1$^{*}$&\textbf{4.2} &\textbf{4.1} &\textbf{3.6} &\textbf{2.9} &\textbf{2.6} &\textbf{2.4} &\textbf{3.3} &\textbf{2.3} &\textbf{3.0} &\textbf{2.1} &\textbf{2.4} &\textbf{2.9} \\
+%\hline
+%CV2$^{\dag}$&1.3 &1.2 &1.3 &1.3 &1.4 &1.4 &2.0 &1.3 &1.2 &1.6 &1.6 &2.0 \\
+%CV2$^{*}$&\textbf{4.3} &\textbf{3.7} &\textbf{3.2} &\textbf{2.8} &\textbf{2.3} &\textbf{2.0} &\textbf{3.7} &\textbf{3.0} &\textbf{2.2} &\textbf{2.8} &\textbf{2.4} &\textbf{2.8} \\
+%\hline
+%CV3$^{\dag}$&1.3 &1.1 &1.2 &1.1 &1.2 &1.2 &1.2 &1.5 &1.5 &1.6 &1.6 &1.9 \\
+%CV3$^{*}$&\textbf{3.4} &\textbf{2.2} &\textbf{1.8} &\textbf{1.6} &\textbf{1.6} &\textbf{1.6} &\textbf{3.3} &\textbf{2.5} &\textbf{2.2} &\textbf{2.2} &\textbf{2.2} &\textbf{2.5} \\
+%\hline
+%CV4$^{\dag}$&1.1 &1.1 &1.2 &1.6 &1.6 &1.9 &1.0 &1.2 &1.2 &1.4 &1.7 &2.0 \\
+%CV4$^{*}$&\textbf{3.3} &\textbf{2.9} &\textbf{2.4} &\textbf{2.1} &\textbf{1.7} &1.8 &\textbf{2.2} &\textbf{1.7} &\textbf{1.5} &\textbf{1.5} &1.4 &1.3 \\
+%\hline
+%CV5$^{\dag}$&1.2 &1.4 &1.5 &1.3 &1.3 &1.1 &1.3 &1.3 &1.7 &1.3 &1.8 &2.1 \\
+%CV5$^{*}$&\textbf{3.7} &\textbf{3.3} &\textbf{2.7} &\textbf{2.1} &\textbf{1.8} &\textbf{1.6} &\textbf{2.4} &\textbf{2.3} &\textbf{2.2} &\textbf{1.9} &1.7 &1.7 \\
+%\hline
+%CV6$^{\dag}$&1.1 &1.2 &1.2 &1.2 &1.4 &1.7 &1.0 &1.4 &1.3 &1.3 &1.3 &1.2 \\
+%CV6$^{*}$&\textbf{4.1} &\textbf{3.8} &\textbf{3.5} &\textbf{2.7} &\textbf{2.5} &\textbf{1.9} &\textbf{3.6} &\textbf{3.3} &\textbf{2.3} &\textbf{2.1} &\textbf{2.0} &\textbf{1.8} \\
+%\hline
+%CV7$^{\dag}$&1.2 &1.2 &1.3 &1.3 &1.5 &1.4 &1.5 &1.4 &1.3 &1.6 &1.3 &1.9 \\
+%CV7$^{*}$&\textbf{3.5} &\textbf{3.4} &\textbf{3.4} &\textbf{3.2} &\textbf{2.9} &\textbf{2.2} &\textbf{2.4} &\textbf{2.7} &\textbf{2.6} &\textbf{2.3} &\textbf{1.5} &\textbf{2.2} \\
+%\hline
+%CV8$^{\dag}$&1.2 &1.3 &1.3 &1.6 &1.5 &1.6 &1.3 &1.3 &1.6 &1.7 &1.9 &2.4 \\
+%CV8$^{*}$&\textbf{2.9} &\textbf{2.7} &\textbf{2.7} &\textbf{2.6} &\textbf{2.4} &\textbf{2.3} &\textbf{2.1} &\textbf{2.2} &\textbf{1.9} &\textbf{2.6} &\textbf{2.6} &2.3 \\
+%\hline
+%CV9$^{\dag}$&1.7 &1.7 &1.7 &2.3 &2.3 &2.4 &0.8 &1.0 &1.3 &1.2 &1.5 &1.7 \\
+%CV9$^{*}$&\textbf{4.5} &\textbf{4.8} &\textbf{4.2} &\textbf{4.2} &\textbf{3.2} &\textbf{2.5} &\textbf{2.9} &\textbf{2.1} &\textbf{2.1} &\textbf{1.7} &\textbf{1.6} &1.5 \\
+%\hline
+%CV10$^{\dag}$&1.2 &1.2 &1.2 &1.2 &1.6 &1.6 &0.9 &1.5 &1.1 &1.2 &1.2 &1.3 \\
+%CV10$^{*}$&\textbf{2.8} &\textbf{3.7} &\textbf{3.0} &\textbf{2.8} &\textbf{2.7} &\textbf{2.1} &\textbf{3.3} &\textbf{3.2} &\textbf{2.2} &\textbf{1.7} &\textbf{1.9} &\textbf{1.7} \\
+%\hline
+%CV11$^{\dag}$&1.2 &1.2 &1.4 &1.4 &1.6 &1.5 &1.4 &1.3 &1.4 &1.2 &1.2 &1.7 \\
+%CV11$^{*}$&\textbf{2.9} &\textbf{2.7} &\textbf{3.2} &\textbf{2.5} &\textbf{2.1} &\textbf{1.8} &\textbf{2.5} &\textbf{2.0} &\textbf{2.0} &\textbf{1.8} &\textbf{1.7} &1.5 \\
+%\hline
+%CV12$^{\dag}$&1.3 &1.3 &1.3 &1.5 &1.6 &1.9 &1.2 &1.2 &1.3 &1.3 &1.3 &1.2 \\
+%CV12$^{*}$&\textbf{3.9} &\textbf{3.9} &\textbf{3.6} &\textbf{3.4} &\textbf{2.8} &\textbf{2.1} &\textbf{3.0} &\textbf{2.8} &\textbf{2.0} &\textbf{1.6} &\textbf{1.8} &\textbf{1.6} \\
+%\hline
+%CV13$^{\dag}$&1.2 &1.4 &1.3 &1.5 &1.5 &1.5 &2.0 &1.4 &1.4 &1.6 &1.7 &2.1 \\
+%CV13$^{*}$&\textbf{3.2} &\textbf{2.8} &\textbf{2.5} &\textbf{2.3} &\textbf{1.9} &\textbf{1.7} &\textbf{3.4} &\textbf{2.3} &\textbf{2.0} &\textbf{1.8} &1.7 &1.6 \\
+%\hline
+%CV14$^{\dag}$&2.0 &2.1 &2.0 &1.9 &2.1 &2.6 &1.3 &1.3 &1.5 &1.4 &1.3 &1.5 \\
+%CV14$^{*}$&\textbf{7.4} &\textbf{6.2} &\textbf{5.0} &\textbf{3.7} &\textbf{3.6} &\textbf{2.9} &\textbf{1.4} &\textbf{2.9} &1.5 &\textbf{2.1} &\textbf{1.5} &1.2 \\
+%\hline
+%CV15$^{\dag}$&1.1 &1.2 &1.2 &1.4 &1.4 &1.5 &1.2 &1.3 &1.2 &1.2 &1.2 &1.1 \\
+%CV15$^{*}$&\textbf{3.7} &\textbf{2.8} &\textbf{2.5} &\textbf{2.6} &\textbf{2.2} &\textbf{1.7} &\textbf{3.1} &\textbf{2.3} &\textbf{2.0} &\textbf{1.8} &\textbf{1.8} &0.8 \\
+%\hline
+%CV16$^{\dag}$&1.2 &1.3 &1.2 &1.4 &1.7 &1.6 &1.3 &1.4 &1.2 &1.5 &1.5 &1.3 \\
+%CV16$^{*}$&\textbf{4.3} &\textbf{3.5} &\textbf{2.7} &\textbf{2.1} &\textbf{2.3} &\textbf{1.9} &0.9 &\textbf{2.0} &\textbf{1.9} &1.5 &1.2 &\textbf{1.4} \\
+%\hline
+%CV17$^{\dag}$&1.8 &2.0 &1.7 &1.7 &2.4 &2.2 &1.2 &1.3 &1.4 &1.3 &1.4 &1.4 \\
+%CV17$^{*}$&\textbf{7.2} &\textbf{4.7} &\textbf{3.4} &\textbf{3.4} &\textbf{3.3} &\textbf{2.3} &\textbf{3.1} &1.3 &\textbf{1.6} &1.3 &1.3 &1.4 \\
+%\hline
+%CV18$^{\dag}$&1.2 &1.3 &1.4 &1.3 &1.9 &1.8 &1.0 &1.1 &1.2 &1.2 &1.4 &1.5 \\
+%CV18$^{*}$&\textbf{3.7} &\textbf{3.2} &\textbf{2.6} &\textbf{1.9} &\textbf{2.3} &1.8 &\textbf{3.9} &\textbf{1.9} &\textbf{2.0} &\textbf{1.6} &1.4 &1.3 \\
+%\hline
+%CV19$^{\dag}$&1.8 &2.0 &1.6 &1.7 &2.2 &2.0 &1.2 &1.5 &1.4 &1.2 &1.2 &1.2 \\
+%CV19$^{*}$&\textbf{7.6} &\textbf{5.6} &\textbf{4.5} &\textbf{4.0} &\textbf{3.6} &\textbf{2.7} &\textbf{4.2} &\textbf{1.6} &\textbf{2.1} &\textbf{1.4} &\textbf{1.5} &\textbf{1.4} \\
+%\hline
+%CV20$^{\dag}$&1.7 &1.5 &2.0 &1.7 &2.0 &1.8 &1.2 &1.1 &1.6 &1.1 &1.2 &1.3 \\
+%CV20$^{*}$&0.5 &0.7 &1.0 &1.2 &1.1 &1.1 &0.8 &0.7 &1.2 &0.9 &0.8 &1.0 \\
+%
+%\bottomrule
+%\end{tabular}
+%\end{threeparttable}
+%\end{table}
 
 
 
@@ -456,6 +456,7 @@ CV20$^{*}$&0.5 &0.7 &1.0 &1.2 &1.1 &1.1 &0.8 &0.7 &1.2 &0.9 &0.8 &1.0 \\
 
 
 \subsubsection{Setup} In this experiment, we compare our approach against the pointwise convolution implementations in cuDNN and use cuDNN gemm algorithm as the baseline. 
+The execution time of our approach includes both CPU and GPU parts, as shown in Algorithm \ref{algo:pwalgo}.
 We use the layer configurations from the popular CNN model MobileNetv2.
 There are 30 different configurations for pointwise convolution, we test all configurations and report the performance of 20 layers. 
 The other 10 layers exhibit similar performance as the selected ones.  
@@ -466,8 +467,8 @@ Table \ref{tab:pwconv} lists the layer configurations used in this experiment.
 \subsubsection{Overall results} Table \ref{tab:pwspeedup} shows the speedups of cuDNN implicit and our approach over cuDNN gemm.
 Our approach achieves the best performance for layers of CV1-CV19.
 For the layer CV20, which uses 1024 filters to convolve with the input, our approach performs poorly compared to cuDNN gemm and cuDNN implicit.
-Overall, our implementation and cuDNN implicit achieve an average speedup of $2.8\times$ and $1.5\times$ over cuDNN gemm. 
-This translates to an improvement of $2\times$ over cuDNN implicit, which is the fastest algorithm in cuDNN for pointwise convolution.
+Overall, our implementation and cuDNN implicit achieve an average speedup of $3\times$ and $1.5\times$ over cuDNN gemm on 2080Ti respectively, and $2\times$ and $1.3\times$ on Xavier respectively. 
+This translates to an improvement of $2\times$ and $1.5\times$ over cuDNN implicit on 2080Ti and Xavier respectively.
 
 \subsubsection{Further analysis}
 \begin{figure}
@@ -477,10 +478,10 @@ This translates to an improvement of $2\times$ over cuDNN implicit, which is the
     \vspace{5mm}
     \subfloat[][Ratios of executed LDG (load from global memory) instruction counts of cuDNN implicit to our approach.]{\includegraphics[width=\columnwidth]{./figure/pwldginst.eps}\label{fig:pwldginst}}
     \vspace{-4mm}
-    \caption{SM utilizations and ratios of executed LDG instruction counts for pointwise convolutions with a batch size of 32.}
+    \caption{SM utilizations and ratios of executed LDG instruction counts for pointwise convolutions with a batch size of 32 on 2080Ti.}
     \label{fig:pwinfo}
 \end{figure}
-Figure \ref{fig:pwinfo} reports the measured SM utilizations and ratios of executed LDG instruction counts of cuDNN implicit to our approach when using a batch size of 32. Other configurations have the similar performance. 
+Figure \ref{fig:pwinfo} reports the measured SM utilizations and ratios of executed LDG instruction counts of cuDNN implicit to our approach when using a batch size of 32 on 2080Ti. Other configurations have the similar performance. 
 
 Given a specific layer configuration of pointwise convolution, our approach will try to create a suitable number of thread blocks to saturate GPU. 
 A potential performance issue is that more thread blocks may incur more reloads of filters or inputs which are shared between thread blocks. 
@@ -497,8 +498,10 @@ There are two reasons for the performance gain of our approach.
 	We implement a simple pointwise without latency hiding, denoted as simple. 
 	We can see that our approach can significantly reduce the memory access latency compared to the simple implementation.
 	To further reduce memory access latency, we need assembly level optimizaitions which is not the focus of this work.
-\subsubsection{Summary} We use dynamic block size to improve SM utilization and use a double buffer and multiple accumulations to hide memory access latency. With both methods, we achieve an average speedup of $2\times$ over cuDNN implicit.
 \end{enumerate}
+
+\subsubsection{Summary} We use dynamic block size to improve SM utilization and use a double buffer and multiple accumulations to hide memory access latency. With both methods, we achieve an average speedup of $2\times$ and $1.5\times$ over cuDNN implicit on 2080Ti and Xavier respectively.
+
 
 \begin{figure*}
     \centering
@@ -507,30 +510,32 @@ There are two reasons for the performance gain of our approach.
     \label{fig:stalllongscore}
 \end{figure*}
 
-\subsection{Inference Performance}
+\subsection{Inference and Training Performance}
 \label{sec:inferexp}
-\subsubsection{Setup} In this experiment, we apply our depthwise and pointwise convolutions on the inference of MobileNetv2 for batch sizes of 1, 8, 16, 32, 64 and 128.
-We use the caffe framework to implement MobileNetv2 and made some modifications to the source code of caffe before performing experiments. 
-First, we replace the implementation of batchnormalization and depthwise convolution layers with cuDNN implementations. 
-To experiment, we first run the inference with cuDNN implementation and then replace the cuDNN with our implementation.
+\subsubsection{Setup} 
+In this experiment, we apply our depthwise and pointwise convolutions to MobileNetV2 and report the performance of inference and training. 
+For inference, we test MobileNetV2 with batch sizes of 1, 8, 16, 32, 64 and 128 on both platforms and report the execution time of inference. 
+For training, we test MobileNetV2 with batch sizes of 16, 32, 64 and 128 on 2080Ti and report the average execution time of one iteration including one forward phase and one backward phase.
+We use the caffe framework to implement MobileNetV2 and replace the implementations of batchnormalization and depthwise convolution layers of caffe with cuDNN implementations. 
+To experiment, we first run the inference with cuDNN implementation, denoted as cuDNN, and then replace the cuDNN with our implementation, denoted as Ours.
 
 \subsubsection{Overall result}
 \begin{table}[]
-\setlength{\tabcolsep}{3.4pt}
-    \caption{Experiments for inference using MobileNetv2}
+\setlength{\tabcolsep}{4.6pt}
+    \caption{Execution time of inference of MobileNetV2 on 2080Ti and Xavier}
     \label{tab:infertime}
     \centering
     %\rowcolors{2}{}{Gray}
     \begin{threeparttable}
     \begin{tabular}{c|l|rrrrrr}
     \toprule
-    &\textbf{batch size} & 1 & 8 & 16& 32 &64 & 128\\
+    &\textbf{Batch} & 1 & 8 & 16& 32 &64 & 128\\
     \midrule
-    \multirow{3}{*}{\textbf{RTX2080Ti}}&\textbf{cuDNN (ms)} & 7.5  & 8.8 & 9.7 & 14.4 & 19.1 &28.7 \\
+    \multirow{3}{*}{\textbf{2080Ti}}&\textbf{cuDNN (ms)} & 7.5  & 8.8 & 9.7 & 14.4 & 19.1 &28.7 \\
     &\textbf{Ours (ms)} &6.1   &7.1    & 8.0  &12.0 &16.9 &26.3\\
     &\textbf{Improvement (\%)} &18.6   &19.3    &17.5  & 16.7 &11.5 &8.4 \\
     \hline
-    \multirow{3}{*}{\textbf{AGX Xavier}}&\textbf{cuDNN (ms)} & 16.6&22.3&32.1&52.6&84.2&140.1  \\
+    \multirow{3}{*}{\textbf{Xavier}}&\textbf{cuDNN (ms)} & 16.6&22.3&32.1&52.6&84.2&140.1  \\
     &\textbf{Ours (ms)} &13.2&18.9&27.8&44.7&76.1&130.0 \\
     &\textbf{Improvement (\%)} & 20.5&15.2&13.4&15.0&9.6&7.2 \\
     \bottomrule
@@ -541,17 +546,18 @@ To experiment, we first run the inference with cuDNN implementation and then rep
 \end{table}
 
 \begin{table}[]
-    \caption{Experiments for inference using MobileNetv2}
-    \label{tab:infertime}
+
+    \caption{Execution time of training of MobileNetV2 on 2080Ti}
+    \label{tab:traintime}
     \centering
     %\rowcolors{2}{}{Gray}
     \begin{threeparttable}
     \begin{tabular}{c|l|rrrr}
     \toprule
-    &\textbf{batch size} & 16& 32 &64 & 128\\
+    &\textbf{Batch} & 16& 32 &64 & 128\\
     \midrule
-    \multirow{3}{*}{\textbf{RTX2080Ti}}&\textbf{cuDNN (ms)} & 16.6 & 27.6 & 43,4 &75.36 \\
-    &\textbf{Ours (ms)} & 14.5  &24.1 &39.9 &71.28\\
+    \multirow{3}{*}{\textbf{2080Ti}}&\textbf{cuDNN (ms)} & 16.6 & 27.6 & 43,4 &75.4 \\
+    &\textbf{Ours (ms)} & 14.5  &24.1 &39.9 &71.3\\
     &\textbf{Improvement (\%)} &12.7  &12.7 &8.1 &5.4 \\
     \bottomrule
     \end{tabular}
@@ -559,4 +565,15 @@ To experiment, we first run the inference with cuDNN implementation and then rep
     \end{threeparttable}
     \vspace{-5mm}
 \end{table}
-Table \ref{tab:infertime} demonstrates that our approach improves the performance of inference by 12.19\% on average compared to the implementation of cuDNN implicit.
+Table \ref{tab:infertime} demonstrates that our approach improves the performance of inference by 12.2\% and 13.5\% on average compared to the implementation of cuDNN implicit on 2080Ti and Xavier respectively. Table \ref{tab:traintime} demonstrates that our approach improves the performance of training by 9.7\% on average compared to the implementation of cuDNN implicit on 2080Ti.
+
+
+
+
+
+
+
+
+
+
+

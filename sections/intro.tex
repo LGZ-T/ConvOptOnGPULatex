@@ -31,7 +31,7 @@ This strategy improves the data locality of elements within a row, reducing the 
 By reducing the number of memory transactions, our approach thus can improve the performance of depthwise convolution.
 
 To increase GPU utilization for pointwise convolution, we propose a dynamic block size method. 
-Previous work \cite{li2019coordinated} employs a heuristic method to select the best block size for general matrix multiplication (GEMM) operation. 
+Previous work \cite{li2019coordinated,pourghassemi2020limits} employs a heuristic method to select the best block size for general matrix multiplication (GEMM) operation. 
 But there is a major restriction when applying their method to convolution operations.
 When converting the convolution operation into GEMM, the resultant matrix size is usually smaller than the expected matrix size.
 Then they try to combine multiple convolutions that can be calculated concurrently into one GEMM kernel to increase the computation workload.

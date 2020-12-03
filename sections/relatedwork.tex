@@ -25,3 +25,5 @@ al. \cite{Iandola2014Communication} reduced memory communication of 2D convoluti
 registers. While their method uses fewer threads, each thread operates on a larger number of data items. As a result, their method does not
 reduce the number of global memory transactions. Unlike \cite{Iandola2014Communication}, our approach promotes register use and can
 significantly reduce the number of memory accesses.
+
+Previous work \cite{oyama2018accelerating} splits batches into smaller batch sizes to mitigate workspace restriction, and thus let cuDNN select a more suitable algorithm without considering workspace requirements.
