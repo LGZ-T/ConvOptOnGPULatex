@@ -24,8 +24,8 @@ The second variable is the number of thread blocks that can run concurrently on 
 We use two values, 2 and 4, for this variable, denoted as $Block_{num}=\{2, 4\}$. 
 There are two reasons for these choices: 
 (1) when $Block_{num}=1$ and $Warp_{num}=4$, there are only 4 warps in an SM. 
-In Nvidia GPUs, each thread can use up to 256 registers and each SM has 65536 registers. 
-Then, a thread block can use at most $4 \times 32 \times 256=32768$ registers, which is only half of the registers of an SM.
+In Nvidia GPUs, each thread can use up to 255 registers and each SM has 65536 registers. 
+Then, a thread block can use at most $4 \times 32 \times 255=32640$ registers, which is less than half of the registers of an SM.
 To avoid wasting hardware resources, we set $Block_{num}>1$; 
 (2) when partitioning the output with the configuration of 4 thread blocks per SM ($Block_{num}=4$), we encounter cases in which 5 or 6 thread blocks are actually running concurrently on an SM. 
 This is because in some cases, each thread block requires very few hardware resources and more than 4 thread blocks can run concurrently on an SM.
@@ -49,8 +49,8 @@ Therefore, it is easier to distribute channels of filters than inputs in our app
 For the sake of simplicity, we design our partition method to utilize layout \textbf{\emph{L1}} whenever there are enough filters to be distributed across threads.
 Specifically, when $F_N \ge 48$, we choose layout \textbf{\emph{L1}} and distribute filter channels across threads within a warp. 
 Otherwise, we choose layout \textbf{\emph{L2}} and distribute input channels.
-The boundary of $F_N = 48$ is determined as follows.
-Figure \ref{fig:pwworkflow} demonstrates that in layout \textbf{\emph{L2}}, the maxmial value of $F_N$ is $4 \times Warp_H$ and $Warp_H \leq 12$, therefore we have $F_N \leq 48$ in layout \textbf{\emph{L2}}.
+The boundary $F_N = 48$ is determined as follows.
+Figure \ref{fig:pwworkflow} demonstrates that in layout \textbf{\emph{L2}}, the maximal value of $F_N$ is $4 \times Warp_H$ and $Warp_H \leq 12$, therefore we have $F_N \leq 48$ in layout \textbf{\emph{L2}}.
 
 After choosing the layout, we partition the output along the filter dimension.
 For the layout \textbf{\emph{L1}}, we halve the filter dimension if $F_N \geq 512$. 
@@ -58,7 +58,7 @@ The reason is that if we let each thread block process a large number of filters
 For the layout \textbf{\emph{L2}}, we halve the filter dimension if $F_N \geq 24$.
 
 \subsection{Distribute Channels Across Threads}
-In this stage, we distribute channels of filters or inputs across threads within the same warp.
+In this stage, we distribute channels of filters or inputs across threads within a warp.
 The number of channels to be distributed is denoted as $C_{num}$.
 To achieve the best performance, we iterate over all candidate combinations of $Block_{num}$, $C_{num}$ and $Warp_H$, and select the combination that leads to optimal SM utilization and arithmetic intensity.
 
@@ -80,7 +80,7 @@ In our experiments, there is no clear boundary between large and small candidate
 The boundary between the large and small size of the input dimension is experimentally determined as $I_N \times I_H \times I_W=16 \times 14 \times 14$.
 
 When searching for the optimal combinations, we only consider combinations that satisfy hardware resources constraints, including registers and shared memory.
-Based on $Block_{num}$, we calculate the number of registers each thread can use ($Limit_R$) and the size of shared memory each thread block can use ($Limit_S$) with formula $Limit_R=65536/(Block_{num}\times 4\times 32)$ and $Limit_S=64 \times 1024B/Block_{num}$ respectively.
+Based on $Block_{num}$, we calculate the number of registers each thread can use ($Limit_R$) and the size of shared memory each thread block can use ($Limit_S$) with formulas $Limit_R=Total_R/(Block_{num}\times Warp_{num} \times 32)$ and $Limit_S=Total_S/Block_{num}$ respectively. $Total_R$ and $Total_S$ represent the number of registers and the size of shared memory of an SM, respectively. On RTX 2080Ti, $Total_R=65536$ and $Total_S=64KB$ while  on Jetson AGX Xavier, $Total_R=65536$ and $Total_S=48KB$.
 Each thread calculates $Warp_H \times T_{num}$ output elements and thus needs $R_O=Warp_H \times T_{num}$, $R_I=Warp_H$ and $R_F=T_{num}$ registers to store output elemnts, input elements and filter elements respectively.
 In cases where the computational workload is small, we try to let each thread accumulates $Warp_H \times T_{num}$ output elements $k \in \{1,2,3,4\}$ times.
 The constraints can be formulated as follows:
@@ -172,12 +172,12 @@ Two metrics can be calculated as follows:
     D = |Warp_H-T_{num}|
     \label{fo:diff}
 \end{equation}
-where $Block_{count}$ is the number of generated thread blcoks, $SM_{num}$ is the number of SMs on a GPU.
+where $Block_{count}$ is the number of generated thread blocks, $SM_{num}$ is the number of SMs on a GPU. For RTX 2080Ti and AGX Xavier, $SM_{num}=48$ and $SM_{num}=8$ respectively.
 
 We will demonstrate how to select the optimal combination based on both metrics in the next section.
 
-\subsection{Putting Togtther}
-The whole workflow is shown in Algorithm \ref{algo:pwalgo}.
+\subsection{Putting Together}
+The whole workflow is described in Algorithm \ref{algo:pwalgo}.
 We first choose the layout of output and partition the output into block tiles based on $F_N$ (Line 3).
 Second, we choose the candidate set for $Warp_H$ based on $I_N \times I_H \times I_W$ (Lines 4-7).
 Then we iterate over all combinations of $Block_{num}$, $C_{num}$ and $Warp_H$ (Line 9), and keep the combinations that satisfy the constraints $Limit_R$ (Formula \ref{fo:limitr}) and $Limit_S$ (Formula \ref{fo:limits}).
@@ -186,7 +186,7 @@ Next, we calculate values of $SM_{util}$ (Formula \ref{fo:smutil}) and $D$ (Form
 \begin{enumerate}[Step 1]
     \item If $SM_{util} \geq 1$ is true for all combinations, we select the combinations that possess the smallest and close to the smallest $SM_{util}$ (Lines 13, 17).
     The reason is that when $SM_{util} \geq 1$, all SMs are utilized, in which case we want to reduce the number of thread blocks to reduce the number of loads of shared filters or inputs between multiple thread blocks.
-    \item If there exist combinations such that $SM_{util}<1$, we first collect these combinations. Then, among collected combinations, we select the ones that possess the biggest and close to the biggest $SM_{util}$ (Lines 20, 24).
+    \item If there exists combinations such that $SM_{util}<1$, we first collect these combinations. Then, among collected combinations, we select the ones that possess the biggest and close to the biggest $SM_{util}$ (Lines 20, 24).
     The reason is that when $SM_{util}<1$, there are idle SMs, in which case we want to increase $SM_{util}$ to fully utilize SMs. We do not want $SM_{util}$ to exceed 1 because that will incur more memory operations.
     \item Among candidate combinations selected in Step 1 and Step 2, we select the combination with the smallest value of $D$ (Line 14, 21) because we try to form $Warp_H$ and $T_{num}$ into a square shape to increase arithmetic intensity.
 \end{enumerate}
@@ -197,4 +197,4 @@ Then, each thread accumulates output elements $k$ times (Line 32).
 Meanwhile, the thread block loads the next $k \times C_{num}$ channels into another shared memory array (Line 31). 
 We also use the double buffer method to increase the computational workload of each thread (Line 35).
 The kernel repeats the process until all channels have been accumulated to output elements.
-Finally, we use a warp level segmented parallel reduction to reduce results in different channels into the final result and write results to global memory (Line 36).  
+Finally, we use a warp level segmented parallel reduction to reduce results of different channels into the final result and write results to global memory (Line 36).  

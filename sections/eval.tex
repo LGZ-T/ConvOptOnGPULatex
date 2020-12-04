@@ -7,15 +7,13 @@ One is NVIDIA RTX 2080Ti GPU (2080Ti), which integrates 4350 CUDA cores for floa
 The GPU has a 64KB shared memory. 
 The host machine has a 2.30GHz Intel Xeon E5-2697 CPU with 252GB memory, running Linux kernel v4.15.0. We use CUDA Toolkit version 10.2.
 The other is NVIDIA Jetson AGX Xavier GPU (Xavier), which integrates 512 Volta cores and 48KB shared memory.
-The host machine has an 8-core Arm CPU with 32GB memory, running Linux kernel v4.15.0. We use CUDA Toolkit 10.0. 
+The host machine has an 1.2GHz 8-core Arm CPU with 32GB memory, running Linux kernel v4.15.0. We use CUDA Toolkit 10.0. 
 
 
-\subsection{Competing Methods} We compare our approach against the following state-of-the-art convolution libraries:
-\begin{itemize}
-  \item \textbf{cuDNN version 7.6.4}. cuDNN is a state-of-the-art convolution implementation that supports all kinds of convolutions including depthwise and pointwise convolutions on GPU. 
+\subsection{Competing Methods} We compare our approach against the state-of-the-art convolution library cuDNN which supports all kinds of convolutions including depthwise and pointwise convolutions on GPU. 
   Moreover, cuDNN can execute GEMM-, FFT- and Winograd-based convolutions. We take cuDNN GEMM implementation as a baseline for pointwise convolution.
-  \item \textbf{Direct implementation of depthwise convolution}. We implement a direct depthwise convolution without using the proposed reuse algorithms. We take this implementation as a baseline for depthwise convolution.
-\end{itemize}
+  We implement a direct depthwise convolution without using the proposed reuse algorithms. We take this implementation as a baseline for depthwise convolution.
+
 
 \subsection{Use Cases}
 We apply our approach to depthwise convolution and pointwise convolution, described as follows.
@@ -30,7 +28,7 @@ The 2D convolution is performed between one filter channel and the corresponding
 \subsection{Performance Report}
 We run each test case ten times with batch sizes 1, 8, 16, 32, 64 and 128 on an unloaded machine and report the averaged running time. 
 We found little variance during execution runs, less than 2\%.  
-All the convolutions used in evaluation use the standard 32-bit (single-precision) floating point numbers, and the data are organized as 4D tensors $(N,C,H,$ and $W)$, where $N$, $C$, $H$, and $W$ are the batch size, channel, height, and width, respectively. 
+All the convolutions used in evaluation use 32-bit (single-precision) floating point numbers, and the data are organized as 4D tensors $(N,C,H,$ and $W)$, where $N$, $C$, $H$, and $W$ are the batch size, channel, height, and width, respectively. 
 In this work, we first test depthwise convolution with two filter sizes, $3 \times 3$ and $5 \times 5$, because these are commonly used filter sizes. 
 Then we report the performance of pointwise convolution. 
 Lastly, we apply our optimized depthwise and pointwise convolutions on MobileNetv2 and report the performance of inference and training.
@@ -40,7 +38,7 @@ Lastly, we apply our optimized depthwise and pointwise convolutions on MobileNet
 %to denote the batch size, the channel, the height, and the width, respectively.
 
 \section{Experimental Results}
-\label{exp} In this section, we report our results for depthwise convolution (Section \ref{sec:depconvexp}), pointwise convolution (Section \ref{sec:pwconvexp}) and inference and training of MobileNetV2 (Section \ref{sec:inferexp}), showing that our approach consistently outperforms alternative methods by delivering the overall best performance.
+\label{exp} In this section, we report results for depthwise convolution (Section \ref{sec:depconvexp}), pointwise convolution (Section \ref{sec:pwconvexp}) and inference and training of MobileNetV2 (Section \ref{sec:inferexp}), showing that our approach consistently outperforms alternative methods by delivering the overall best performance.
 
 
 %\subsection{2D Convolution\label{sec:ex2dc}}
@@ -157,7 +155,7 @@ Lastly, we apply our optimized depthwise and pointwise convolutions on MobileNet
 \hspace{0em}
 \subfloat[Speedups on Xavier for the $5 \times 5$ fitler.]{\includegraphics[width=0.4\textwidth,height=5.5cm]{./figure/dwspeedupjetsonf5.eps}
 	\label{fig:dwspeedupjetsonf5}}
-\caption{Speedups of cuDNN implicit and ours over the baseline implementation for depthwise convolution with filters of $3 \times 3$ and $5 \times 5$ on two platforms.} \label{fig:dwspeedup}
+\caption{Speedups of cuDNN implicit and ours over the baseline implementation for depthwise convolution with filters of size $3 \times 3$ and $5 \times 5$ on two platforms.} \label{fig:dwspeedup}
 \end{figure*}
 
 
@@ -238,7 +236,7 @@ Different from cuDNN implicit, we focus on optimizing memory performance for dep
 This suggests that our reuse algorithms can improve memory performance significantly, which thus leads to better overall performance.
 
 \subsubsection{Summary}
-Our approach can significantly reduce the number of memory operations and improve memory performance, which leads to faster computation time when performing depthwise convolutions.  
+Our approach can reduce the number of memory operations and improve memory performance, which leads to faster computation time when performing depthwise convolutions.  
 Compared to the fastest available algorithms in cuDNN, our approach achieves an average speedup of $2.8\times$ and $1.8\times$ when performing depthwise convolutions on 2080Ti and Xavier, respectively.
 
 
@@ -350,7 +348,7 @@ There are two reasons for the performance gain of our approach.
 	\item Our approach exhibits a much higher SM utilization than cuDNN implicit.
 	We can see in Figure \ref{fig:pwsmutil} that our approach has an average of $1.9\times$ higher SM utilization compared to cuDNN implicit.
 	When executing pointwise convolution with a batch size of 128 or below, cuDNN implicit can not utilize SMs efficiently because of its fixed block size. 
-	Based on our dynamic block size, we improve SM utilization which leads to performance improvement for pointwise convolution.
+	Based on our dynamic block size method, we improve SM utilization which leads to performance improvement for pointwise convolution.
 	\item We use a double buffer and multiple accumulations of output to hide memory access latency.
 	Figure \ref{fig:stalllongscore} shows the average number of cycles each warp spends on waiting for the global operation to complete. 
 	We implement a simple pointwise without latency hiding, denoted as simple. 
@@ -358,7 +356,7 @@ There are two reasons for the performance gain of our approach.
 	To further reduce memory access latency, we need assembly level optimizaitions which is not the focus of this work.
 \end{enumerate}
 
-\subsubsection{Summary} We use dynamic block size to improve SM utilization and use a double buffer and multiple accumulations to hide memory access latency. With both methods, we achieve an average speedup of $2\times$ and $1.5\times$ over cuDNN implicit on 2080Ti and Xavier respectively.
+\subsubsection{Summary} We use dynamic block size method to improve SM utilization and use a double buffer and multiple accumulations to hide memory access latency. With both methods, we achieve an average speedup of $2\times$ and $1.5\times$ over cuDNN implicit on 2080Ti and Xavier respectively.
 
 
 \begin{figure*}
@@ -372,10 +370,10 @@ There are two reasons for the performance gain of our approach.
 \label{sec:inferexp}
 \subsubsection{Setup} 
 In this experiment, we apply our depthwise and pointwise convolutions to MobileNetV2 and report the performance of inference and training. 
-For inference, we test MobileNetV2 with batch sizes of 1, 8, 16, 32, 64 and 128 on both platforms and report the execution time of inference. 
-For training, we test MobileNetV2 with batch sizes of 16, 32, 64 and 128 on 2080Ti and report the average execution time of one iteration including one forward phase and one backward phase.
+For inference, we test MobileNetV2 with batch sizes of 1, 8, 16, 32, 64 and 128 on both platforms and report the inference time. 
+For training, we test MobileNetV2 with batch sizes of 16, 32, 64 and 128 on 2080Ti and report the average training time of one iteration including one forward phase and one backward phase.
 We use the caffe framework to implement MobileNetV2 and replace the implementations of batchnormalization and depthwise convolution layers of caffe with cuDNN implementations. 
-To experiment, we first run the inference with cuDNN implementation, denoted as cuDNN, and then replace the cuDNN with our implementation, denoted as Ours.
+To experiment, we first run the inference with cuDNN implementation, denoted as cuDNN, and then replace the cuDNN with our implementations, denoted as Ours.
 
 \subsubsection{Overall result}
 \begin{table}[]

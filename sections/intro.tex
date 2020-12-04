@@ -1,9 +1,9 @@
 \section{Introduction}
-\IEEEPARstart{N}{owadays}, many researchers construct the fundamental building block of their CNNs with depthwise separable convolution initially introduced in \cite{sifre2014rigid} to reduce the computational cost of standard 2D convolution. 
+\IEEEPARstart{N}{owadays}, many researchers construct the fundamental building block of their CNNs with depthwise separable convolutions initially introduced in \cite{sifre2014rigid} to reduce the computational cost of standard 2D convolutions. 
 This kind of CNNs, including MobileNet \cite{Sandler_2018_CVPR,howard2019searching}, EfficientNet \cite{tan2019efficientnet} and ShuffleNet \cite{Ma_2018_ECCV}, has been widely used in image classification, object detection and  semantic segmentation.
 Depthwise separable convolution splits the computation of 2D convolution into depthwise convolution and pointwise convolution. 
 
-Many existing optimization techniques \cite{li2016optimizing,Zhen2018Optimizing,enfedaque2014implementation,liu2019optimizing,winter2019adaptive,vasilache2014fast,lavin2016fast,Vasudevan2017Parallel,Chellapilla2006High} for 2D convolution can be applied to depthwise separable convolutions. 
+Many existing optimization techniques \cite{li2016optimizing,Zhen2018Optimizing,enfedaque2014implementation,liu2019optimizing,winter2019adaptive,vasilache2014fast,lavin2016fast,Vasudevan2017Parallel,Chellapilla2006High} for 2D convolutions can be applied to depthwise separable convolutions. 
 Among these techniques, fast fourier transform (FFT) \cite{vasilache2014fast}, winograd (Winograd) \cite{lavin2016fast} and general matrix multiplication (GEMM) \cite{Vasudevan2017Parallel,Chellapilla2006High} are broadly adopted ones.
 When applying FFT and Winograd methods to depthwise convolution, we observe little performance improvement compared to the direct implementation. 
 The reason is that depthwise convolution has a much lower computational workload than 2D convolution and memory performance dominates its runtime. 
@@ -23,7 +23,7 @@ Though the GEMM algorithm has been well optimized by cuDNN, we find two performa
 In this work, we propose two approaches targeting memory performance and GPU utilization to improve the performance of depthwise and pointwise convolutions, respectively. 
 
 To improve the memory performance of depthwise convolution, we introduce two novel optimization techniques for operations performed on columns and rows. 
-The first technique exploits column reuse by utilizing shuffle instructions (supported by both CUDA and OpenCL and hence is applicable to mainstream GPUs) to exchange elements among threads within the same GPU warp (or working group). 
+The first technique exploits column reuse by utilizing shuffle instructions (supported by both CUDA and OpenCL and hence is applicable to mainstream GPUs) to exchange elements among threads within a warp (or working group). 
 In this way, we can avoid reloading the same elements shared among different threads. 
 We further extend the shuffle instructions to facilitate dynamic indexing, which is not supported in the previous study \cite{vasilache2014fast}. 
 The second technique targets row reuse by multiplying one input row with multiple rows of a convolutional kernel (or filter) to compute multiple output elements. 
@@ -46,5 +46,5 @@ This paper makes the following technical contributions:
     \item It presents two novel algorithms for column and row reuse (Section \ref{sec:creuse} and \ref{sec:rowreuse}) for depthwise convolution, which improve the data locality and reduce the number of global memory transactions when performing convolution in the column and row direction.
     \item It describes a novel method for transforming dynamic indices into static indices. 
     Our approach enhances register promotion, leading to better performance (Section \ref{exp}).
-    \item It presents a dynamic block size method based on the total amount of computational workload. The proposed method can increase GPU utilization for pointwise convolution and meanwhile hides the global memory access latency. 
+    \item It presents a dynamic block size method based on the total amount of computational workload. The proposed method can increase GPU utilization for pointwise convolution and meanwhile hides the global memory access latency (Section \ref{sec:pwconv}). 
 \end{itemize}
