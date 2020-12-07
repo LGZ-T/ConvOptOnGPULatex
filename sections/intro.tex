@@ -1,12 +1,28 @@
 \section{Introduction}
-\IEEEPARstart{N}{owadays}, many researchers construct the fundamental building block of their CNNs with depthwise separable convolutions initially introduced in \cite{sifre2014rigid} to reduce the computational cost of standard 2D convolutions. 
-This kind of CNNs, including MobileNet \cite{Sandler_2018_CVPR,howard2019searching}, EfficientNet \cite{tan2019efficientnet} and ShuffleNet \cite{Ma_2018_ECCV}, has been widely used in image classification, object detection and  semantic segmentation.
-Depthwise separable convolution splits the computation of 2D convolution into depthwise convolution and pointwise convolution. 
+%\IEEEPARstart{N}{owadays}, many researchers construct the fundamental building block of their CNNs with depthwise separable convolutions initially introduced in \cite{sifre2014rigid} to reduce the computational cost of standard 2D convolutions.
+%This kind of CNNs, including MobileNet \cite{Sandler_2018_CVPR,howard2019searching}, EfficientNet \cite{tan2019efficientnet} and ShuffleNet \cite{Ma_2018_ECCV}, has been widely used in image classification, object detection and  semantic segmentation.
+%Depthwise separable convolution splits the computation of 2D convolution into depthwise convolution and pointwise convolution.
 
-Many existing optimization techniques \cite{li2016optimizing,Zhen2018Optimizing,enfedaque2014implementation,liu2019optimizing,winter2019adaptive,vasilache2014fast,lavin2016fast,Vasudevan2017Parallel,Chellapilla2006High} for 2D convolutions can be applied to depthwise separable convolutions. 
+In recent years, deep neural networks (DNNs) have made astonishing success in solving a wide range of tasks \FIXME{\cite{}}. One of the
+most successful DNN architectures is the convolutional neural network (CNN) that is widely used in tasks like image classification
+\FIXME{\cite{}}, object detection \FIXME{\cite{}} and  semantic segmentation \FIXME{\cite{}}.
+
+
+The depthwise separable convolution (DSC) is widely used in modern CNN models for accelerating model inference time \FIXME{\cite{}}. This
+operation can process both the spatial dimensions (e.g., the width and the height of an image) and the depth dimension (e.g., the RGB
+channels of an image) of an input. It achieves this by splitting a convolution kernel into two separate kernels that perform two
+convolutions: a depthwise convolution and a pointwise convolution. The former applies a single convolutional filter for each input channel,
+and the latter uses a $1 \times 1$ kernel to iterate through every single point of the input (e.g., the kernel has a depth of however many
+channels the input image has). Compare to a classical depth-wise convolution that operates on a 3D input of $channels \times width \times
+height$, the DSC reduces the number of parameters needed for the convolution filter (and hence the chance of model over-fitting) and
+computation time by decoupling the computation. For this reason, the DSC is widely used in latency-sensitive scenarios, such as using a
+trained CNN on embedded devices or performing on-device learning on resource-constrained systems.
+
+
+Many existing optimization techniques \cite{li2016optimizing,Zhen2018Optimizing,enfedaque2014implementation,liu2019optimizing,winter2019adaptive,vasilache2014fast,lavin2016fast,Vasudevan2017Parallel,Chellapilla2006High} for 2D convolutions can be applied to depthwise separable convolutions.
 Among these techniques, fast fourier transform (FFT) \cite{vasilache2014fast}, winograd (Winograd) \cite{lavin2016fast} and general matrix multiplication (GEMM) \cite{Vasudevan2017Parallel,Chellapilla2006High} are broadly adopted ones.
-When applying FFT and Winograd methods to depthwise convolution, we observe little performance improvement compared to the direct implementation. 
-The reason is that depthwise convolution has a much lower computational workload than 2D convolution and memory performance dominates its runtime. 
+When applying FFT and Winograd methods to depthwise convolution, we observe little performance improvement compared to the direct implementation.
+The reason is that depthwise convolution has a much lower computational workload than 2D convolution and memory performance dominates its runtime.
 However, both FFT and Winograd methods focus on reducing arithmetic operations of convolutions by sacrificing memory performance, which makes them unsuitable for depthwise convolution.
 Also, FFT and Winograd methods are not suitable for pointwise convolution because FFT favors large filter sizes and Winograd works best when the filter size is $3 \times 3$. Both methods are not implemented for pointwise convolution in cuDNN.
 
@@ -15,36 +31,36 @@ The state-of-the-art GEMM-based method is implicit GEMM implemented by cuDNN \ci
 %{\color{red}we need to talk about why small batches are important.}
 Though the GEMM algorithm has been well optimized by cuDNN, we find two performance issues when applying cuDNN on depthwise separable convolutions with batch sizes of 128 or below.
 \begin{itemize}
-    \item Depthwise convolution possesses a much lower computational workload than standard 2D convolution. Therefore the memory performance is one of the most important gating factors \cite{cudaperformance}. 
+    \item Depthwise convolution possesses a much lower computational workload than standard 2D convolution. Therefore the memory performance is one of the most important gating factors \cite{cudaperformance}.
     However, the implicit GEMM of cuDNN uses more global memory access operations than necessary to complete convolution (as shown in Figure \ref{fig:dwldginst} of Section \ref{sec:depconvexp}), which significantly degrades the performance of depthwise convolution.
     \item The implementation of pointwise convolution in cuDNN can not utilize GPU efficiently (as shown in Figure \ref{fig:pwsmutil} of Section \ref{sec:pwconvexp}).
-    The reason is that cuDNN uses a fixed block size without considering the total amount of computation, which results in a small number of thread blocks when the computational workload is low. 
+    The reason is that cuDNN uses a fixed block size without considering the total amount of computation, which results in a small number of thread blocks when the computational workload is low.
 \end{itemize}
-In this work, we propose two approaches targeting memory performance and GPU utilization to improve the performance of depthwise and pointwise convolutions, respectively. 
+In this work, we propose two approaches targeting memory performance and GPU utilization to improve the performance of depthwise and pointwise convolutions, respectively.
 
-To improve the memory performance of depthwise convolution, we introduce two novel optimization techniques for operations performed on columns and rows. 
-The first technique exploits column reuse by utilizing shuffle instructions (supported by both CUDA and OpenCL and hence is applicable to mainstream GPUs) to exchange elements among threads within a warp (or working group). 
-In this way, we can avoid reloading the same elements shared among different threads. 
-We further extend the shuffle instructions to facilitate dynamic indexing, which is not supported in the previous study \cite{vasilache2014fast}. 
-The second technique targets row reuse by multiplying one input row with multiple rows of a convolutional kernel (or filter) to compute multiple output elements. 
-This strategy improves the data locality of elements within a row, reducing the number of memory transactions compared with that of the existing convolution processing pipeline. 
+To improve the memory performance of depthwise convolution, we introduce two novel optimization techniques for operations performed on columns and rows.
+The first technique exploits column reuse by utilizing shuffle instructions (supported by both CUDA and OpenCL and hence is applicable to mainstream GPUs) to exchange elements among threads within a warp (or working group).
+In this way, we can avoid reloading the same elements shared among different threads.
+We further extend the shuffle instructions to facilitate dynamic indexing, which is not supported in the previous study \cite{vasilache2014fast}.
+The second technique targets row reuse by multiplying one input row with multiple rows of a convolutional kernel (or filter) to compute multiple output elements.
+This strategy improves the data locality of elements within a row, reducing the number of memory transactions compared with that of the existing convolution processing pipeline.
 By reducing the number of memory transactions, our approach thus can improve the performance of depthwise convolution.
 
-To increase GPU utilization for pointwise convolution, we propose a dynamic block size method. 
-Previous work \cite{li2019coordinated,pourghassemi2020limits} employs a heuristic method to select the best block size for general matrix multiplication (GEMM) operation. 
+To increase GPU utilization for pointwise convolution, we propose a dynamic block size method.
+Previous work \cite{li2019coordinated,pourghassemi2020limits} employs a heuristic method to select the best block size for general matrix multiplication (GEMM) operation.
 But there is a major restriction when applying their method to convolution operations.
 When converting the convolution operation into GEMM, the resultant matrix size is usually smaller than the expected matrix size.
 Then they try to combine multiple convolutions that can be calculated concurrently into one GEMM kernel to increase the computation workload.
 This is possible for CNNs which has multiple parallel convolutions within the same layer (e.g. inception layers in GoogleNet \cite{szegedy2015going}).
 But many other CNNs must perform convolution operations one by one to ensure correctness, which makes their method unsuitable in these CNNs.
-In our dynamic block size method, we first decrease the computational workload of each thread and create more thread blocks to saturate GPU. 
+In our dynamic block size method, we first decrease the computational workload of each thread and create more thread blocks to saturate GPU.
 But this simple method will let each thread suffer from long global memory access latency since there are not enough arithmetic operations to hide the latency.
-To address this problem, we design a dynamic block size method that distributes input or filter channels across threads within a warp. 
+To address this problem, we design a dynamic block size method that distributes input or filter channels across threads within a warp.
 
 This paper makes the following technical contributions:
 \begin{itemize}
     \item It presents two novel algorithms for column and row reuse (Section \ref{sec:creuse} and \ref{sec:rowreuse}) for depthwise convolution, which improve the data locality and reduce the number of global memory transactions when performing convolution in the column and row direction.
-    \item It describes a novel method for transforming dynamic indices into static indices. 
+    \item It describes a novel method for transforming dynamic indices into static indices.
     Our approach enhances register promotion, leading to better performance (Section \ref{exp}).
-    \item It presents a dynamic block size method based on the total amount of computational workload. The proposed method can increase GPU utilization for pointwise convolution and meanwhile hides the global memory access latency (Section \ref{sec:pwconv}). 
+    \item It presents a dynamic block size method based on the total amount of computational workload. The proposed method can increase GPU utilization for pointwise convolution and meanwhile hides the global memory access latency (Section \ref{sec:pwconv}).
 \end{itemize}
