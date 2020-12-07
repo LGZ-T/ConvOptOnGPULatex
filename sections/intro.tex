@@ -16,7 +16,7 @@ and the latter uses a $1 \times 1$ kernel to iterate through every single point 
 channels the input image has). Compare to a classical depth-wise convolution that operates on a 3D input of $channels \times width \times
 height$, the DSC reduces the number of parameters needed for the convolution filter (and hence the chance of model over-fitting) and
 computation time by decoupling the computation. For this reason, the DSC is widely used in latency-sensitive scenarios, such as using a
-trained CNN on embedded devices or performing on-device learning on resource-constrained systems.
+trained CNN on embedded devices or performing distributed, on-device learning on resource-constrained systems~\cite{espeholt2019seed}.
 
 
 Many existing optimization techniques \cite{li2016optimizing,Zhen2018Optimizing,enfedaque2014implementation,liu2019optimizing,winter2019adaptive,vasilache2014fast,lavin2016fast,Vasudevan2017Parallel,Chellapilla2006High} for 2D convolutions can be applied to depthwise separable convolutions.
