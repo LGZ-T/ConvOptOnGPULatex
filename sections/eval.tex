@@ -210,7 +210,7 @@ We hypothesize that FFT- and Winograd- based algorithms focus on the reduction o
 Precomp and gemm algorithms need extra memory operations to compute output elements. 
 Moreover, depthwise convolution is more sensitive to memory performance than pointwise and multi-channel 2D convolutions. 
 Consequently, these algorithms are not suitable for depthwise convolutions. 
-Overall, our approach improves cuDNN implicit by $2.0\times$ and $1.4\times$ when using a $3 \times 3$  filter on 2080Ti and Xavier respectively, and $3.5\times$ and $2.1\times$ when using a $5 \times 5$ filter on 2080Ti and Xavier repsectively.
+Overall, our approach improves cuDNN implicit by $2.0\times$ and $1.4\times$ when using a $3 \times 3$  filter on 2080Ti and Xavier respectively, and $3.5\times$ and $2.1\times$ when using a $5 \times 5$ filter on 2080Ti and Xavier respectively.
 %When using a $5 \times 5$ filter, our approach achieves a better overall speedup of $7.7\times$. A $5 \times 5$ filter has four overlapped columns and rows (instead of just one
 %overlapped column and row on width and height dimensions when using a $3 \times 3$ filter). The larger number of overlapped data thus gives
 %more room for performance optimization when using our column and row reuse algorithms. 
@@ -392,7 +392,7 @@ There are two reasons for the performance gain of our approach.
 We observe some performance degradation for pointwise convolutions with INT8 data type.
 When performing pointwise convolutions with INT8, we use $NHWC$ data format and four continuous INT8 channels can be viewed as an INT32 channel. 
 Thus, the size of channel dimension is reduced to one fourth of the original size.
-For small channel sizes ($I_N \leq 96$), the corresponding reduced channel sizes restrict  choices of the number of distributed channels, which may lead to suboptimal performance compared to original channel sizes.
+For small channel sizes ($I_C \leq 96$), the corresponding reduced channel sizes restrict  choices of the number of distributed channels, which may lead to suboptimal performance compared to original channel sizes.
 
 \subsubsection{Summary} We use dynamic block size method to improve SM utilization and use a double buffer and multiple accumulations to hide memory access latency. With both methods, we achieve an average speedup of $2\times$ and $1.5\times$ over cuDNN implicit on 2080Ti and Xavier respectively.
 
@@ -465,7 +465,7 @@ We also report the improvement of our approach compared to cuDNN implementations
 
 \begin{table}[]
 
-    \caption{Training time of MobileNetV2 on 2080Ti}
+    \caption{Training time of MobileNetV2 with FP32 on 2080Ti}
     \vspace{-3mm}
     \label{tab:traintime}
     \centering
@@ -477,7 +477,7 @@ We also report the improvement of our approach compared to cuDNN implementations
     \midrule
     \multirow{3}{*}{\textbf{2080Ti}}&\textbf{cuDNN (ms)} & 16.6 & 27.6 & 43,4 &75.4 \\
     &\textbf{Ours (ms)} & 14.5  &24.1 &39.9 &71.3\\
-    &\textbf{Improvement (\%)} &12.7  &12.7 &8.1 &5.4 \\
+    &\textbf{Improve (\%)} &12.7  &12.7 &8.1 &5.4 \\
     \bottomrule
     \end{tabular}
     \footnotesize

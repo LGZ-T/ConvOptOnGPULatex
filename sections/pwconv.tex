@@ -1,6 +1,6 @@
 \section{Optimizing Pointwise Convolution}
 \label{sec:pwconv}
-In this section, we demonstrate the workflow of our dynamic block size method as shown in Figure \ref{fig:pwworkflow}. 
+In this section, we demonstrate the workflow of our dynamic block size scheme as shown in Figure \ref{fig:pwworkflow}. 
 The whole workflow consists of two stages. 
 
 In the first stage, we use a 2-level hierarchical partitioning method to decompose the output into two levels of tiles, including block tiles and warp tiles. 
@@ -68,20 +68,20 @@ Assume that we distribute 8 channels ($C_{num}=8$), meaning that 8 threads will 
 Therefore, 32 threads of a warp can load 32 channels of $32/8=4$ filters at the same time, we denote this number as $F_{num}=32/C_{num}$.
 And then the number of filters each thread needs to process can be calculated with $T_{num}=Warp_W/F_{num}$.
 To fully utilize a warp, $C_{num}$ should be a power of 2.
-Thus, condidates for $C_{num}$ are $C_{num}=\{1,2,4,8,16,32\}$.
+Thus, candidates for $C_{num}$ are $C_{num}=\{1,2,4,8,16,32\}$.
 
 Next, we demonstrate how to determine the candidates for $Warp_H$ based on the size of the input dimension, $I_N \times I_H \times I_W$.
 If the size of the input dimension is large, we prefer to choose a large $Warp_H$ because using small $Warp_H$ will generate more thread blocks and results in multiple loads of shared filters \cite{jia2020enabling, zheng2020flextensor}.
 If the size of the input dimension is small, we prefer to choose small $Warp_H$ because using a large $Warp_H$ will generate a few thread blocks and result in SM underutilization.
 Since each thread loads at most 12 input elements ($Warp_H<12$), we set the upper limit of large $Warp_H$ to 12 and the lower limit to $12/2=6$. 
-Therefore, the condidates for large $Warp_H$ are $Warp_H=\{6,7,8,9,10,11,12\}$.
+Therefore, the candidates for large $Warp_H$ are $Warp_H=\{6,7,8,9,10,11,12\}$.
 The candidates for small $Warp_H$ are $Warp_H=\{2,3,4,5,6,7,8\}$.
 In our experiments, there is no clear boundary between large and small candidate sets of $Warp_H$, therefore we let both sets overlap in the middle values.
 The boundary between the large and small size of the input dimension is experimentally determined as $I_N \times I_H \times I_W=16 \times 14 \times 14$.
 
 When searching for the optimal combinations, we only consider combinations that satisfy hardware resources constraints, including registers and shared memory.
 Based on $Block_{num}$, we calculate the number of registers each thread can use ($Limit_R$) and the size of shared memory each thread block can use ($Limit_S$) with formulas $Limit_R=Total_R/(Block_{num}\times Warp_{num} \times 32)$ and $Limit_S=Total_S/Block_{num}$ respectively. $Total_R$ and $Total_S$ represent the number of registers and the size of shared memory of an SM, respectively. On RTX 2080Ti, $Total_R=65536$ and $Total_S=64KB$ while  on Jetson AGX Xavier, $Total_R=65536$ and $Total_S=48KB$.
-Each thread calculates $Warp_H \times T_{num}$ output elements and thus needs $R_O=Warp_H \times T_{num}$, $R_I=Warp_H$ and $R_F=T_{num}$ registers to store output elemnts, input elements and filter elements respectively.
+Each thread calculates $Warp_H \times T_{num}$ output elements and thus needs $R_O=Warp_H \times T_{num}$, $R_I=Warp_H$ and $R_F=T_{num}$ registers to store output elements, input elements and filter elements respectively.
 In cases where the computational workload is small, we try to let each thread accumulates $Warp_H \times T_{num}$ output elements $k \in \{1,2,3,4\}$ times.
 The constraints can be formulated as follows:
 \begin{equation}\nonumber
@@ -95,7 +95,7 @@ R_O+R_I+R_F+R_{LF}+R_{LI}+extraR \leq Limit_R
     \label{fo:limits}
 (Block_H+Block_W)\times C_{num} \times k \times 4 \times 2 \leq Limit_S
 \end{equation}
-where $R_{LF}$ and $R_{LI}$ are the number of temporary registers used to store filter and input elements loaded from global memroy respectively, $extraR$ is the number of additioal registers allocated by the compilter. Values of $k$ and $extraR$ for each kernel are determined through an off-line method. In Formula \ref{fo:limits}, 4 means each element has 4 bytes and 2 means we use a double buffer method.
+where $R_{LF}$ and $R_{LI}$ are the number of temporary registers used to store filter and input elements loaded from global memory respectively, $extraR$ is the number of additional registers allocated by the compiler. Values of $k$ and $extraR$ for each kernel are determined through an off-line method. In Formula \ref{fo:limits}, 4 means each element has 4 bytes and 2 means we use a double buffer method.
 \begin{figure*}
 	\centering
     \includegraphics[width=0.95\textwidth,height=7cm]{./figure/pwworkflow.eps}
