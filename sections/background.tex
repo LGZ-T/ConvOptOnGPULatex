@@ -20,6 +20,10 @@ Our work targets depthwise separable convolution which contains depthwise convol
 Depthwise convolution takes as input a 2D feature map and a bank of 2D filters. Each filter is convolved with the corresponding input channel to produce one output channel. 
 In the pointwise convolution, all filters are used to convolve with the same input feature map to compute one output feature map. It is the same as multi-channel 2D convolution with the difference that all filters are $1 \times 1$.
 
+When applying quantization to convolutions, the inputs and filters are converted from 32bit floating point (FP32) numbers to 8bit integer (INT8) numbers. 
+Channels are accumulated to 32bit integers using $\_\_dp4a$ instructions provided by CUDA \cite{cudatoolkit}.
+The final results are converted back to FP32 numbers and written into global memory. 
+In this work, we focus on post-training quantization \cite{fang2020post,jacob2018quantization}, which converts the filters of a pre-trained CNN model to INT8 integers offline and the inputs to INT8 integers on-the-fly.
 
 \begin{figure}[t!]
 \centering

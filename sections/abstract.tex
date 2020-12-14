@@ -10,9 +10,9 @@ Our approach leverages two optimization techniques named column reuse and row re
 (2) Pointwise convolution in cuDNN exhibits low GPU utilization when using a batch size of 128 or below due to the fixed block size without considering the total amount of computation. 
 We design a dynamic block size method which not only increases GPU utilization of pointwise convolution by distributing channels across threads but also keeps a certain amount of computation for each thread to hide memory access latency.
 
-We compare our optimized depthwise convolution and pointwise convolution with the implementations of cuDNN on NVIDIA RTX 2080Ti and Jetson AGX Xavier GPUs. 
+We compare our optimized depthwise and pointwise convolutions with the implementations of cuDNN for 32-bit floating point and 8-bit integer numbers on NVIDIA RTX 2080Ti and Jetson AGX Xavier GPUs. 
 Experiments show that our approach delivers over $3\times$ and $2\times$ faster performance than cuDNN for depthwise and pointwise convolutions, respectively. 
-We also apply our implementations on caffe framework to test the inference and training time of MobileNetV2 with batch sizes of 128 and below, results show that we improve the performance of inference and training by 14.4\% and 9.7\% on average, respectively.
+We also apply our implementations on caffe framework to test the inference and training time of normal and quantizated MobileNetV2 with batch sizes of 128 and below, results show that we improve the performance of inference and training by 11.5\% and 9.7\% on average, respectively.
 \end{abstract}
 
 %% End of generated code

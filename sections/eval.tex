@@ -5,14 +5,16 @@
 \subsection{Evaluation Platforms} We evaluate our approach on two platforms. 
 One is NVIDIA RTX 2080Ti GPU (2080Ti), which integrates 4350 CUDA cores for floating point computation and 4350 CUDA cores for integer operations. 
 The GPU has a 64KB shared memory. 
-The host machine has a 2.30GHz Intel Xeon E5-2697 CPU with 252GB memory, running Linux kernel v4.15.0. We use CUDA Toolkit version 10.2.
+The host machine has a 2.30GHz Intel Xeon E5-2697 CPU with 252GB memory, running Linux kernel v4.15.0. We use CUDA Toolkit 11.0 and cuDNN 7.6.5.
 The other is NVIDIA Jetson AGX Xavier GPU (Xavier), which integrates 512 Volta cores and 48KB shared memory.
-The host machine has an 1.2GHz 8-core Arm CPU with 32GB memory, running Linux kernel v4.15.0. We use CUDA Toolkit 10.0. 
+The host machine has an 1.2GHz 8-core Arm CPU with 32GB memory, running Linux kernel v4.9.140-tegra. We use CUDA Toolkit 10.0 and cuDNN 7.6.3. 
 
 
 \subsection{Competing Methods} We compare our approach against the state-of-the-art convolution library cuDNN which supports all kinds of convolutions including depthwise and pointwise convolutions on GPU. 
-  Moreover, cuDNN can execute GEMM-, FFT- and Winograd-based convolutions. We take cuDNN GEMM implementation as a baseline for pointwise convolution.
-  We implement a direct depthwise convolution without using the proposed reuse algorithms. We take this implementation as a baseline for depthwise convolution.
+  Moreover, cuDNN can execute GEMM-, FFT- and Winograd-based convolutions. 
+%  We take cuDNN GEMM implementation as a baseline for pointwise convolution.
+%  We implement a direct depthwise convolution without using the proposed reuse algorithms. 
+%  We take this implementation as a baseline for depthwise convolution.
 
 
 \subsection{Use Cases}
@@ -27,11 +29,13 @@ The 2D convolution is performed between one filter channel and the corresponding
 
 \subsection{Performance Report}
 We run each test case ten times with batch sizes 1, 8, 16, 32, 64 and 128 on an unloaded machine and report the averaged running time. 
-We found little variance during execution runs, less than 2\%.  
-All the convolutions used in evaluation use 32-bit (single-precision) floating point numbers, and the data are organized as 4D tensors $(N,C,H,$ and $W)$, where $N$, $C$, $H$, and $W$ are the batch size, channel, height, and width, respectively. 
+We found little variance during execution runs, less than 2\%.
+We run convolutions with two data types, 32bit floating point (FP32) for normal CNNs and 8bit integer (INT8) for quantized CNNs.
+In our experiments, we utilize $NCHW$ for FP32 and $NHWC$ for INT8.
+
 In this work, we first test depthwise convolution with two filter sizes, $3 \times 3$ and $5 \times 5$, because these are commonly used filter sizes. 
 Then we report the performance of pointwise convolution. 
-Lastly, we apply our optimized depthwise and pointwise convolutions on MobileNetv2 and report the performance of inference and training.
+Lastly, we apply our optimized depthwise and pointwise convolutions on normal and quantized MobileNetv2 and report the performance of inference and training.
 %
 %\subsection{Notations}
 %Throughout the evaluation, we use $I$, $F$, and $O$ to represent the input, the filter, and the output respectively, $N$, $C$, $H$, and $W$
@@ -118,6 +122,7 @@ Lastly, we apply our optimized depthwise and pointwise convolutions on MobileNet
 
 \begin{table}[]
 \caption{Layer configurations of depthwise  convolutions.}
+\vspace{-3mm}
 \label{tab:depconvconfigs}
 \centering
 \rowcolors{2}{}{Gray}
@@ -139,7 +144,7 @@ Lastly, we apply our optimized depthwise and pointwise convolutions on MobileNet
 \bottomrule
 \end{tabular}
 \end{threeparttable}
-\vspace{-5mm}
+
 \end{table}
 
 \begin{figure*}[!t]
@@ -192,6 +197,10 @@ Table \ref{tab:depconvconfigs} gives the layer configurations used in this exper
 %Then, we set the number of the batch size to 512 ($I_N=O_N=512$). Other batch sizes demonstrate a similar performance because all tested implementations have a linear scale as the batch size. The exact configuration is presented in Table \ref{tab:3dconvconfigs}.
 
 \subsubsection{Overall results}
+When testing depthwise convolutions with INT8, our implementations with INT8 and cuDNN implementations with FP32 both achieve more than $10\times$ speedups over cuDNN implementations with INT8 for configurations in Table \ref{tab:depconvconfigs}.
+We attribute the poor performance of cuDNN depthwise convolutions with INT8 to internal implementation issues.
+Thus, we only report the performance of depthwise convolutions with FP32.
+
 Figure \ref{fig:dwspeedup} shows that our approach gives the best speedups in almost all test cases. 
 Our approach delivers an average speedup of $5.4\times$ and $4.3\times$ for the $3 \times 3$ filter on 2080Ti and Xavier respectively, and $7.8\times$ and $2.2\times$ for the $5 \times 5$ filter on 2080Ti and Xavier respectively.
 The cuDNN implicit algorithm achieves an average speedup of $2.8\times$ and $3.1\times$ for the $3 \times 3$ filter on 2080Ti and Xavier respectively, and $2.2\times$ and $1.7\times$ for the $5 \times 5$ filter on 2080Ti and Xavier respectively.
@@ -214,9 +223,9 @@ Overall, our approach improves cuDNN implicit by $2.0\times$ and $1.4\times$ whe
     \centering
     \subfloat[][SM utilizations of cuDNN implicit algorithm and our approach.]{\includegraphics[width=0.9\columnwidth]{./figure/smutil.eps}\label{fig:dwsmutil}}
     \qquad
-    \vspace{5mm}
+    %\vspace{5mm}
     \subfloat[][Ratios of executed LDG (load from global memory) instruction counts of cuDNN implicit algorithm to our approach.]{\includegraphics[width=0.9\columnwidth]{./figure/ldginst.eps}\label{fig:dwldginst}}
-    \vspace{-4mm}
+    \vspace{-2mm}
     \caption{SM utilization and LDG instruction counts of depthwise convolutions with a batch size of 32 and a filter size of $3\times3$ on 2080Ti.}
     \label{fig:dwratio}
 \end{figure}
@@ -246,6 +255,7 @@ Compared to the fastest available algorithms in cuDNN, our approach achieves an 
 \begin{table}[]
 \setlength{\tabcolsep}{5.2pt}
 \caption{Layer configurations of pointwise convolutions.}
+\vspace{-3mm}
 \label{tab:pwconv}
 \rowcolors{2}{}{Gray}
 \begin{threeparttable}
@@ -290,15 +300,30 @@ Compared to the fastest available algorithms in cuDNN, our approach achieves an 
 \end{table}
 
 \begin{figure*}
+\captionsetup[subfloat]{labelformat=empty,skip=0pt}
 	\centering
-    \includegraphics[width=\textwidth,height=6.5cm]{./figure/pwspeeduprtx.eps}
-    \caption{Speedups of pointwise convolutions on 2080Ti.} \label{fig:pwspeeduprtx}
+	\subfloat[]{\includegraphics[width=\textwidth,height=6.2cm]{./figure/pwspeeduprtx.eps}
+	\label{fig:pwspeeduprtx}}
+\vspace{-5mm}
+	\subfloat[]{\includegraphics[width=\textwidth,height=6.2cm]{./figure/pwspeedupjetson.eps}
+	\label{fig:pwspeedupjetson}}
+	\vspace{-6mm}
+	\caption{Speedups of cuDNN implicit and ours over cuDNN gemm for pointwise convolutions with FP32 on two platforms. Above: speedups on 2080Ti. Below: speedups on Xavier.}
+	\label{fig:pwspeedupfp32}
 \end{figure*}
 
 \begin{figure*}
+\captionsetup[subfloat]{labelformat=empty,skip=0pt}
+
 	\centering
-    \includegraphics[width=\textwidth,height=6.5cm]{./figure/pwspeedupjetson.eps}
-    \caption{Speedups of pointwise convolutions on Xavier.} \label{fig:pwspeedupjetson}
+	\subfloat[]{\includegraphics[width=\textwidth,height=6.2cm]{./figure/pwspeeduprtxint8.eps}
+	\label{fig:pwspeeduprtxint8}}
+	\vspace{-5mm}
+	\subfloat[]{\includegraphics[width=\textwidth,height=6.2cm]{./figure/pwspeedupjetsonint8.eps}
+	\label{fig:pwspeedupjetsonint8}}
+	\vspace{-6mm}
+	\caption{Speedups of cuDNN precomp and ours over cuDNN implicit for pointwise convolutions with INT8 on two platforms. Above: speedups on 2080Ti. Below: speedups on Xavier.}
+	\label{fig:pwspeedupint8}
 \end{figure*}
 
 %\begin{figure}
@@ -311,29 +336,37 @@ Compared to the fastest available algorithms in cuDNN, our approach achieves an 
 %\end{figure}
 
 
-\subsubsection{Setup} In this experiment, we compare our approach against the pointwise convolution implementations in cuDNN and use cuDNN gemm algorithm as the baseline. 
+\subsubsection{Setup} In this experiment, we compare our approach against all available pointwise convolution implementations in cuDNN.
 The execution time of our approach includes both CPU and GPU parts, as shown in Algorithm \ref{algo:pwalgo}.
 We use the layer configurations from the popular CNN model MobileNetv2.
 There are 30 different configurations for pointwise convolution, we test all configurations and report the performance of 20 layers. 
 The other 10 layers exhibit similar performance as the selected ones.  
 We report the performance when batch sizes are set to 1, 8, 16, 32, 64 and 128.
-In all configurations of pointwise convolution, cuDNN implicit performs best among all algorithms in cuDNN, therefore we only show results of cuDNN implicit.
+
+When using data type FP32, cuDNN implicit performs best among all algorithms in cuDNN, therefore we only show results of cuDNN implicit and take cuDNN gemm as the baseline implementation.
+When using data type INT8, cuDNN precomp performs best, therefore we show results of cuDNN precomp and take cuDNN implicit as the baseline.
 Table \ref{tab:pwconv} lists the layer configurations used in this experiment.
 
-\subsubsection{Overall results} Figure \ref{fig:pwspeeduprtx} and \ref{fig:pwspeedupjetson} show the speedups of cuDNN implicit and our approach over cuDNN gemm on two platforms.
+\subsubsection{Overall results} Figure \ref{fig:pwspeedupfp32} shows speedups of cuDNN implicit and our approach over cuDNN gemm for pointwise convolutions with FP32 on two platforms.
 Our approach achieves the best performance for layers of CV1-CV19.
 For the layer CV20, which uses 1024 filters to convolve with the input, our approach performs poorly compared to cuDNN gemm and cuDNN implicit.
 Overall, our implementation and cuDNN implicit achieve an average speedup of $3\times$ and $1.5\times$ over cuDNN gemm on 2080Ti respectively, and $2\times$ and $1.3\times$ on Xavier respectively. 
 This translates to an improvement of $2\times$ and $1.5\times$ over cuDNN implicit on 2080Ti and Xavier respectively.
+
+Figure \ref{fig:pwspeedupint8} shows speedups of cuDNN precomp and our approach over cuDNN implicit for pointwise convolutions with INT8 on two platforms.
+On 2080Ti, our approach and cuDNN precomp achieve an average speedup of $1.7\times$ and $1.3\times$ respectively.
+On Xavier, our approach and cuDNN precomp achieve an average speedup of $1.6\times$ and $1.2\times$ respectively.
+In summary, our approach obtains $1.3\times$ and $1.5\times$ speedup over cuDNN precomp on 2080Ti and Xavier respectively.
+
 
 \subsubsection{Further analysis}
 \begin{figure}
     \centering
     \subfloat[][SM utilizations of cuDNN implicit and our approach.]{\includegraphics[width=\columnwidth]{./figure/pwsmutil.eps}\label{fig:pwsmutil}}
     \qquad
-    \vspace{5mm}
+    
     \subfloat[][Ratios of executed LDG (load from global memory) instruction counts of cuDNN implicit to our approach.]{\includegraphics[width=\columnwidth]{./figure/pwldginst.eps}\label{fig:pwldginst}}
-    \vspace{-4mm}
+    \vspace{-2mm}
     \caption{SM utilizations and ratios of executed LDG instruction counts for pointwise convolutions with a batch size of 32 on 2080Ti.}
     \label{fig:pwinfo}
 \end{figure}
@@ -353,8 +386,13 @@ There are two reasons for the performance gain of our approach.
 	Figure \ref{fig:stalllongscore} shows the average number of cycles each warp spends on waiting for the global operation to complete. 
 	We implement a simple pointwise without latency hiding, denoted as simple. 
 	We can see that our approach can significantly reduce the memory access latency compared to the simple implementation.
-	To further reduce memory access latency, we need assembly level optimizaitions which is not the focus of this work.
+	To further reduce memory access latency, we need assembly level optimizations which is not the focus of this work.
 \end{enumerate}
+
+We observe some performance degradation for pointwise convolutions with INT8 data type.
+When performing pointwise convolutions with INT8, we use $NHWC$ data format and four continuous INT8 channels can be viewed as an INT32 channel. 
+Thus, the size of channel dimension is reduced to one fourth of the original size.
+For small channel sizes ($I_N \leq 96$), the corresponding reduced channel sizes restrict  choices of the number of distributed channels, which may lead to suboptimal performance compared to original channel sizes.
 
 \subsubsection{Summary} We use dynamic block size method to improve SM utilization and use a double buffer and multiple accumulations to hide memory access latency. With both methods, we achieve an average speedup of $2\times$ and $1.5\times$ over cuDNN implicit on 2080Ti and Xavier respectively.
 
@@ -370,15 +408,23 @@ There are two reasons for the performance gain of our approach.
 \label{sec:inferexp}
 \subsubsection{Setup} 
 In this experiment, we apply our depthwise and pointwise convolutions to MobileNetV2 and report the performance of inference and training. 
-For inference, we test MobileNetV2 with batch sizes of 1, 8, 16, 32, 64 and 128 on both platforms and report the inference time. 
+
+For inference, we test normal and quantized MobileNetV2 with batch sizes of 1, 8, 16, 32, 64 and 128 on both platforms and report the inference time. 
+When applying quantization to pointwise convolutions, the input and filter are quantized from FP32 to INT8 and the output is still FP32. 
+Since cuDNN performs poorly for depthwise convolutions with INT8, we do not apply quantization to  depthwise convolutions.
+Other operations are quantized normally.
+
 For training, we test MobileNetV2 with batch sizes of 16, 32, 64 and 128 on 2080Ti and report the average training time of one iteration including one forward phase and one backward phase.
+
 We use the caffe framework to implement MobileNetV2 and replace the implementations of batchnormalization and depthwise convolution layers of caffe with cuDNN implementations. 
-To experiment, we first run the inference with cuDNN implementation, denoted as cuDNN, and then replace the cuDNN with our implementations, denoted as Ours.
+To experiment, we first run the inference with cuDNN implementation, denoted as \textbf{cuDNN}, and then replace the cuDNN with our implementations, denoted as \textbf{Ours}.
+We also report the improvement of our approach compared to cuDNN implementations, denoted as \textbf{Improve}.
 
 \subsubsection{Overall result}
 \begin{table}[]
-\setlength{\tabcolsep}{4.6pt}
-    \caption{Execution time of inference of MobileNetV2 on 2080Ti and Xavier}
+\setlength{\tabcolsep}{4.4pt}
+    \caption{Inference time of MobileNetV2 with FP32 and INT8 on 2080Ti and Xavier}
+    \vspace{-3mm}
     \label{tab:infertime}
     \centering
     %\rowcolors{2}{}{Gray}
@@ -387,23 +433,40 @@ To experiment, we first run the inference with cuDNN implementation, denoted as 
     \toprule
     &\textbf{Batch} & 1 & 8 & 16& 32 &64 & 128\\
     \midrule
-    \multirow{3}{*}{\textbf{2080Ti}}&\textbf{cuDNN (ms)} & 7.5  & 8.8 & 9.7 & 14.4 & 19.1 &28.7 \\
-    &\textbf{Ours (ms)} &6.1   &7.1    & 8.0  &12.0 &16.9 &26.3\\
-    &\textbf{Improvement (\%)} &18.6   &19.3    &17.5  & 16.7 &11.5 &8.4 \\
+    %normal MobileNetV2
+    \multirow{3}{*}{\textbf{\shortstack{2080Ti\\(FP32)}}}
+    &\textbf{cuDNN (ms)}   &7.5  &8.8  &9.7  &14.4 &19.1 &28.7 \\
+    &\textbf{Ours (ms)}    &6.1  &7.1  &8.0  &12.0 &16.9 &26.3\\
+    &\textbf{Improve (\%)} &18.6 &19.3 &17.5 &16.7 &11.5 &8.4 \\
     \hline
-    \multirow{3}{*}{\textbf{Xavier}}&\textbf{cuDNN (ms)} & 16.6&22.3&32.1&52.6&84.2&140.1  \\
-    &\textbf{Ours (ms)} &13.2&18.9&27.8&44.7&76.1&130.0 \\
-    &\textbf{Improvement (\%)} & 20.5&15.2&13.4&15.0&9.6&7.2 \\
+    \multirow{3}{*}{\textbf{\shortstack{Xavier\\(FP32)}}}
+    &\textbf{cuDNN (ms)}   &16.6 &22.3 &32.1 &52.6 &84.2 &140.1  \\
+    &\textbf{Ours (ms)}    &13.2 &18.9 &27.8 &44.7 &76.1 &130.0 \\
+    &\textbf{Improve (\%)} &20.5 &15.2 &13.4 &15.0 &9.6  &7.2 \\
+    \hline
+    %quantized MobileNetV2
+    \multirow{3}{*}{\textbf{\shortstack{2080Ti\\(INT8)}}}
+    &\textbf{cuDNN (ms)}   &6.3  &7.4  &7.7  &11.2 &14.6 &20.2 \\
+    &\textbf{Ours (ms)}    &5.5  &6.6  &6.8  &10.3 &14.0 &19.7\\
+    &\textbf{Improve (\%)} &12.7 &10.8 &11.7 &8.0  &4.1  &2.5 \\
+    \hline
+    \multirow{3}{*}{\textbf{\shortstack{Xavier\\(INT8)}}}
+    &\textbf{cuDNN (ms)}   &13.3 &18.0 &27.0 &42.6 &64.8 &103.7  \\
+    &\textbf{Ours (ms)}    &11.7 &15.4 &22.7 &38.8 &58.3 &94.4 \\
+    &\textbf{Improve (\%)} &12.0 &14.4 &16.0 &8.9 &10.0  &9.0 \\
+    
+    
     \bottomrule
     \end{tabular}
     \footnotesize
     \end{threeparttable}
-    \vspace{-5mm}
+    
 \end{table}
 
 \begin{table}[]
 
-    \caption{Execution time of training of MobileNetV2 on 2080Ti}
+    \caption{Training time of MobileNetV2 on 2080Ti}
+    \vspace{-3mm}
     \label{tab:traintime}
     \centering
     %\rowcolors{2}{}{Gray}
@@ -421,7 +484,10 @@ To experiment, we first run the inference with cuDNN implementation, denoted as 
     \end{threeparttable}
     \vspace{-5mm}
 \end{table}
-Table \ref{tab:infertime} demonstrates that our approach improves the performance of inference by 12.2\% and 13.5\% on average compared to the implementation of cuDNN implicit on 2080Ti and Xavier respectively. Table \ref{tab:traintime} demonstrates that our approach improves the performance of training by 9.7\% on average compared to the implementation of cuDNN implicit on 2080Ti.
+Table \ref{tab:infertime} demonstrates the performance of inference.
+For MobileNetV2 with FP32, our approach improves the performance of inference by 12.2\% and 13.5\% on average compared to the implementation of cuDNN implicit on 2080Ti and Xavier respectively. 
+For MobileNetV2 with INT8, we obtain 8.5\% and 11.7\% improvements on average over cuDNN precomp on 2080Ti and Xavier respectively. 
+Table \ref{tab:traintime} demonstrates that our approach improves the performance of training by 9.7\% on average compared to the implementation of cuDNN implicit on 2080Ti.
 
 
 
