@@ -3,32 +3,32 @@
 %This kind of CNNs, including MobileNet \cite{Sandler_2018_CVPR,howard2019searching}, EfficientNet \cite{tan2019efficientnet} and ShuffleNet \cite{Ma_2018_ECCV}, has been widely used in image classification, object detection and  semantic segmentation.
 %Depthwise separable convolution splits the computation of 2D convolution into depthwise convolution and pointwise convolution.
 
-In recent years, deep neural networks (DNNs) have made astonishing success in solving a wide range of tasks \cite{zhang2018diverse,song2018deep,Cai_2018_CVPR,Sandler_2018_CVPR,briot2018analysis,tokunaga2019adaptive}. One of the
+In recent years, deep neural networks (DNNs) have made astonishing success in solving a wide range of tasks \FIXME{\cite{}}. One of the
 most successful DNN architectures is the convolutional neural network (CNN) that is widely used in tasks like image classification
-\cite{zhang2018diverse,song2018deep}, object detection \cite{Cai_2018_CVPR,Sandler_2018_CVPR} and  semantic segmentation \cite{briot2018analysis,tokunaga2019adaptive}. CNN models are typically trained and run on
+\FIXME{\cite{}}, object detection \FIXME{\cite{}} and  semantic segmentation \FIXME{\cite{}}. CNN models are typically trained and run on
 GPUs due to their computation requirements.
 
 
 The depthwise separable convolution (\texttt{DSC}) is widely used in modern CNN models for accelerating model computation time
-\cite{howard2019searching,tan2019efficientnet,Ma_2018_ECCV,Sandler_2018_CVPR}. This operation can process both the spatial dimensions (e.g., the width and the height of an image) and the depth
+\FIXME{\cite{}}. This operation can process both the spatial dimensions (e.g., the width and the height of an image) and the depth
 dimension (e.g., the RGB channels of an image) of an input. It achieves this by splitting a convolution kernel into two separate kernels
 that perform two convolutions: a depthwise convolution and a pointwise convolution. The former applies a single convolutional filter for
 each input channel, and the latter uses a $1 \times 1$ kernel to iterate through every single point of the input (e.g., the kernel has a
-depth of however many channels the input image has). Compare to a classical depthwise, 2D convolution that operates on a 2D input of
-$channels \times width \times height$, the DSC reduces the number of parameters needed for the convolution filter (and hence the chance of
-model over-fitting) as well as computation time by having fewer arithmetic operations. For this reason, the DSC is widely used in
-latency-sensitive scenarios, such as using a trained CNN on embedded devices or performing distributed, on-device learning on
-resource-constrained systems~\cite{espeholt2019seed}.
+depth of however many channels the input image has). Compare to a classical depthwise, 3D convolution that operates on a 3D input of
+$channels \times width \times height$, the DSC reduces the number of multiplication operations as well as the number of parameters needed
+for the convolution filter (and hence the chance of model over-fitting) as well as computation time by having fewer arithmetic operations.
+For this reason, the DSC is widely used in latency-sensitive scenarios, such as using a trained CNN on embedded devices or performing
+distributed, on-device learning on resource-constrained systems~\cite{espeholt2019seed}.
 
 
-A wide range of optimization techniques have been proposed to perform convolutions
+A wide range of optimization techniques have been proposed to peform convolutions
 \cite{li2016optimizing,Zhen2018Optimizing,enfedaque2014implementation,liu2019optimizing,winter2019adaptive,vasilache2014fast,lavin2016fast,Vasudevan2017Parallel,Chellapilla2006High}.
 Among these techniques, the fast fourier transform (FFT) \cite{vasilache2014fast}, winograd (Winograd) \cite{lavin2016fast} and general
 matrix multiplication (GEMM) \cite{Vasudevan2017Parallel,Chellapilla2006High} are broadly adopted. However, FFT and Winograd offer little
-benefit for depthwise convolutions compared to standard 2D convolution. This is because FFT and Winograd are designed to optimize
-arithmetic computation \cite{zlateski2019anatomy}, but not memory accesses. However, the memory access latency often dominates the execution time of
-depthwise convolution \cite{cudaperformance} due to its lower arithmetic operations compared to a standard 2D convolution.  Both methods
-are also ill-suite for pointwise convolution (that applies a $1 \times 1$ kernel) because FFT is designed to operate on a large filter and
+benefit for depthwise convolutions compared to standard 3D convolution. This is because FFT and and Winograd are designed to optimize
+arithmetic computation \FIXME{\cite{}}, but not memory accesses. However, the memory access latency often dominates the execution time of
+depthwise convolution \cite{cudaperformance} due to its lower arithmetic operations compared to a standard 3D convolution.  Both methods
+are also ill-suite for pointwise convolution (that applies a $1 \times 1$ kernel) because FFT is designed to operated on a large filter and
 Winograd works best when the filter size is $3 \times 3$.
 %Both methods are not implemented for pointwise convolution in cuDNN.
 
@@ -76,7 +76,7 @@ training samples is likely to be small due to resource constraints.
 %To address this problem, we design a dynamic block size method that distributes input or filter channels across threads within a warp.
 
 Our work addresses the memory latency and work distribution issues identified above. By addressing these two issues together, our approach
-enables efficient DSC because it accelerates not only depthwise convolution by reducing the GPU memory access latency and also pointwise
+enables efficient DSC because it accelerate not only depthwise convolution by reducing the GPU memory access latency and also pointwise
 convolution for model inferencing and small-batch-sized training.
 
 
@@ -92,12 +92,12 @@ of memory transactions compared with that of the existing convolution processing
 approach improves the performance of depthwise convolution.
 
 To overcome the drawback of fixed block size work partition of a GEMM kernel for pointwise convolution, we employ a dynamic block-size
-scheme. Our approach first adjusts the work assigned to each GPU thread so that we have a sufficient number of blocks to be distributed to GPU
+scheme. Our approach first adjusts the work assigned to each GPU so that we have a sufficient number of blocks to be distributed to GPU
 threads to improve the GPU utilization. A challenge here is how to assign the right amount of work to GPU threads so that the global memory
 access latency can be adequately hidden through computation. Having too little work per GPU thread will make the GPU memory access
 dominates the execution while having too large work assignment will lead to low GPU utilization (as only a small number of GPU threads will
 receive a block to work on). To this end, our dynamic scheme distributes input or filter channels across threads within a warp to minimize
-memory latency with improved GPU parallelism. Some recent work \cite{li2019coordinated,pourghassemi2020limits} employ a heuristic method 
+memory latency with improved GPU parallelism. Some recent work \cite{li2019coordinated,pourghassemi2020limits} employ a heuristic method to
 to maximize parallelism for GEMM. They achieve this by trying to combine multiple convolutions that can be computed concurrently into one
 GEMM kernel. Such a strategy assumes multiple parallel convolutions can be performed within a single GEMM kernel. However, this strong
 assumption is only valid for some special CNN structures like the inception layer in GoogleNet \cite{szegedy2015going}. As a result, these
@@ -105,11 +105,11 @@ prior methods are not applicable to the more general case of CNNs where convolut
 dependence. Our dynamic work distribution strategy does not rely on this assumption and hence is more generally applicable compared to
 these prior approaches.
 
-We evaluate our approach by applying it to both depthwise and pointwise convolutions with FP32 and INT8 of DSC on two GPU platforms: an NVIDIA RTX 2080Ti GPU
-and an embedded NVIDIA Jetson AGX Xavier GPU. We compared our approach against cuDNN, an industry strengthened DNN library that is heavily
+We evaluate our approach by applying it to both depthwise and pointwise convolutions of DSC on two GPU platforms: an NVIDIA RTX 2080Ti GPU
+and an embedded NVIDIA Jetson AGX Xavier GPU. We compared our approach against cuDNN, an industry strengthed DNN library that is heavily
 optimized for the NVIDIA GPU architecture. Experimental results show that our approach delivers over $3\times$ and $2\times$ faster
 performance than cuDNN for depthwise and pointwise convolutions, respectively. We show that our approach reduces the end-to-end training
-and inference time of MobileNet \cite{Sandler_2018_CVPR,howard2019searching} when the batch size is $<=$ 128 by 11.5\% and 9.7\% on average, respectively.
+and inference time of MobileNet \FIXME{\cite{}} when the batch size is $<=$ 128 by 14.4\% and 9.7\% on average, respectively.
 
 
 

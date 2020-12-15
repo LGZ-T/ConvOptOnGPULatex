@@ -10,13 +10,6 @@
 %the inputs to INT8 integers during runtime.
 
 
-\begin{figure}[t!]
-\centering
-  \includegraphics[width=0.9\columnwidth,height=5.5cm]{./figure/twostrategies.eps}
-  \caption{Example of performing a single-channel depthwise convolution using a GPU. Here, the filter size is $5 \times 5$, the input image size is $6 \times 11$
-  and the output size is $2 \times 7$.}
-  \label{fig:twostrategies}
-\end{figure}
 
 
 
@@ -49,7 +42,10 @@ number of input channels (i.e., $c$). The DSC reduces the computation by reducin
 to a standard depthwise convolution.
 
 
-\subsection{Roadmap} We present our approach for optimizing the two convolutional kernels of DSC in
+\subsection{Roadmap and Notations} We present our approach for optimizing the two convolutional kernels of DSC in
 Sections \ref {sec:strategies} and \ref {sec:pwconv}. We start by introducing our methods for improving data locality of depthwise
 convolution in Section \ref{sec:strategies} and then presenting our approach for using dynamic work distribution to accelerate
 small-batch-sized pointwise convolution in Section \ref {sec:pwconv}.
+
+\mypara{Notations.} Throughout the paper, we use $I$, $F$, and $O$ to represent the input, the filter, and the output respectively; we also
+use $N$, $C$, $H$, and $W$ to denote the batch size, the channel, the height, and the width, respectively.
