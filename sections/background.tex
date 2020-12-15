@@ -19,18 +19,6 @@
 \end{figure}
 
 
-\subsection{Depthwise Separable Convolution}
-Our work targets depthwise separable convolution (DSC) that is widely used by  CNN  models to reduce the number of multiplication
-operations needed for doing convolution (a standard operation in CNN). The DSC splits a standard depthwise (e.g., multi-channeled) 2d
-convolution kernel into two individual kernels: a depthwise convolution kernel and a pointwise convolution kernel. The depthwise
-convolution kernel processes one input channel at a time, and stacks the outputs of all channels together to form an $n \times n \times c$
-matrix, where $n \times n$ is the output of a depthwise convolution kernel and $c$ is the number of channels to be processed. Specifically,
-it takes as input a 2D feature map and applies a bank of 2D filters (e.g., an $N \times N$ kernel) on the width and height directions of
-the input. We iteratively apply the depthwise convolution kernel to all channels. The output of the depthwise convolution kernel is fed
-into a pointwise convolution kernel which uses a $1 \times 1$ filter to iterates through every single point. This kernel has a depth of the
-number of input channels (i.e., $c$). The DSC reduces the computation by reducing the number of input transformations needed when compared
-to a standard depthwise convolution.
-
 
 \subsection{GPU Architecture}
 Deep learning models are often trained and executed on the GPU. Modern GPUs employ a complex execution pipeline and memory hierarchy to
@@ -47,7 +35,21 @@ latency as global memory. The key to optimizing memory performance is to make us
 shared memory) and reduce the number of memory accesses to slower memory. Our work is designed to provide such capabilities for depthwise
 separable convolution operations.
 
-\subsection{Roadmap} We present our approach for optimizing the two convolutional kernels of DSC in Sections \ref {sec:strategies} and \ref
-{sec:pwconv}. We start by introducing our methods for improving data locality of depthwise convolution in Section \ref{sec:strategies} and
-then presenting our approach for using dynamic work distribution to accelerate small-batch-sized pointwise convolution in Section \ref
-{sec:pwconv}.
+
+\subsection{Depthwise Separable Convolution}
+Our work targets depthwise separable convolution (DSC) that is widely used by  CNN  models to reduce the number of multiplication
+operations needed for doing convolution (a standard operation in CNN). The DSC splits a standard depthwise (e.g., multi-channeled) 2d
+convolution kernel into two individual kernels: a depthwise convolution kernel and a pointwise convolution kernel. The depthwise
+convolution kernel processes one input channel at a time, and stacks the outputs of all channels together to form an $n \times n \times c$
+matrix, where $n \times n$ is the output of a depthwise convolution kernel and $c$ is the number of channels to be processed. Specifically,
+it takes as input a 2D feature map and applies a bank of 2D filters (e.g., an $N \times N$ kernel) on the width and height directions of
+the input. We iteratively apply the depthwise convolution kernel to all channels. The output of the depthwise convolution kernel is fed
+into a pointwise convolution kernel which uses a $1 \times 1$ filter to iterates through every single point. This kernel has a depth of the
+number of input channels (i.e., $c$). The DSC reduces the computation by reducing the number of input transformations needed when compared
+to a standard depthwise convolution.
+
+
+\subsection{Roadmap} We present our approach for optimizing the two convolutional kernels of DSC in
+Sections \ref {sec:strategies} and \ref {sec:pwconv}. We start by introducing our methods for improving data locality of depthwise
+convolution in Section \ref{sec:strategies} and then presenting our approach for using dynamic work distribution to accelerate
+small-batch-sized pointwise convolution in Section \ref {sec:pwconv}.
