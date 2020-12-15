@@ -1,5 +1,24 @@
 
 \section{Background}
+
+
+%\subsection{Quantization}
+%Quantization is another technique that is often used together with DSC to accelerate model execution of CNN models \FIXME{\cite{}}. When
+%applying quantization to convolutions, the inputs and filter parameters are typically converted from 32-bit floating point (FP32) numbers
+%to 8-bit integer (INT8) numbers. The convolution results will then be converted back to FP32. In this work, we focus on  post-training
+%quantization \cite{fang2020post,jacob2018quantization} that converts the filters of a pre-trained CNN model to INT8 integers offline and
+%the inputs to INT8 integers during runtime.
+
+
+\begin{figure}[t!]
+\centering
+  \includegraphics[width=0.9\columnwidth,height=5.5cm]{./figure/twostrategies.eps}
+  \caption{Example of performing a single-channel depthwise convolution using a GPU. Here, the filter size is $5 \times 5$, the input image size is $6 \times 11$
+  and the output size is $2 \times 7$.}
+  \label{fig:twostrategies}
+\end{figure}
+
+
 \subsection{Depthwise Separable Convolution}
 Our work targets depthwise separable convolution (DSC) that is widely used by  CNN  models to reduce the number of multiplication
 operations needed for doing convolution (a standard operation in CNN). The DSC splits a standard depthwise (e.g., multi-channeled) 2d
@@ -11,23 +30,6 @@ the input. We iteratively apply the depthwise convolution kernel to all channels
 into a pointwise convolution kernel which uses a $1 \times 1$ filter to iterates through every single point. This kernel has a depth of the
 number of input channels (i.e., $c$). The DSC reduces the computation by reducing the number of input transformations needed when compared
 to a standard depthwise convolution.
-
-
-\subsection{Quantization}
-Quantization is another technique that is often used together with DSC to accelerate model execution of CNN models \FIXME{\cite{}}. When
-applying quantization to convolutions, the inputs and filter parameters are typically converted from 32-bit floating point (FP32) numbers
-to 8-bit integer (INT8) numbers. The convolution results will then be converted back to FP32. In this work, we focus on  post-training
-quantization \cite{fang2020post,jacob2018quantization} that converts the filters of a pre-trained CNN model to INT8 integers offline and
-the inputs to INT8 integers during runtime.
-
-
-\begin{figure}[t!]
-\centering
-  \includegraphics[width=0.9\columnwidth,height=5.5cm]{./figure/twostrategies.eps}
-  \caption{Example of performing a single-channel depthwise convolution using a GPU. Here, the filter size is $5 \times 5$, the input image size is $6 \times 11$
-  and the output size is $2 \times 7$.}
-  \label{fig:twostrategies}
-\end{figure}
 
 
 \subsection{GPU Architecture}
