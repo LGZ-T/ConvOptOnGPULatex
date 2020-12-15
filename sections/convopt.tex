@@ -9,9 +9,9 @@ that the warp size is 4 and thus having $laneid=threadid\%4$.} \label{fig:overal
 \end{figure}
 
 
-We now demonstrate how our column and row reuse optimizations can be used together to optimize GPU memory transactions for convolution
-operations. We take the widely used 2D convolution as an example to illustrate how to apply proposed reuse algorithms on convolution
-operations.
+We have individually demonstrated how our column and row reuse optimizations can be used together to optimize GPU memory accesses for
+depthwise convolution operations. We take the widely used 2D convolution as an example to illustrate how to apply both reuse algorithms on
+convolution operations.
 
 
 To apply our approach to depthwise convolution, we first divide the output into sub-blocks. Each sub-block contains exactly $n$ columns (in this
