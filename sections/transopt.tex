@@ -192,9 +192,10 @@ load\ row_{i4}:
 \end{aligned}	
 \end{equation}
 
-In this new implementation, we would only issue loads to five rows to calculate the output elements.
-Compared to the nine loads required by the standard convolution implementation, we reduce the number of loads to row elements by nearly half.
-We note that although the number of accesses to the output column $out$ is increased, the overhead is negligible because $out$ is much smaller than multiple rows and hence can be stored in registers.
+In this new implementation, we would only issue loads to five rows to calculate the output elements. Compared to the nine loads required by
+the standard convolution implementation, we reduce the number of loads to row elements by nearly half. We note that although the number of
+accesses to the output column $out$ is increased, the overhead is negligible because $out$ is smaller than the size of multiple rows and
+often can be stored in registers.
 
 We describe a general solution for row reuse in Algorithm \ref{algo:rowreuse}, where $row$ denotes the row loaded from the input, $index$ denotes the index of $row$, $filter$ denotes the vector of filter rows and $filter[i]$ means the $i$th row of the filter.
 Pseudo code at Lines 1-5 process the first $F_H-1$ rows ($row_{i0}$ and $row_{i1}$ in Figure \ref{algo:rowreuse}) that are needed by less than $F_H$ output elements.
