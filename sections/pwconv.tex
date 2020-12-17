@@ -1,6 +1,6 @@
 \section{Optimizing Pointwise Convolution}
 \label{sec:pwconv} In this section, we explain the workflow of our dynamic block size scheme for pointwise convolution. This process is
-depicted Figure \ref{fig:pwworkflow} and consists of two stages, described as follows.
+depicted Fig. \ref{fig:pwworkflow} and consists of two stages, described as follows.
 
 In the first stage, we use a 2-level hierarchical partitioning method to decompose the output into two levels of tiles, including block
 tiles and warp tiles. Each thread block processes one block tile and each warp processes one warp tile. The main consideration when
@@ -22,7 +22,7 @@ thread=32,640$ registers}. Therefore, to utilize the available hardware register
 also found that using more than 4 threads per block offer little benefit and hence we set the $Block_{num}$ to be either 2 or 4 (to keep
 this parameter a power of two value).
 
-The workflow of our 2-level hierarchical partitioning method is illustrated in Figure \ref{fig:pwworkflow}. First, we describe how to
+The workflow of our 2-level hierarchical partitioning method is illustrated in Fig. \ref{fig:pwworkflow}. First, we describe how to
 partition a block tile into warp tiles, and second, how to partition the output into block tiles.
 
 We halve both dimensions of each block tile and generate $2 \times 2$ warp tiles. The height and width of a warp tile are represented as
@@ -30,7 +30,7 @@ $Warp_H$ and $Warp_W$ respectively. In our design, when $Warp_H > 12$, we need a
 \cite{yan2020optimizing,yan2020demystifying} for some configurations of pointwise convolution to avoid register spills. But in this work,
 we focus on higher level rather than assembly level optimizations, and thus set $Warp_H \leq 12$.
 
-To divide the output into block tiles, we use two logical layouts of the output, \textbf{\emph{L1}} and \textbf{\emph{L2}}, as shown in Figure \ref{fig:pwworkflow}.
+To divide the output into block tiles, we use two logical layouts of the output, \textbf{\emph{L1}} and \textbf{\emph{L2}}, as shown in Fig. \ref{fig:pwworkflow}.
 $F_N$ and $I_N \times I_H \times I_W$ represent the filter and input dimensions of the output respectively.
 Before partitioning the output, we first select the layout of the output based on the size of the filter dimension.
 The rationale behind this choice can be described as follows.
@@ -41,7 +41,7 @@ For the sake of simplicity, we design our partition method to utilize layout \te
 Specifically, when $F_N \ge 48$, we choose layout \textbf{\emph{L1}} and distribute filter channels across threads within a warp.
 Otherwise, we choose layout \textbf{\emph{L2}} and distribute input channels.
 The boundary $F_N = 48$ is determined as follows.
-Figure \ref{fig:pwworkflow} demonstrates that in layout \textbf{\emph{L2}}, the maximal value of $F_N$ is $4 \times Warp_H$ and $Warp_H \leq 12$, therefore we have $F_N \leq 48$ in layout \textbf{\emph{L2}}.
+Fig. \ref{fig:pwworkflow} demonstrates that in layout \textbf{\emph{L2}}, the maximal value of $F_N$ is $4 \times Warp_H$ and $Warp_H \leq 12$, therefore we have $F_N \leq 48$ in layout \textbf{\emph{L2}}.
 
 After choosing the layout, we partition the output along the filter dimension.
 For the layout \textbf{\emph{L1}}, we halve the filter dimension if $F_N \geq 512$.
