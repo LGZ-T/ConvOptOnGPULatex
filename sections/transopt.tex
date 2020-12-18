@@ -157,7 +157,7 @@ direcly processed by Algorithm \ref{algo:basic} and Algorithm \ref{algo:basic2}.
 \label{fig:rowreuse}
 \end{figure}
 
-\mypara{Working example.} Consider the standard convolution example shown in Fig. \ref{fig:rowreuse} as a working example for our row
+\mypara{Working example.} Consider now the standard convolution example shown in Fig. \ref{fig:rowreuse} as a working example for our row
 reuse algorithm. When sliding the filter over the 2D input along the height dimension, it produces a column of elements as the output.
 
 \subsubsection{Standard convolution} Assume we use one thread to calculate one column of output elements.
@@ -172,11 +172,12 @@ As can be seen from the above equations, $row_{i1}$ and $row_{i3}$ are loaded tw
 loaded in total. These redundant loads to the same read-only row thus incur extra memory accesses and additional overhead.
 
 \subsubsection{Our optimization}
-To remove redundant loads to the same row, we redesign the execution flow of the convolution.
-Specifically, after loading a row from the input, we compute the number of output elements that depend on the loaded row.
-For our working example, the computation of element $out_0$ in the output column would depend on $row_{i0}$.
-Similarly, output elements $out_0$ and $out_1$ will need $row_{i1}$. With this information in place, we use the loaded row to perform inner products with corresponding rows of the filter to calculate the output elements whose outcomes depending on the loaded row.
-Our approach translates the execution flow of the working example presented in Fig. \ref {fig:rowreuse} to:
+To remove redundant loads to the same row, we redesign the execution flow of the standard depthwise convolution. Specifically, after
+fetching a row from the input, we compute the number of output elements that depend on the loaded row. For our working example, the
+computation of element $out_0$ in the output column depends on $row_{i0}$. Similarly, output elements $out_0$ and $out_1$ will need
+$row_{i1}$. With this information in place, we use the loaded row to perform inner products with corresponding rows of the filter to
+calculate the output elements whose outcomes depending on the loaded row. Our approach translates the execution flow of the working example
+presented in Fig. \ref {fig:rowreuse} to:
 
 \begin{equation}\nonumber
 \begin{aligned}
@@ -197,10 +198,10 @@ load\ row_{i4}:
 \end{aligned}	
 \end{equation}
 
-In this new implementation, we would only issue loads to five rows to calculate the output elements. Compared to the nine loads required by
-the standard convolution implementation, we reduce the number of loads to row elements by nearly half. We note that although the number of
-accesses to the output column $out$ is increased, the overhead is negligible because $out$ is smaller than the size of multiple rows and
-often can be stored in registers.
+In this new implementation, we would only issue loads to five rows to calculate the output elements of our working example. Compared to the
+nine loads required by the standard convolution, we reduce the number of loads to row elements by nearly half. We note that although the
+number of accesses to the output column $out$ is increased, the overhead is negligible because $out$ is smaller than the size of multiple
+rows and often can be stored in registers.
 
 We describe a general solution for row reuse in Algorithm \ref{algo:rowreuse}, where $row$ denotes the row loaded from the input, $index$ denotes the index of $row$, $filter$ denotes the vector of filter rows and $filter[i]$ means the $i$th row of the filter.
 Pseudo code at Lines 1-5 process the first $F_H-1$ rows ($row_{i0}$ and $row_{i1}$ in Fig. \ref{algo:rowreuse}) that are needed by less than $F_H$ output elements.

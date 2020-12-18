@@ -10,15 +10,15 @@ that the warp size is 4 and thus having $laneid=threadid\%4$.} \label{fig:overal
 
 
 We have individually demonstrated how our column and row reuse optimizations can be used together to optimize GPU memory accesses for
-depthwise convolution operations. We take the widely used 2D convolution as an example to illustrate how to apply both reuse algorithms on
-convolution operations.
+depthwise convolution operations. We now take the widely used 2D convolution as an example to illustrate how to apply both reuse algorithms
+on convolution operations.
 
 
-To apply our approach to depthwise convolution, we first divide the output into sub-blocks. Each sub-block contains exactly $n$ columns (in this
-work, $n = 32$, which is the default warp size of our GPU platform). The only exception is the last sub-block, which may contain less than
-$n$ columns. If a sub-block contains more than $k$ rows ($k=56$ in this work), we then further breakdown the sub-block along the height
-dimension. Each GPU thread block will process one or multiple sub-blocks, and each warp will compute one sub-block. As a
-result, the threads within the same warp will process the adjacent columns of one sub-block.
+To apply our approach to depthwise convolution that works on a 2D matrix, we first divide the output into sub-blocks. Each sub-block
+contains exactly $n$ columns (in this work, $n = 32$, which is the default warp size of our GPU platform). The only exception is the last
+sub-block, which may contain less than $n$ columns. If a sub-block contains more than $k$ rows ($k=56$ in this work), we then further
+breakdown the sub-block along the height dimension. Each GPU thread block will process one or multiple sub-blocks, and each warp will
+compute one sub-block. As a result, the threads within the same warp will process the adjacent columns of one sub-block.
 
 
 \begin{algorithm}[t!]
@@ -49,21 +49,21 @@ result, the threads within the same warp will process the adjacent columns of on
 	\label{algo:overalldesign}
 \end{algorithm}
 
-Figure \ref{fig:overalldesign} shows the mapping process of GPU threads to output elements. In this example, we slide a $3 \times 3$ filter
-over an $8 \times 8$ input.  Given that 2D convolutions typically produce an output image with the same size as the input image, the
-input image should be padded. To reduce the memory pressure, we do not allocate GPU memory space for the padded elements. Instead,
-we use different methods to calculate the edge and inner elements of the output. The edge and inner elements are represented by the shaded
-and dashed squares in Figure \ref{fig:overalldesign}, respectively.
+\subsubsection{Example} Figure \ref{fig:overalldesign} shows the mapping process of GPU threads to output elements. In this example, we slide a $3
+\times 3$ filter over an $8 \times 8$ input. To apply a square  filter at the edge of the image, we need to pad the input. To reduce the
+memory pressure, we do not allocate GPU memory space for the padded elements. Instead, we use different methods to calculate the edge and
+inner elements of the output. The edge and inner elements are represented by the shaded and dashed squares in Figure
+\ref{fig:overalldesign}, respectively.
 
 
-In this example, we assume each warp contains four threads (Figure \ref{fig:overalldesign}). Therefore, we will divide the inner elements
-into multiple sub-blocks and each sub-block contains four columns so that a column can be processed by one of the four GPU threads within a
-wrap. In our case, we will have two sub-blocks, where sub-block 0 contains four columns, but sub-block 1 only contains two columns. To
-utilize the threads within a warp, we divide elements of the last two columns evenly among the four threads.
+In this example, we assume each GPU warp contains four threads. Therefore, we will divide the inner elements into multiple sub-blocks and
+each sub-block contains four columns so that a column can be processed by one of the four GPU threads within a wrap. In our case, we will
+have two sub-blocks, where sub-block 0 contains four columns, but sub-block 1 only contains two columns. To utilize the threads within a
+warp, we divide elements of the last two columns evenly among the four threads.
 
-\mypara{Generalization.} In Algorithm \ref{algo:overalldesign}, we describe our generalized solution. Here, we process the sub-blocks with
-exactly 32 columns (i.e., the default wrap size of our evaluation GPU) and the last sub-block in Lines 4-15 and 16-19, respectively. In
-this way, each GPU thread calculates one column of the output elements. This is done through a number of steps. First, each thread block
+\subsubsection{Generalization} In Algorithm \ref{algo:overalldesign}, we describe our generalized solution. Here, we process the sub-blocks
+with exactly 32 columns (i.e., the default wrap size of our evaluation GPU) and the last sub-block in Lines 4-15 and 16-19, respectively.
+In this way, each GPU thread calculates one column of the output elements. This is done through a number of steps. First, each thread block
 loads the filter into shared memory and divides the filter into a combination of 3-column and 5-column sub-filters. Next, each thread
 calculates the address of the first input element it needs (Lines 6). For each output element and sub-filter, each thread loads
 corresponding input elements into $iTemp$ and passes it to Algorithms \ref{algo:basic} and \ref{algo:basic2} to fill the row vector $iTemp$
