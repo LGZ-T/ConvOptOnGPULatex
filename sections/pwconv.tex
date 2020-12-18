@@ -6,7 +6,7 @@ In the first stage, we use a 2-level hierarchical partitioning method to decompo
 tiles and warp tiles. Each thread block processes one block tile and each warp processes one warp tile. The main consideration when
 decomposing the output is the layout of tiles on each level. In the second stage, we distribute channels of input or filter across threads
 within a GPU warp. To achieve the best performance, we need to determine the number of channels to be distributed, the height of a warp
-tile, and the number of thread blocks per SM (see also Section \ref{sec:ga}.
+tile, and the number of thread blocks per SM (see also Section \ref{sec:ga}).
 
 \subsection{2-Level Hierarchical Partitioning}
 Our hierarchical partitioning method is governed by two parameters, the number of warps in a thread block, denoted as $Warp_{num}$, and the
@@ -15,10 +15,8 @@ warp number will decrease the opportunity to hide the memory access latency at t
 number of thread blocks and may lead to SM underutilization. We empirically set the warp number to be four, which gives good performance on
 our pilot study using microbenchmarks of hand-written depthwise convolution kernels. For the number of thread blocks, $Block_{num}$, we use
 two values, 2 and 4, on our evaluation platforms. These choices are justified as follows. For Nvidia GPUs, each GPU thread can use up to
-255 registers, and each SM has 65,536 registers. If we set $Block_{num}=1$ and $Warp_{num}=4$ (per our discussion above), each SM will have
-4 wraps (\FIXME{Why???? Is this platform-specific????}. This allows a thread block to use up to just half of the available registers of an
-SM because a thread block under this setting can use at most \FIXME{$4 warps \times 32 threads per wrap \times 255 registers per
-thread=32,640$ registers}. Therefore, to utilize the available hardware register, one should set $Block_{num}$ to be greater than one. We
+255 registers, and each SM has 65,536 registers. If we set $Block_{num}=1$ and $Warp_{num}=4$ (per our discussion above), each SM will have $Block_{num} \times Warp_{num}=4$ wraps. This allows a thread block to use up to just half of the available registers of an
+SM because a thread block under this setting can use at most $4\ (warps\ in\ an SM) \times 32\ (threads\ per\ warp) \times 255\ (registers\ per\ thread)=32,640$ registers. Therefore, to utilize the available hardware register, one should set $Block_{num}$ to be greater than one. We
 also found that using more than 4 threads per block offer little benefit and hence we set the $Block_{num}$ to be either 2 or 4 (to keep
 this parameter a power of two value).
 

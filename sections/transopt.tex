@@ -116,10 +116,15 @@ and 25 to 10 when 5 and 25 input elements are loaded. This reduction greatly imp
 \subsubsection{Generalize to other filter sizes} So far we have described our approach using a concrete working example with a pre-defined
 filter size, but our algorithms can be generalized to filters with an arbitrary size. To apply our approach to a filter of size $n \times
 n$, we will first divide the filter into several $n \times 5$ sub-filters. Next, we divide the remaining columns into several $n \times 3$
-sub-filters with some overlap columns. For example, \FIXME{and as illustrated in Fig. \ref{}}, a $7 \times 7$ filter can be divided into
+sub-filters with some overlap columns. For example, and as illustrated in Fig. \ref{fig:split7x7}, a $7 \times 7$ filter can be divided into
 a $7 \times 5$ sub-filter and a $7 \times 3$ sub-filter with one overlap column. Each $n \times 5$ and $n \times 3$ filters can then be
 direcly processed by Algorithm \ref{algo:basic} and Algorithm \ref{algo:basic2}.
-
+\begin{figure}[t!]
+\centering
+  \includegraphics[height=3cm]{./figure/split7x7.eps}
+  \caption{Divide a $7 \times 7$ filter into one $7 \times 5$ filter and one $7 \times 3$ filter.}
+  \label{fig:split7x7}
+\end{figure}
 
 \begin{figure}[t!]
 	\centering

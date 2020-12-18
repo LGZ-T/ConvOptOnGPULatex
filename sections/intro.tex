@@ -3,14 +3,14 @@
 %This kind of CNNs, including MobileNet \cite{Sandler_2018_CVPR,howard2019searching}, EfficientNet \cite{tan2019efficientnet} and ShuffleNet \cite{Ma_2018_ECCV}, has been widely used in image classification, object detection and  semantic segmentation.
 %Depthwise separable convolution splits the computation of 2D convolution into depthwise convolution and pointwise convolution.
 
-In recent years, deep neural networks (DNNs) have made astonishing success in solving a wide range of tasks \cite{zhang2018diverse,song2018deep,Cai_2018_CVPR,Sandler_2018_CVPR,briot2018analysis,tokunaga2019adaptive}. One of the
+In recent years, deep neural networks (DNNs) have made astonishing success in solving a wide range of tasks \cite{zoran2020towards,yang2020gated,wang2020rdsnet,chen2020mnasfpn,zhong2020squeeze,tokunaga2019adaptive}. One of the
 most successful DNN architectures is the convolutional neural network (CNN) that is widely used in tasks like image classification
-\cite{zhang2018diverse,song2018deep}, object detection \cite{Cai_2018_CVPR,Sandler_2018_CVPR} and  semantic segmentation \cite{briot2018analysis,tokunaga2019adaptive}. CNN models are typically trained and run on
+\cite{zoran2020towards,yang2020gated}, object detection \cite{wang2020rdsnet,chen2020mnasfpn} and  semantic segmentation \cite{zhong2020squeeze,tokunaga2019adaptive}. CNN models are typically trained and run on
 GPUs due to their computation requirements.
 
 
 The depthwise separable convolution (\texttt{DSC}) is widely used in modern CNN models for accelerating model computation time
-\cite{howard2019searching,tan2019efficientnet,Ma_2018_ECCV,Sandler_2018_CVPR}. This operation can process both the spatial dimensions (e.g., the width and the height of an image) and the depth
+\cite{howard2019searching,tan2019efficientnet,haase2020rethinking,zhang2019depth}. This operation can process both the spatial dimensions (e.g., the width and the height of an image) and the depth
 dimension (e.g., the RGB channels of an image) of an input. It achieves this by splitting a convolution kernel into two separate kernels
 that perform two convolutions: a depthwise convolution and a pointwise convolution. The former applies a single convolutional filter for
 each input channel, and the latter uses a $1 \times 1$ kernel to iterate through every single point of the input (e.g., the kernel has a
@@ -22,11 +22,11 @@ distributed, on-device learning on resource-constrained systems~\cite{espeholt20
 
 
 A wide range of optimization techniques have been proposed to perform convolutions
-\cite{li2016optimizing,Zhen2018Optimizing,enfedaque2014implementation,liu2019optimizing,winter2019adaptive,vasilache2014fast,lavin2016fast,Vasudevan2017Parallel,Chellapilla2006High}.
-Among these techniques, the fast fourier transform (FFT) \cite{vasilache2014fast}, winograd (Winograd) \cite{lavin2016fast} and general
-matrix multiplication (GEMM) \cite{Vasudevan2017Parallel,Chellapilla2006High} are broadly adopted. However, FFT and Winograd offer little
+\cite{Zhen2018Optimizing,liu2019optimizing,winter2019adaptive,li2019autofft,yan2020optimizing,Vasudevan2017Parallel,li2019coordinated,wu2020ugemm}.
+Among these techniques, the fast fourier transform (FFT) \cite{li2019autofft}, winograd (Winograd) \cite{yan2020optimizing} and general
+matrix multiplication (GEMM) \cite{Vasudevan2017Parallel,li2019coordinated,wu2020ugemm} are broadly adopted. However, FFT and Winograd offer little
 benefit for depthwise convolutions compared to standard 2D convolution. This is because FFT and and Winograd are designed to optimize
-arithmetic computation \cite{zlateski2019anatomy}, but not memory accesses. However, the memory access latency often dominates the execution time of
+arithmetic computation \cite{zlateski2019anatomy,yan2020optimizing}, but not memory accesses. However, the memory access latency often dominates the execution time of
 depthwise convolution \cite{cudaperformance} due to its lower arithmetic operations compared to a standard 2D convolution.  Both methods
 are also ill-suite for pointwise convolution (that applies a $1 \times 1$ kernel) because FFT is designed to operated on a large filter and
 Winograd works best when the filter size is $3 \times 3$.
