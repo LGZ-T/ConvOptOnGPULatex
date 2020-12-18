@@ -10,32 +10,33 @@ which integrates 512 Volta cores and 48KB shared memory. The host machine has an
 kernel v4.9.140-tegra. We use CUDA Toolkit 10.0 and cuDNN 7.6.3.
 
 
-\subsection{Competing Methods} We compare our approach against the state-of-the-art convolution library cuDNN which supports all kinds of convolutions including depthwise and pointwise convolutions on GPU.
-  Moreover, cuDNN can execute GEMM-, FFT- and Winograd-based convolutions.
+\subsection{Competing Methods} We compare our approach against the state-of-the-art convolution library cuDNN which supports a wide range of convolution operations,
+ including depthwise and pointwise convolutions on GPU.  Moreover, cuDNN can execute GEMM-, FFT- and Winograd-based convolutions.
 %  We take cuDNN GEMM implementation as a baseline for pointwise convolution.
 %  We implement a direct depthwise convolution without using the proposed reuse algorithms.
 %  We take this implementation as a baseline for depthwise convolution.
 
 
-\subsection{Use Cases}
-We apply our approach to depthwise convolution and pointwise convolution, described as follows.
-
-\mypara{Depthwise convolution.} This applies a bank of single-channel 2D filters to convolve with one multi-channel 2D input, e.g., an image of three color channels, R, G and B. We apply a 2D convolution filter to each of the input channels.
-This technique has been widely used in many CNNs, including MobileNetv2 \cite{Sandler_2018_CVPR}, EfficientNet \cite{tan2019efficientnet} and ShuffleNetv2 \cite{Ma_2018_ECCV}.
-
-\mypara{Pointwise convolution.} This applies a bank of multi-channel 2D 1$\times$1 filters to convolve with one multi-channel 2D input.
-The 2D convolution is performed between one filter channel and the corresponding input channel, and the results are sum up across channels to generate one output channel.
+%\subsection{Use Cases}
+%We apply our approach to depthwise convolution and pointwise convolution, described as follows.
+%
+%\mypara{Depthwise convolution.} This applies a bank of single-channel 2D filters to convolve with one multi-channel 2D input, e.g., an image of three color channels, R, G and B. We apply a 2D convolution filter to each of the input channels.
+%This technique has been widely used in many CNNs, including MobileNetv2 \cite{Sandler_2018_CVPR}, EfficientNet \cite{tan2019efficientnet} and ShuffleNetv2 \cite{Ma_2018_ECCV}.
+%
+%\mypara{Pointwise convolution.} This applies a bank of multi-channel 2D 1$\times$1 filters to convolve with one multi-channel 2D input.
+%The 2D convolution is performed between one filter channel and the corresponding input channel, and the results are sum up across channels to generate one output channel.
 
 
 \subsection{Performance Report}
-We run each test case ten times with batch sizes 1, 8, 16, 32, 64 and 128 on an unloaded machine and report the averaged running time.
-We found little variance during execution runs, less than 2\%.
-We run convolutions with two data types, 32bit floating point (FP32) for normal CNNs and 8bit integer (INT8) for quantized CNNs.
-In our experiments, we utilize $NCHW$ for FP32 and $NHWC$ for INT8.
+We apply our approach to depthwise convolution and pointwise convolution.  We run each test case ten times with batch sizes 1, 8, 16, 32,
+64 and 128 on an unloaded machine and report the averaged running time. We found little variance during execution runs, less than 2\%. We
+run convolutions with two data types, 32-bit floating points (FP32) for normal CNNs and 8-bit integer (INT8) for quantized CNNs
+\FIXME{\cite{}}. In our experiments, we utilize the tensorflow data layouts $NCHW$ and $NHWC$ for FP32 and INT8, respectively, where $N, C,
+H, W$ respectively denote for the bath size, the number of channels, the height and the width. \FIXME{Why using two different formats????}
 
-In this work, we first test depthwise convolution with two filter sizes, $3 \times 3$ and $5 \times 5$, because these are commonly used filter sizes.
-Then we report the performance of pointwise convolution.
-Lastly, we apply our optimized depthwise and pointwise convolutions on normal and quantized MobileNetv2 and report the performance of inference and training.
+In this work, we first test depthwise convolution with two filter sizes, $3 \times 3$ and $5 \times 5$, because these are commonly used
+filter sizes. Then we report the performance of pointwise convolution. Lastly, we apply our optimized depthwise and pointwise convolutions
+on the standard and quantized MobileNetv2 to report the performance of both inference and training.
 %
 %\subsection{Notations}
 %Throughout the evaluation, we use $I$, $F$, and $O$ to represent the input, the filter, and the output respectively, $N$, $C$, $H$, and $W$
