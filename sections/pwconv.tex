@@ -10,22 +10,12 @@ In the first stage, we determine candidate values for parameters related to the 
 within a GPU warp. To achieve the best performance, we need to determine the number of channels to be distributed, the height of a warp
 tile, and the number of thread blocks per SM (see also Section \ref{sec:ga}).
 
-\subsection{Generate Search Space}
-To generate search space for parameters related to the tile size, we need to determine candidate values of these parameters. First, we introduce how to determine candidate values for two input independent parameters, namely the number of warps in a thread block ($Warp_{num}$) and the number of thread blocks that can run concurrently on an SM ($Block_{num}$). Then, we introduce how to partition the output into block tiles and warp tiles, and determine candidate values for input dependent parameters, namely the height and width of the warp  tile, denoted as $Warp_H$ and $Warp_W$ respectively.
-
-We need to find the right warp number because a small
-warp number will decrease the opportunity to hide the memory access latency at the warp level, but a large warp number will decrease the
-number of thread blocks and may lead to SM underutilization. We empirically set the warp number to be four ($Warp_{num}=4$), which gives good performance on
-our pilot study using microbenchmarks of hand-written depthwise convolution kernels. For the number of thread blocks, $Block_{num}$, we use
-two values, 2 and 4, on our evaluation platforms. These choices are justified as follows. For Nvidia GPUs, each GPU thread can use up to
-255 registers, and each SM has 65,536 registers. If we set $Block_{num}=1$ and $Warp_{num}=4$ (per our discussion above), each SM will have $Block_{num} \times Warp_{num}=4$ wraps. This allows a thread block to use up to just half of the available registers of an
-SM because a thread block under this setting can use at most $4\ (warps\ in\ an\ SM) \times 32\ (threads\ per\ warp) \times 255\ (registers\ per\ thread)=32,640$ registers. Therefore, to utilize the available hardware register, one should set $Block_{num}$ to be greater than one. We
-also found that using more than 4 threads per block offer little benefit and hence we set the $Block_{num}$ to be either 2 or 4 ($Block_{num}=\{2,4\}$).
-
-To determine candidate values for $Warp_H$ and $Warp_W$, we use a 2-level tiling method to partition the output into block tiles and warp tiles. 
+\subsection{Determine Candidates for Input Dependent Parameters}
+In our design, we use a 2-level tiling method to partition the output into block tiles and warp tiles.
 Each thread block processes one block tile and each warp processes one warp tile.
-%The workflow of our 2-level tiling method is illustrated in Fig. \ref{fig:pwworkflow}. First, we describe how to
-%partition a block tile into warp tiles, and second, how to partition the output into block tiles.
+Hence, we have two input dependent parameters, namely the height and width of the warp tile, denoted as $Warp_H$ and $Warp_W$ respectively.
+Now we introduce how to use the 2-level tiling method to determine candidate values for $Warp_H$ and $Warp_W$. 
+
 To divide the output into block tiles, we use two logical layouts of the output, \textbf{\emph{L1}} and \textbf{\emph{L2}}, as shown in Fig. \ref{fig:pwworkflow}.
 $F_N$ and $I_N \times I_H \times I_W$ represent the filter and input dimensions of the output respectively.
 Before partitioning the output, we first select the layout of the output based on the size of the filter dimension.
@@ -43,7 +33,6 @@ Since both layouts have the similar procedure, we take layout \textbf{\emph{L1}}
 After choosing the layout based on $F_N$, we partition the output along the filter dimension.
 First, we halve the filter dimension if $F_N \geq 512$.
 The reason is that if we let each thread block process a large number of filters, then each thread needs to issue more load instructions, which may cause MIO (Memory Input Output) instruction queue throttle and leads to performance degradation.
-%For the layout \textbf{\emph{L2}}, we halve the filter dimension if $F_N \geq 24$.
 Then, we halve both dimensions of each block tile and generate $2 \times 2$ warp tiles.
 Based on the partition method, we know that $Warp_W$ can be calculated with $Warp_W=F_N/4$ or $Warp_W=F_N/2$. Thus, we only need to determine candidate values for $Warp_H$ based on the size of the input dimension.
 In our design, when $Warp_H > 12$, we need assembly level optimizations like the work in
@@ -51,7 +40,7 @@ In our design, when $Warp_H > 12$, we need assembly level optimizations like the
 we focus on higher level rather than assembly level optimizations, and thus set $Warp_H \leq 12$.
 If the size of the input dimension is large, we prefer to choose a large $Warp_H$ because using small $Warp_H$ will generate more thread blocks and results in multiple loads of shared filters \cite{jia2020enabling, zheng2020flextensor}.
 If the size of the input dimension is small, we prefer to choose small $Warp_H$ because using a large $Warp_H$ will generate a few thread blocks and result in SM underutilization.
-Since each thread loads at most 12 input elements ($Warp_H<12$), we set the upper limit of large $Warp_H$ to 12 and the lower limit to $12/2=6$.
+Since each thread loads at most 12 input elements ($Warp_H \leq 12$), we set the upper limit of large $Warp_H$ to 12 and the lower limit to $12/2=6$.
 Therefore, the candidates for large $Warp_H$ are $Warp_H=\{6,7,8,9,10,11,12\}$.
 The candidates for small $Warp_H$ are $Warp_H=\{2,3,4,5,6,7,8\}$.
 In our experiments, there is no clear boundary between large and small candidate sets of $Warp_H$, therefore we let both sets overlap in the middle values.
@@ -59,13 +48,21 @@ The boundary between the large and small size of the input dimension is experime
 
 When using layout \textbf{\emph{L2}}, $Warp_H$ can be calculated with $Warp_H=F_N/4$ or $Warp_H=F_N/2$. The candidate values for large $Warp_W$ are $Warp_W=\{6,7,8,9,10,11,12\}$ and for small $Warp_W$ are $Warp_W=\{2,3,4,5,6,7,8\}$.
 
-\subsection{Distribute Channels Across Threads}
-In this stage, we distribute channels of filters or inputs across threads within a warp.
-The number of channels to be distributed is denoted as $C_{num}$.
-To achieve the best performance, we iterate over all candidate combinations of $Block_{num}$, $C_{num}$ and $Warp_H$, and select the combination that leads to optimal SM utilization and arithmetic intensity.
+\subsection{Determine Candidates for Input Independent Parameters}
+There are three input independent parameters we need to consider, namely the number of warps in a thread block ($Warp_{num}$), the number of thread blocks that can run concurrently on an SM ($Block_{num}$) and the number of channels to be distributed ($C_{num}$).
 
-Now we illustrate how to determine candidates for $C_{num}$ with layout \textbf{\emph{L1}}.
-Layout \textbf{\emph{L2}} has a similar process.
+We need to find the right warp number because a small warp number will decrease the opportunity to hide the memory access latency at the warp level, but a large warp number will decrease the number of thread blocks and may lead to SM underutilization. 
+We empirically set the warp number to be four ($Warp_{num}=4$), which gives good performance on our pilot study using microbenchmarks of hand-written depthwise convolution kernels. 
+For the number of thread blocks, $Block_{num}$, we use two values, 2 and 4, on our evaluation platforms. 
+These choices are justified as follows. For Nvidia GPUs, each GPU thread can use up to 255 registers, and each SM has 65,536 registers. 
+If we set $Block_{num}=1$ and $Warp_{num}=4$ (per our discussion above), each SM will have $Block_{num} \times Warp_{num}=4$ wraps. 
+This allows a thread block to use up to just half of the available registers of an SM because a thread block under this setting can use at most $4\ (warps\ in\ an\ SM) \times 32\ (threads\ per\ warp) \times 255\ (registers\ per\ thread)=32,640$ registers. 
+Therefore, to utilize the available hardware register, one should set $Block_{num}$ to be greater than one. 
+We also found that using more than 4 threads per block offer little benefit and hence we set the $Block_{num}$ to be either 2 or 4 ($Block_{num}=\{2,4\}$).
+
+%To achieve the best performance, we iterate over all candidate combinations of $Block_{num}$, $C_{num}$ and $Warp_H$, and select the combination that leads to optimal SM utilization and arithmetic intensity.
+
+Now we illustrate how to determine candidates for $C_{num}$.
 Assume that we distribute 8 channels ($C_{num}=8$), meaning that 8 threads will load 8 channels of the same filter into registers.
 Therefore, 32 threads of a warp can load 32 channels of $32/8=4$ filters at the same time, we denote this number as $F_{num}=32/C_{num}$.
 And then the number of filters each thread needs to process can be calculated with $T_{num}=Warp_W/F_{num}$.
@@ -73,11 +70,11 @@ To fully utilize a warp, $C_{num}$ should be a power of 2.
 Thus, candidates for $C_{num}$ are $C_{num}=\{1,2,4,8,16,32\}$.
 
 
-
-When searching for the optimal combinations, we only consider combinations that satisfy hardware resources constraints, including registers and shared memory.
+\subsection{Searching For the Optimal Combination}
+When searching for the optimal combination, we only consider combinations that satisfy hardware resources constraints, including registers and shared memory.
 Based on $Block_{num}$, we calculate the number of registers each thread can use ($Limit_R$) and the size of shared memory each thread block can use ($Limit_S$) with formulas $Limit_R=Total_R/(Block_{num}\times Warp_{num} \times 32)$ and $Limit_S=Total_S/Block_{num}$ respectively. $Total_R$ and $Total_S$ represent the number of registers and the size of shared memory of an SM, respectively. On RTX 2080Ti, $Total_R=65536$ and $Total_S=64KB$ while  on Jetson AGX Xavier, $Total_R=65536$ and $Total_S=48KB$.
 Each thread calculates $Warp_H \times T_{num}$ output elements and thus needs $R_O=Warp_H \times T_{num}$, $R_I=Warp_H$ and $R_F=T_{num}$ registers to store output elements, input elements and filter elements respectively.
-In cases where the computational workload is small, we try to let each thread accumulates $Warp_H \times T_{num}$ output elements $k \in \{1,2,3,4\}$ times.
+%In cases where the computational workload is small, we try to let each thread accumulates $Warp_H \times T_{num}$ output elements $k \in \{1,2,3,4\}$ times.
 The constraints can be formulated as follows:
 \begin{equation}\nonumber
 R_{LF}=\frac{C_{num} \times k \times Block_W}{128},R_{LI}=\frac{C_{num} \times k \times Block_H}{128}
@@ -157,7 +154,7 @@ where $Block_{count}$ is the number of generated thread blocks, $SM_{num}$ is th
 
 We will demonstrate how to select the optimal combination based on both metrics in the next section.
 
-\subsection{Putting Together}
+
 The whole workflow is described in Algorithm \ref{algo:pwalgo}.
 We first choose the layout of output and partition the output into block tiles based on $F_N$ (Line 3).
 Second, we choose the candidate set for $Warp_H$ based on $I_N \times I_H \times I_W$ (Lines 4).
