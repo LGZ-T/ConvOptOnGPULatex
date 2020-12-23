@@ -14,7 +14,7 @@ The depthwise separable convolution (\texttt{DSC}) is widely used in modern CNN 
 dimension (e.g., the RGB channels of an image) of an input. It achieves this by splitting a convolution kernel into two separate kernels
 that perform two convolutions: a depthwise convolution and a pointwise convolution. The former applies a single convolutional filter for
 each input channel, and the latter uses a $1 \times 1$ kernel to iterate through every single point of the input (e.g., the kernel has a
-depth of however many channels the input image has). Compare to a classical depthwise, 2D convolution that operates on a 2D input of
+depth of however many channels the input image has). Compare to a classical 2D convolution that operates on a 2D input of
 $channels \times width \times height$, the DSC reduces the number of multiplication operations as well as the number of parameters needed
 for the convolution filter (and hence the chance of model over-fitting) as well as computation time by having fewer arithmetic operations.
 For this reason, the DSC is widely used in latency-sensitive scenarios, such as using a trained CNN on embedded devices or performing
@@ -44,7 +44,7 @@ Winograd works best when the filter size is $3 \times 3$.
 
 
 While GEMM is a good fit for pointwise convolution (that is also adopted by cuDNN \cite{ChetlurWVCTCS14}), the current implementation of
-GEMM for CNNs can lead to poor GPU performance during model deployment. A typical GEMM implementation uses a fixed block size to distribute
+GEMM for CNNs can lead to poor GPU performance during model deployment. A typical GEMM implementation uses a fixed tile size to distribute
 work across parallel threads, without taking into consideration the amount of computation required. As we will show later in the paper,
 such a strategy cannot make effective use of the GPU parallelism when the batch size (i.e., the number of samples to be processed at once)
 is small (e.g., $<= 128$). The ineffective use of GPU resources leads to low GPU utilization and sub-optimal performance. This is a
@@ -77,7 +77,7 @@ training samples is likely to be small due to resource constraints.
 
 Our work addresses the memory latency and work distribution issues identified above. By addressing these two issues together, our approach
 enables efficient DSC because it accelerates not only depthwise convolution by reducing the GPU memory access latency and also pointwise
-convolution for model inferencing and small-batch-sized training.
+convolution for model inference and small-batch-sized training.
 
 
 To improve the memory performance of depthwise convolution (that operates on the width and the height directions of the input matrix), we
@@ -91,13 +91,13 @@ compute multiple output elements at the same time. This strategy improves the da
 of memory transactions compared with that of the existing convolution processing pipeline. By reducing the number of memory accesses, our
 approach improves the performance of depthwise convolution.
 
-To overcome the drawback of fixed block size work partition of a GEMM kernel for pointwise convolution, we employ a dynamic block-size
-scheme. Our approach first adjusts the work assigned to each GPU thread so that we have a sufficient number of blocks to be distributed to GPU
+To overcome the drawback of fixed tile size work partition of a GEMM kernel for pointwise convolution, we employ a dynamic tile size
+scheme. Our approach first adjusts the work assigned to each GPU thread so that we have a sufficient number of thread blocks to be distributed to GPU
 threads to improve the GPU utilization. A challenge here is how to assign the right amount of work to GPU threads so that the global memory
 access latency can be adequately hidden through computation. Having too little work per GPU thread will make the GPU memory access
 dominates the execution while having too large work assignment will lead to low GPU utilization (as only a small number of GPU threads will
-receive a block to work on). To this end, our dynamic scheme distributes input or filter channels across threads within a warp to minimize
-memory latency with improved GPU parallelism. Some recent work \cite{li2019coordinated,pourghassemi2020limits} employ a heuristic method to
+receive a tile to work on). To this end, our dynamic scheme distributes input or filter channels across threads within a warp to minimize
+memory latency with improved GPU parallelism. Some recent work \cite{li2019coordinated,pourghassemi2020limits} employ a heuristic method
 to maximize parallelism for GEMM. They achieve this by trying to combine multiple convolutions that can be computed concurrently into one
 GEMM kernel. Such a strategy assumes multiple parallel convolutions can be performed within a single GEMM kernel. However, this strong
 assumption is only valid for some special CNN structures like the inception layer in GoogleNet \cite{szegedy2015going}. As a result, these
@@ -115,10 +115,10 @@ and inference time of MobileNet \cite{Sandler_2018_CVPR,howard2019searching} whe
 
 This paper makes the following technical contributions:
 \begin{itemize}
-    \item It presents two novel algorithms for column and row reuse (Sections \ref{sec:creuse} and \ref{sec:rowreuse}) for depthwise
+    \item It presents two novel algorithms for column and row reuse (Section \ref{sec:strategies}) for depthwise
         convolution, improving the data locality and the memory access latency for depthwise convolution.
     \item It describes a novel method for transforming dynamic indices into static indices to assist register promotion for performance
         optimization (Section \ref{exp}).
-    \item It presents a dynamic block size for pointwise convolution, increasing GPU utilization while minimizing the global memory
+    \item It presents a dynamic tile size for pointwise convolution, increasing GPU utilization while minimizing the global memory
         access latency (Section \ref{sec:pwconv}).
 \end{itemize}

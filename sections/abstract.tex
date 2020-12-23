@@ -2,11 +2,11 @@
 The depthwise separable convolution is commonly seen in convolutional neural networks (CNNs), and is widely used to reduce the
 computation overhead of a standard multi-channeled 2D convolution. Existing implementations of depthwise separable convolutions target
 accelerating model training with large batch size with a large number of samples to be processed at once. Such approaches are inadequate
-for small-batch-sized model training and the typical scenario of model inferencing where the model takes in a few samples at once.
+for small-batch-sized model training and the typical scenario of model inference where the model takes in a few samples at once.
 %
 This paper aims to bridge the gap of optimizing depthwise separable convolutions by targeting the GPU architecture. We achieve this by
 designing two novel algorithms to improve the column and row reuse of the convolution operation to reduce the number of memory operations
-performed on the width and the height dimensions of the 2D convolution. Our approach employs a dynamic block size scheme to adaptively
+performed on the width and the height dimensions of the 2D convolution. Our approach employs a dynamic tile size scheme to adaptively
 distribute the computational data across GPU threads to improve the GPU utilization and to hide the memory access latency. We apply our
 approach on two GPU platforms: an NVIDIA RTX 2080Ti GPU and an embedded NVIDIA Jetson AGX Xavier GPU, and two data types: 32bit floating point and 8bit integer numbers. We compared our approach against
 cuDNN that is heavily tuned for the NVIDIA GPU architecture. Experimental results show that our approach delivers over $2\times$ (up to
