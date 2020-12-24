@@ -29,26 +29,30 @@ shared memory) and reduce the number of memory accesses to slower memory. Our wo
 separable convolution operations.
 \begin{figure}[t!]
 \centering
-  \includegraphics[height=5.5cm]{./figure/depthseparableconv.eps}
-  \caption{Demonstration of depthwise convolution (above) and pointwise convolution (below).}
+\subfloat[Depthwise convolution: three $5 \times 5$ 2D filters are used to convolve with one 3-channel $12 \times 12$ input and generate one 3-channel $8 \times 8$ output.]{\includegraphics[height=2.5cm]{./figure/depthwisedemo.eps}
+	\label{fig:dwdemo}}
+\vspace{1em}
+\subfloat[Pointwise convolution: four 3-channel $1 \times 1$ filters are used to convolve with one 3-channel $8 \times 8$ input and generate one 4-channel $8 \times 8$ output.]{\includegraphics[height=2.5cm]{./figure/pointwisedemo.eps}
+	\label{fig:pwdemo}}
+\caption{Demonstration of depthwise and pointwise convolutions.}
   \label{fig:depsepconv}
 \end{figure}
 
 \subsection{Depthwise Separable Convolution}
 Our work targets depthwise separable convolution (DSC) that is widely used by  CNN  models to reduce the number of multiplication
-operations needed for doing convolution (a standard operation in CNN). The DSC splits a standard depthwise (e.g., multi-channeled) 2D
-convolution kernel into two individual kernels: a depthwise convolution kernel and a pointwise convolution kernel.
+operations needed for doing convolution (a standard operation in CNN). The DSC splits a standard (e.g., multi-channeled) 2D
+convolution kernel into two individual kernels: a depthwise convolution kernel and a pointwise convolution kernel. 
 
 The depthwise
 convolution kernel processes one input channel at a time, and stacks the outputs of all channels together to form an $n \times n \times c$
 matrix, where $n \times n$ is the output of a depthwise convolution kernel and $c$ is the number of channels to be processed. Specifically,
 it takes as input a feature map and applies a bank of 2D filters (e.g., an $N \times N$ kernel) on the width and height directions of
-the input. We iteratively apply the depthwise convolution kernel to all channels. The above part of Fig. \ref{fig:depsepconv} shows an example of depthwise convolution, where three $5 \times 5$ 2D filters are used to convolve with the corresponding channel of a $12 \times 12 \times 3$ feature map and generate one $8 \times 8 \times 3$ output.
+the input. We iteratively apply the depthwise convolution kernel to all channels. Fig. \ref{fig:dwdemo} shows an example of depthwise convolution, where three $5 \times 5$ 2D filters are used to convolve with the corresponding channel of a $12 \times 12 \times 3$ feature map and generate one $8 \times 8 \times 3$ output. 
 
 The output of the depthwise convolution kernel is fed
 into a pointwise convolution kernel which uses a $1 \times 1$ filter to iterates through every single point. This kernel has a depth of the
 number of input channels (i.e., $c$). The DSC reduces the computation by reducing the number of input transformations needed when compared
-to a standard depthwise convolution. The below part of Fig. \ref{fig:depsepconv} shows an example of pointwise convolution, where four $1 \times 1 \times 3$ filters are used to convolve with the $8 \times 8 \times 3$ feature map iteratively and each filter generate one channel of a $8 \times \times 3$ output.
+to a standard depthwise convolution. Fig. \ref{fig:pwdemo} shows an example of pointwise convolution, where four $1 \times 1 \times 3$ filters are used to convolve with the $8 \times 8 \times 3$ feature map iteratively and each filter generate one channel of a $8 \times 8 \times 3$ output.
 
 
 \subsection{Roadmap and Notations\label{sec:roadmap}} We present our approach for optimizing the two convolutional kernels of DSC in
