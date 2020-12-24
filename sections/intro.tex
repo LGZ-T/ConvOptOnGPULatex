@@ -25,10 +25,10 @@ A wide range of optimization techniques have been proposed to perform convolutio
 \cite{Zhen2018Optimizing,liu2019optimizing,winter2019adaptive,li2019autofft,yan2020optimizing,Vasudevan2017Parallel,li2019coordinated,wu2020ugemm}.
 Among these techniques, the fast fourier transform (FFT) \cite{li2019autofft}, winograd (Winograd) \cite{yan2020optimizing} and general
 matrix multiplication (GEMM) \cite{Vasudevan2017Parallel,li2019coordinated,wu2020ugemm} are broadly adopted. However, FFT and Winograd offer little
-benefit for depthwise convolutions compared to standard 2D convolution. This is because FFT and and Winograd are designed to optimize
+benefit for depthwise convolutions compared to standard 2D convolution. This is because FFT and Winograd are designed to optimize
 arithmetic computation \cite{zlateski2019anatomy,yan2020optimizing}, but not memory accesses. However, the memory access latency often dominates the execution time of
 depthwise convolution \cite{cudaperformance} due to its lower arithmetic operations compared to a standard 2D convolution.  Both methods
-are also ill-suite for pointwise convolution (that applies a $1 \times 1$ kernel) because FFT is designed to operated on a large filter and
+are also ill-suite for pointwise convolution (that applies a $1 \times 1$ kernel) because FFT is designed to operate on a large filter and
 Winograd works best when the filter size is $3 \times 3$.
 %Both methods are not implemented for pointwise convolution in cuDNN.
 
@@ -92,7 +92,7 @@ of memory transactions compared with that of the existing convolution processing
 approach improves the performance of depthwise convolution.
 
 To overcome the drawback of fixed tile size work partition of a GEMM kernel for pointwise convolution, we employ a dynamic tile size
-scheme. Our approach first adjusts the work assigned to each GPU thread so that we have a sufficient number of thread blocks to be distributed to GPU
+scheme. Our approach first adjusts the work assigned to each GPU thread so that we have a sufficient number of tiles to be distributed to GPU
 threads to improve the GPU utilization. A challenge here is how to assign the right amount of work to GPU threads so that the global memory
 access latency can be adequately hidden through computation. Having too little work per GPU thread will make the GPU memory access
 dominates the execution while having too large work assignment will lead to low GPU utilization (as only a small number of GPU threads will

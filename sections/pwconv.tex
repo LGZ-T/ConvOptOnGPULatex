@@ -11,6 +11,7 @@ In the following sections, we give a detailed description of three stages.
 \subsection{Determine Candidates for Input Dependent Parameters}
 In our design, we use a 2-level tiling method to partition the output into block tiles and warp tiles.
 Each thread block processes one block tile and each warp processes one warp tile.
+The height dimension of the warp tile is shared among 32 threads of a warp and the width dimension of the warp tile is distributed across 32 threads of a warp.
 Hence, we have two input dependent parameters, namely the height and width of the warp tile, denoted as $Warp_H$ and $Warp_W$ respectively.
 Now we introduce how to use the 2-level tiling method to determine candidate values for $Warp_H$ and $Warp_W$. 
 
@@ -20,16 +21,16 @@ Before partitioning the output, we first select the layout of the output based o
 The rationale behind choosing the filter dimension instead of the input dimension can be described as follows.
 The number of filters, $F_N$, is fixed once the structure of a CNN is determined.
 But the size of the input dimension will be affected by the batch size, $I_N$, during inference and training.
-Therefore, it is easier to design our approach based on the size of filter dimension.
+Therefore, it is easier to design our approach based on the size of the filter dimension.
 When $F_N > 48$, we choose layout \textbf{\emph{L1}} and distribute filter channels across threads within a warp.
 Otherwise, we choose layout \textbf{\emph{L2}} and distribute input channels.
 The boundary $F_N = 48$ is determined as follows.
-Fig. \ref{fig:pwworkflow} demonstrates that in layout \textbf{\emph{L2}}, the maximal value of $F_N$ is $4 \times Warp_H$ and $Warp_H \leq 12$, therefore we have $F_N \leq 48$ for layout \textbf{\emph{L2}}.
+Fig. \ref{fig:pwworkflow} demonstrates that in layout \textbf{\emph{L2}}, the maximal value of $F_N$ is $4 \times Warp_H$ and $Warp_H \leq 12$ (explain later in this section), therefore we have $F_N \leq 48$ for layout \textbf{\emph{L2}}.
 
 Since both layouts have the similar procedure, we take layout \textbf{\emph{L1}} as an illustration example and give a brief description of layout \textbf{\emph{L2}} at the end of this section.
 After choosing the layout based on $F_N$, we partition the output along the filter dimension.
 First, we halve the filter dimension if $F_N \geq 512$.
-The reason is that if we let each thread block process a large number of filters, then each thread needs to issue more than 15 load instructions, which may cause MIO (Memory Input Output) instruction queue throttle and leads to performance degradation.
+The reason is that if we let each thread block process a large number of filters, then each thread needs to issue more than 15 global memory load instructions, which may cause MIO (Memory Input Output) instruction queue throttle and leads to performance degradation.
 Then, we halve both dimensions of each block tile and generate $2 \times 2$ warp tiles.
 
 Based on the partition method, we know that $Warp_W$ can be calculated with $Warp_W=F_N/4$ or $Warp_W=F_N/2$. Thus, we only need to determine candidate values for $Warp_H$ based on the size of the input dimension.
@@ -92,7 +93,7 @@ In Formula \ref{fo:limitr}, $extraR$ is the number of additional registers alloc
 \begin{figure*}
 	\centering
     \includegraphics[width=0.95\textwidth,height=7cm]{./figure/pwworkflow.eps}
-    \caption{Workflow of our dynamic block size scheme.} \label{fig:pwworkflow}
+    \caption{Workflow of our 2-level partition and channel distribution methods.} \label{fig:pwworkflow}
 \end{figure*}
 \begin{algorithm}[t!]
     \small
@@ -123,12 +124,12 @@ In Formula \ref{fo:limitr}, $extraR$ is the number of additional registers alloc
         
         Choose the proper kernel based on the recorded combination.\;
         \tcp{below codes are executed on GPU}
-        Each thread block loads $k\times C_{num}$ channels of the needed input and filter into shared memory array $sharedBuf1$\;
+        Each thread block loads $C_{num}$ channels of the needed input and filter into shared memory array $sharedBuf1$\;
         $\_\_syncthreads()$\;
-        \For{$iter \gets 0$ \KwTo $I_C$ By $2 \times k \times C_{num}$}{
-            Load next $k \times C_{num}$ channels of input and filter into temporary registers\;
+        \For{$iter \gets 0$ \KwTo $I_C$ By $2 \times C_{num}$}{
+            Load next $C_{num}$ channels of input and filter into temporary registers\;
             Load current channels of input and filter from $sharedBuf1$ into registers\;
-            Accumulate output elements $k$ times\;
+            Accumulate output elements\;
             Write temporary registers into shared memory $sharedBuf2$\;
             $\_\_syncthreads()$\;
             Repeat above steps but swap $sharedBuf1$ and $sharedBuf2$\;
