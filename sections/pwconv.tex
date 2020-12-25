@@ -3,13 +3,13 @@
 Our dynamic tile size scheme will search for the optimal tile size for the output based on the size of input and generate a proper number of tiles to saturate GPU and maximize data reuse.
 Our approach consists of three stages, described as follows.
 
-In the first and second stages, as shown in Fig. \ref{fig:pwworkflow}, we identify parameters related to the tile size and determine candidate values for each parameter. The first and second stages process input dependent and independent parameters respectively. 
+In the first and second stages, we identify parameters related to the tile size and determine candidate values for each parameter. The first and second stages process input dependent and independent parameters respectively. 
 In the third stage, as detailed in Algorithm \ref{algo:pwalgo}, we iterate over all combinations of parameters and search for the combination that achieves optimal SM utilization and data reuse.   
 
 
 In the following sections, we give a detailed description of three stages. 
 \subsection{Determine Candidates for Input Dependent Parameters}
-In our design, we use a 2-level tiling method to partition the output into block tiles and warp tiles.
+In our design, we use a 2-level tiling method, as shown in Fig. \ref{fig:pwworkflow}, to partition the output into block tiles and warp tiles.
 Each thread block processes one block tile and each warp processes one warp tile.
 The height dimension of the warp tile is shared among 32 threads of a warp and the width dimension of the warp tile is distributed across 32 threads of a warp.
 Hence, we have two input dependent parameters, namely the height and width of the warp tile, denoted as $Warp_H$ and $Warp_W$ respectively.
@@ -61,10 +61,11 @@ We also found that setting $Block_{num}>4$ during searching offers little benefi
 
 %To achieve the best performance, we iterate over all candidate combinations of $Block_{num}$, $C_{num}$ and $Warp_H$, and select the combination that leads to optimal SM utilization and arithmetic intensity.
 
-When searching for the optimal combination of parameters, a small tile size may be generated, which can not fully utilize 32 threads of a warp.
- For example, if a warp only needs to process 16 filters ($Warp_W=16$) and one thread processes one filter, then only 16 threads are utilized. 
- To fully utilize the warp, as shown in Fig. \ref{fig:pwworkflow}, we can distribute eight channels ($C_{num}=8$) of each filter across 32 threads of the warp. 
- In that case, each warp can process $F_{num}=32/C_{num}=32/8=4$ filters each time and each thread processes $T_{num}=Warp_W/F_{num}=16/4=4$ filters.
+When searching for the optimal combination of parameters, a small tile size may be generated, which may lead to low arithmetic intensity and can not hide global memory access latency.
+ For example, we assume that the warp tile size is $Warp_H \times Warp_W = 8 \times 64$ and has 56 channels, which means that one warp needs to convolve 8 input elements with 64 filter elements and accumulates results 56 times to generate $8 \times 64=512$ elements. Since the height dimension is shared among 32 threads of the warp, each thread loads 8 input elements, and width dimension is distributed across 32 threads, each thread loads 2 filter elements. Therefore, each thread accumulates 56 channels of $8 \times 2=16$ elements. Now we can estimate arithmetic intensity of each thread for one iteration as $\frac{number\ of\ multiplications}{number\ of\ elements}=\frac{8 \times 2}{8 + 2}=1.6$. We can improve arithmetic intensity by distributing channels across threads, as shown in Fig. \ref{fig:pwworkflow}. We distribute eight channels ($C_{num}=8$) of each filter element across 32 threads of the warp. 
+ In that case, each warp can process $F_{num}=32/C_{num}=32/8=4$ filter elements and each thread processes $T_{num}=Warp_W/F_{num}=64/4=16$ filter elements.
+ The arithmetic intensity can be estimated as $\frac{Warp_H \times T_{num}}{Warp_H + T_{num}}=\frac{8 \times 16}{8+16}=5.3$.
+ Higher arithmetic intensity increases the chance to hide global memory access latency.
 To fully utilize a warp, candidate values for $C_{num}$ should be a power of 2.
 Thus, candidates for $C_{num}$ are $C_{num}=\{1,2,4,8,16,32\}$.
 
@@ -73,6 +74,8 @@ Thus, candidates for $C_{num}$ are $C_{num}=\{1,2,4,8,16,32\}$.
 When searching for the optimal combination, we only consider combinations that satisfy hardware resources constraints, including registers and shared memory.
 In the rest of this section, we take layout \textbf{\emph{L1}} as an illustration example.
 Based on $Block_{num}$, we calculate the number of registers each thread can use ($Limit_R$) and the size of shared memory each thread block can use ($Limit_S$) with formulas $Limit_R=Total_R/(Block_{num}\times Warp_{num} \times 32)$ and $Limit_S=Total_S/Block_{num}$ respectively. $Total_R$ and $Total_S$ represent the number of registers and the size of shared memory of an SM, respectively. On RTX 2080Ti, $Total_R=65536$ and $Total_S=64KB$ while  on Jetson AGX Xavier, $Total_R=65536$ and $Total_S=48KB$.
+
+In our approach, each warp processes one warp tile which contains $Warp_W \times Warp_H$ output elements.
 Each thread calculates $Warp_H \times T_{num}$ elements and thus needs $R_{result}=Warp_H \times T_{num}$, $R_{operand}=Warp_H+T_{num}$ registers to store results and operands respectively.
 %In cases where the computational workload is small, we try to let each thread accumulates $Warp_H \times T_{num}$ output elements $k \in \{1,2,3,4\}$ times.
 The constraints can be formulated as follows:
@@ -88,7 +91,7 @@ R_{result}+R_{operand}+R_{tmp}+extraR \leq Limit_R
 (2 \times Warp_H+2 \times Warp_W)\times C_{num} \times 4 \times 2 \leq Limit_S
 \end{equation}
 where $R_{tmp}$ is the number of temporary registers used to store filter and input elements loaded from global memory.
-$2 \times Warp_W$ and $2 \times Warp_H$ mean the width and height of the block tile respectively. 128 means each thread block has $Warp_{num} \times 32 = 4 \times 32=128$ threads to load data from global memory. 
+$2 \times Warp_W$ and $2 \times Warp_H$ represent the width and height of the block tile respectively. 128 means each thread block has $Warp_{num} \times 32 = 4 \times 32=128$ threads to load data from global memory. 
 In Formula \ref{fo:limitr}, $extraR$ is the number of additional registers allocated by the compiler and its value is determined through an off-line method. In Formula \ref{fo:limits}, 4 means each element has 4 bytes and 2 means we use a double buffer method.
 \begin{figure*}
 	\centering
@@ -105,19 +108,19 @@ In Formula \ref{fo:limitr}, $extraR$ is the number of additional registers alloc
         
         Choose the layout and partition the output based on $F_N$\;
         Choose the candidate set for $Warp_H$ ($Warp_W$) based on the size of input dimension\;
-        $preSM \gets MAX\_FLOAT$,$preD \gets MAX\_INT$\;
+        $preSM \gets MAX\_FLOAT$,$preAI \gets MIN\_INT$\;
         \ForEach{combination of $Warp_W$, $Warp_H$, $Warp_{num}$, $Block_{num}$ and $C_{num}$}{
             \If{not satisfy constraints of Formula \ref{fo:limitr} and \ref{fo:limits}}{
                 continue\;
             }
-            Calculate $SM_{util}$ and $D$ with Formula \ref{fo:smutil} and \ref{fo:diff}\;
-            \If{$preSM \geq 1$ and $SM_{util} \geq 1$ and ((both are close and $D<preD$) or ($SM_{util}<preSM$))}{
+            Calculate $SM_{util}$ and $AI$ with Formula \ref{fo:smutil} and \ref{fo:diff}\;
+            \If{$preSM \geq 1$ and $SM_{util} \geq 1$ and ((both are close and $AI>preAI$) or ($SM_{util}<preSM$))}{
                     $preSM \gets min(preSM,SM_{util})$\;
-                    $preD \gets D$, record the combination\;
+                    $preAI \gets AI$, record the combination\;
             }
-            \ElseIf{$SM_{util}<1$ and ((both are close and $D<preD$) or ($SM_{util}>preSM$))}{
+            \ElseIf{$SM_{util}<1$ and ((both are close and $AI>preAI$) or ($SM_{util}>preSM$))}{
                     $preSM \gets max(preSM,SM_{util})$\;
-                    $preD \gets D$, record the combination\;
+                    $preAI \gets AI$, record the combination\;
             }
 
         }
@@ -139,7 +142,7 @@ In Formula \ref{fo:limitr}, $extraR$ is the number of additional registers alloc
         \label{algo:pwalgo}
 \end{algorithm}
 
-To guide the search for the optimal combination of parameters, we use two metrics named SM utilization ($SM_{util}$) and the difference between $Warp_H$ and $T_{num}$ ($D$).
+To guide the search for the optimal combination of parameters, we use two metrics named SM utilization ($SM_{util}$) and arithmetic intensity ($AI$).
 Two metrics can be calculated as follows:
 \begin{equation}\nonumber
     Block_{count}=\frac{F_N}{2 \times Warp_W} \times \frac{I_N \times I_H \times I_W}{2 \times Warp_H}
@@ -149,7 +152,7 @@ Two metrics can be calculated as follows:
     \label{fo:smutil}
 \end{equation}
 \begin{equation}
-    D = |Warp_H-T_{num}|
+    AI = \frac{Warp_H \times T_{num}}{Warp_H+T_{num}}
     \label{fo:diff}
 \end{equation}
 where $Block_{count}$ is the number of generated thread blocks, $SM_{num}$ is the number of SMs on a GPU. For RTX 2080Ti and AGX Xavier, $SM_{num}=68$ and $SM_{num}=8$ respectively.
@@ -159,13 +162,13 @@ We first choose the layout of output and partition the output into block tiles b
 Second, we choose the candidate set for $Warp_H$ based on $I_N \times I_H \times I_W$ (Lines 4).
 Then we iterate over all combinations of $Warp_W$, $Warp_H$, $Warp_{num}$, $Block_{num}$ and $C_{num}$ (Line 6), and keep the combinations that satisfy the constraints $Limit_R$ (Formula \ref{fo:limitr}) and $Limit_S$ (Formula \ref{fo:limits}).
 
-Next, we calculate values of $SM_{util}$ (Formula \ref{fo:smutil}) and $D$ (Formula \ref{fo:diff}) for all satisfied combinations (Line 9) and select the optimal combination with following steps:
+Next, we calculate values of $SM_{util}$ (Formula \ref{fo:smutil}) and $AI$ (Formula \ref{fo:diff}) for all satisfied combinations (Line 9) and select the optimal combination with following steps:
 \begin{enumerate}[Step 1]
     \item If $SM_{util} \geq 1$ is true for all combinations, we select the combinations that possess the smallest and close to the smallest $SM_{util}$ (Lines 10-12).
     The reason is that when $SM_{util} \geq 1$, all SMs are utilized, in which case we want to reduce the number of thread blocks to reduce the number of loads of shared filters or inputs between multiple thread blocks.
     \item If there exists combinations such that $SM_{util}<1$, we first collect these combinations. Then, among collected combinations, we select the ones that possess the biggest and close to the biggest $SM_{util}$ (Lines 13-15).
     The reason is that when $SM_{util}<1$, there are idle SMs, in which case we want to increase $SM_{util}$ to fully utilize SMs. We do not want $SM_{util}$ to exceed 1 because that will incur more memory operations.
-    \item Among candidate combinations selected in Step 1 and Step 2, we select the combination with the smallest value of $D$ (Line 10, 13) because we try to form $Warp_H$ and $T_{num}$ into a square shape to increase arithmetic intensity.
+    \item Among candidate combinations selected in Step 1 and Step 2, we select the combination with the maximum value of $AI$ (Line 10, 13) because higher arithmetic intensity can hide more global memory access latency.
 \end{enumerate}
 
 Last, we choose the pointwise convolution kernel based on the selected combination (Line 16).
