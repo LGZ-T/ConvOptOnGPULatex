@@ -201,7 +201,11 @@ experiment where the notations were defined earlier in Section \ref{sec:roadmap}
 %Then, we set the number of the batch size to 512 ($I_N=O_N=512$). Other batch sizes demonstrate a similar performance because all tested implementations have a linear scale as the batch size. The exact configuration is presented in Table \ref{tab:3dconvconfigs}.
 
 \subsubsection{Overall results}
-\mypara{FP32 implementation.} Since that cuDNN is close-sourced, further analysis into the root casue is difficult. We hypothesize that
+\mypara{FP32 implementation.} Fig. \ref{fig:dwspeedup} shows that our approach gives the best speedups in almost all test cases.
+Our approach delivers an average speedup of $5.4\times$ and $4.3\times$ for the $3 \times 3$ filter on 2080Ti and Xavier respectively, and $7.8\times$ and $2.2\times$ for the $5 \times 5$ filter on 2080Ti and Xavier respectively.
+The cuDNN implicit algorithm achieves an average speedup of $2.8\times$ and $3.1\times$ for the $3 \times 3$ filter on 2080Ti and Xavier respectively, and $2.2\times$ and $1.7\times$ for the $5 \times 5$ filter on 2080Ti and Xavier respectively.
+Other algorithms of cuDNN perform poorly in all test cases.
+Since that cuDNN is close-sourced, further analysis into the root casue is difficult. We hypothesize that
 FFT- and Winograd- based algorithms are designed to reduce computation and trade memory performance for speed. Precomp and gemm algorithms
 need extra memory operations to compute output elements. Moreover, as we have discussed in Section \ref{sec:intro}, depthwise convolution
 is more sensitive to memory performance than pointwise and multi-channel 2D convolutions. Consequently, these algorithms are not suitable
