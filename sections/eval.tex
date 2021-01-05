@@ -12,7 +12,7 @@ kernel v4.9.140-tegra. We use CUDA Toolkit 10.0 and cuDNN 7.6.3.
 
 \subsection{Competing Methods} We compare our approach against cuDNN \cite{ChetlurWVCTCS14} which supports a wide range of convolution operations,
  including depthwise and pointwise convolutions on GPU.  Moreover, cuDNN can execute GEMM-, FFT- and Winograd-based convolutions, allowing
- us to apply our techniques to mainstream convolution methods.
+ us to compare our techniques with mainstream convolution methods.
 %  We take cuDNN GEMM implementation as a baseline for pointwise convolution.
 %  We implement a direct depthwise convolution without using the proposed reuse algorithms.
 %  We take this implementation as a baseline for depthwise convolution.
@@ -32,7 +32,7 @@ kernel v4.9.140-tegra. We use CUDA Toolkit 10.0 and cuDNN 7.6.3.
 We apply our approach to depthwise convolution and pointwise convolution of DSC.  We run each test case ten times with batch sizes 1, 8,
 16, 32, 64 and 128 on an unloaded machine and report the averaged running time. We found little variance during execution runs, less than
 2\%. We run convolutions with two data types, 32-bit floating points (FP32) for normal CNNs and 8-bit integer (INT8) for quantized CNNs
-\cite{nagel2019data}. In our experiments, we utilize the tensorflow data layouts $NCHW$ and $NHWC$ for FP32 and INT8, respectively, where $N, C,
+\cite{nagel2019data}. In our experiments, we utilize data layouts $NCHW$ and $NHWC$ for FP32 and INT8, respectively, where $N, C,
 H, W$ respectively denote for the bath size, the number of channels, the height and the width. CUDA \cite{cudatoolkit} provides 8-bit integer 4-element vector dot product (DP4A) instruction that performs the vector dot product between two 4-element vectors and accumulates the result in a 32-bit integer. For INT8 data type, we can group four contiguous channels into a 4-element vector and use DP4A instruction to perform convolution. Therefore, we utilize $NHWC$ data layout for INT8 data type.
 
 In this work, we first test depthwise convolution with two filter sizes, $3 \times 3$ and $5 \times 5$, because these are commonly used
@@ -164,7 +164,7 @@ outperforms alternative methods by delivering the overall best performance.
 \hspace{0em}
 \subfloat[Speedups on Xavier for the $5 \times 5$ fitler.]{\includegraphics[width=0.4\textwidth,height=5.5cm]{./figure/dwspeedupjetsonf5.eps}
 	\label{fig:dwspeedupjetsonf5}}
-\caption{Speedups of cuDNN implicit and ours over the baseline implementation for depthwise convolution with filters of size $3 \times 3$ and $5 \times 5$ on two platforms.} \label{fig:dwspeedup}
+\caption{Speedups of cuDNN implicit and ours over the baseline implementation for FP32 depthwise convolution with filters of size $3 \times 3$ and $5 \times 5$ on two platforms.} \label{fig:dwspeedup}
 \end{figure*}
 
 
@@ -394,7 +394,7 @@ There are two reasons for the performance gain of our approach.
 	We can see in Fig. \ref{fig:pwsmutil} that our approach has an average of $1.9\times$ higher SM utilization compared to cuDNN implicit.
 	When executing pointwise convolution with a batch size of 128 or below, cuDNN implicit can not utilize SMs efficiently because of its fixed block size.
 	Based on our dynamic block size method, we improve SM utilization which leads to performance improvement for pointwise convolution.
-	\item We use a double buffer and multiple accumulations of output to hide memory access latency.
+	\item We use double buffer and channel distribution to hide memory access latency.
 	Fig. \ref{fig:stalllongscore} shows the average number of cycles each warp spends on waiting for the global operation to complete.
 	We implement a simple pointwise without latency hiding, denoted as simple.
 	We can see that our approach can significantly reduce the memory access latency compared to the simple implementation.
@@ -406,7 +406,7 @@ When performing pointwise convolutions with INT8, we use $NHWC$ data format and 
 Thus, the size of channel dimension is reduced to one fourth of the original size.
 For small channel sizes ($I_C \leq 96$), the corresponding reduced channel sizes restrict  choices of the number of distributed channels, which may lead to suboptimal performance compared to original channel sizes.
 
-\subsubsection{Summary} We use dynamic block size method to improve SM utilization and use a double buffer and multiple accumulations to hide memory access latency. With both methods, we achieve an average speedup of $2\times$ and $1.5\times$ over cuDNN implicit on 2080Ti and Xavier respectively.
+\subsubsection{Summary} We use dynamic block size method to improve SM utilization and use double buffer and channel distribution to hide memory access latency. With both methods, we achieve an average speedup of $2\times$ and $1.5\times$ over cuDNN implicit on 2080Ti and Xavier respectively.
 
 
 \begin{figure*}
