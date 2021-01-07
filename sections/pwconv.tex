@@ -97,6 +97,7 @@ In Formula \ref{fo:limitr}, $extraR$ is the number of additional registers alloc
 \begin{figure*}
 	\centering
     \includegraphics[width=0.95\textwidth,height=7cm]{./figure/pwworkflow.eps}
+    \vspace{-3mm}
     \caption{Workflow of our 2-level partition and channel distribution methods.} \label{fig:pwworkflow}
 \end{figure*}
 \begin{algorithm}[t!]
@@ -160,8 +161,9 @@ Next, we calculate values of $SM_{util}$ (Formula \ref{fo:smutil}) and $AI$ (For
 \end{enumerate}
 
 Last, we choose the pointwise convolution kernel based on the selected combination (Line 8).
-In this kernel, each thread block first loads $C_{num}$ channels of the corresponding block tile into a shared memory array (Line 9).
+In this kernel, each thread block first loads $C_{num}$ channels of the corresponding block tile into shared memory array $sharedBuf1$(Line 9).
 Meanwhile, the thread block loads the next $C_{num}$ channels of the block tile into temporary registers (Line 12).
-We also use the double buffer method to increase the computational workload of each thread (Line 25).
+Then, we load data from $sharedBuf1$ into registers (Line 13) and accumulate output elements into registers (Line 14).
+Next, we write data in temporary registers into $sharedBuf2$ (Line 15).
 The kernel repeats the process until all channels have been accumulated to output elements.
 Finally, we use a warp level segmented parallel reduction to reduce results of different channels into the final result and write results to global memory (Line 18).

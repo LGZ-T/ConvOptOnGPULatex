@@ -8,6 +8,7 @@
 \begin{figure}[t!]
 \centering
   \includegraphics[width=0.9\columnwidth,height=5.5cm]{./figure/twostrategies.eps}
+  \vspace{-3mm}
   \caption{Working example of performing a depthwise convolution using a GPU. Here, the filter size is $5 \times 5$, the input image size is $6 \times 11$
   and the output size is $2 \times 7$.}
   \label{fig:twostrategies}
@@ -122,6 +123,7 @@ directly processed by Algorithm \ref{algo:basic} and Algorithm \ref{algo:basic2}
 \begin{figure}[t!]
 \centering
   \includegraphics[height=3cm]{./figure/split7x7.eps}
+  \vspace{-3mm}
   \caption{Divide a $7 \times 7$ filter into one $7 \times 5$ filter and one $7 \times 3$ filter.}
   \label{fig:split7x7}
 \end{figure}
@@ -129,6 +131,7 @@ directly processed by Algorithm \ref{algo:basic} and Algorithm \ref{algo:basic2}
 \begin{figure}[t!]
 	\centering
 	\includegraphics[width=0.8\columnwidth,height=3.5cm]{./figure/exchange.eps}
+	\vspace{-3mm}
 \caption{Convert dynamic indexing of array $iTemp$ into static indexing, allowing  $iTemp$ to be allocated in registers instead of the local memory.}
 \label{fig:exchange}
 \end{figure}
@@ -153,6 +156,7 @@ directly processed by Algorithm \ref{algo:basic} and Algorithm \ref{algo:basic2}
 \begin{figure}[t!]
 	\centering
 	\includegraphics[width=0.8\columnwidth,height=3cm]{./figure/rowreuse.eps}
+	\vspace{-3mm}
 \caption{A $3 \times 3$ filter is used to slide over the input image along height dimension, which produces a column of output elements.}
 \label{fig:rowreuse}
 \end{figure}

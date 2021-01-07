@@ -138,15 +138,15 @@ outperforms alternative methods by delivering the overall best performance.
 \toprule
 & \textbf{$I_N$} & \textbf{$I_C$} & \textbf{$I_H \times I_W$ }&  \textbf{$F_H \times F_W$} &\textbf{$S$}\\
 \midrule
-\textbf{CV1} & 1,8,16,32,64,128  & 16    & 112$\times$112 & $3 \times 3$, $5 \times 5$&2  \\
-\textbf{CV2} & 1,8,16,32,64,128  & 72    & 56$\times$56  &$3 \times 3$, $5 \times 5$  &2 \\
-\textbf{CV3} & 1,8,16,32,64,128  & 88   & 28$\times$28  &$3 \times 3$, $5 \times 5$   &1 \\
-\textbf{CV4} & 1,8,16,32,64,128  & 96    & 28$\times$28  &$3 \times 3$, $5 \times 5$  &2  \\
-\textbf{CV5} & 1,8,16,32,64,128  & 96   & 14$\times$14  &$3 \times 3$, $5 \times 5$   &1 \\
-\textbf{CV6} & 1,8,16,32,64,128  & 120   & 14$\times$14  &$3 \times 3$, $5 \times 5$  &1  \\
-\textbf{CV7} & 1,8,16,32,64,128  & 192   & 14$\times$14  &$3 \times 3$, $5 \times 5$  &1  \\
-\textbf{CV8} & 1,8,16,32,64,128  & 240   & 14$\times$14  &$3 \times 3$, $5 \times 5$  &2  \\
-\textbf{CV9} & 1,8,16,32,64,128  & 432   & 7$\times$7  &$3 \times 3$, $5 \times 5$    &1\\
+\textbf{CONV1} & 1,8,16,32,64,128  & 16    & 112$\times$112 & $3 \times 3$, $5 \times 5$&2  \\
+\textbf{CONV2} & 1,8,16,32,64,128  & 72    & 56$\times$56  &$3 \times 3$, $5 \times 5$  &2 \\
+\textbf{CONV3} & 1,8,16,32,64,128  & 88   & 28$\times$28  &$3 \times 3$, $5 \times 5$   &1 \\
+\textbf{CONV4} & 1,8,16,32,64,128  & 96    & 28$\times$28  &$3 \times 3$, $5 \times 5$  &2  \\
+\textbf{CONV5} & 1,8,16,32,64,128  & 96   & 14$\times$14  &$3 \times 3$, $5 \times 5$   &1 \\
+\textbf{CONV6} & 1,8,16,32,64,128  & 120   & 14$\times$14  &$3 \times 3$, $5 \times 5$  &1  \\
+\textbf{CONV7} & 1,8,16,32,64,128  & 192   & 14$\times$14  &$3 \times 3$, $5 \times 5$  &1  \\
+\textbf{CONV8} & 1,8,16,32,64,128  & 240   & 14$\times$14  &$3 \times 3$, $5 \times 5$  &2  \\
+\textbf{CONV9} & 1,8,16,32,64,128  & 432   & 7$\times$7  &$3 \times 3$, $5 \times 5$    &1\\
 
 \bottomrule
 \end{tabular}
@@ -241,7 +241,7 @@ speedup when using INT8 over cuDNN.
     \subfloat[][SM utilizations of the cuDNN implicit algorithm and our approach.]{\includegraphics[width=0.9\columnwidth]{./figure/smutil.eps}\label{fig:dwsmutil}}
     \qquad
     %\vspace{5mm}
-    \subfloat[][The ratio of executed LDG (load from global memory) instruction counts given by the cuDNN implicit algorithm over our approach.]{\includegraphics[width=0.9\columnwidth]{./figure/ldginst.eps}\label{fig:dwldginst}}
+    \subfloat[][The ratio of executed LDG (load from global memory) instruction counts given by the cuDNN implicit algorithm over our approach ($ratio=\frac{LDG\ inst\ counts\ of\ cuDNN}{LDG\ inst\ counts\ of\ ours}$).]{\includegraphics[width=0.9\columnwidth]{./figure/ldginst.eps}\label{fig:dwldginst}}
     \vspace{-2mm}
     \caption{SM utilization and LDG instruction counts of depthwise convolutions with a batch size of 32 and a filter size of $3\times3$ on the NVIDIA 2080Ti GPU.}
     \label{fig:dwratio}
@@ -271,7 +271,7 @@ $2.8\times$ and $1.8\times$ when performing depthwise convolutions on 2080Ti and
 \label{sec:pwconvexp}
 
 \begin{table}[]
-\setlength{\tabcolsep}{5.2pt}
+\setlength{\tabcolsep}{4.2pt}
 \caption{Layer configurations of pointwise convolutions.}
 \vspace{-3mm}
 \label{tab:pwconv}
@@ -281,36 +281,36 @@ $2.8\times$ and $1.8\times$ when performing depthwise convolutions on 2080Ti and
 \toprule
 & \textbf{$I_N$} & \textbf{$I_C=F_C$} & \textbf{$I_H \times I_W$} & \textbf{$F_N \times F_H \times F_W$} \\
 \midrule
-\textbf{CV1}  & 1,8,16,32,64,128  & 16    & $56\times 56$   & $8 \times 1\times 1$\\
-\textbf{CV2}  & 1,8,16,32,64,128  & 8     & $56\times 56$   & $16 \times 1\times 1$\\
+\textbf{CONV1}  & 1,8,16,32,64,128  & 16    & $56\times 56$   & $8 \times 1\times 1$\\
+\textbf{CONV2}  & 1,8,16,32,64,128  & 8     & $56\times 56$   & $16 \times 1\times 1$\\
 %\textbf{CONV3}  & 1,8,16,32,64,128  & 16    & $56\times 56$   & 16  & $1\times 1$\\
-\textbf{CV3}  & 1,8,16,32,64,128  & 16    & $56\times 56$   & $72 \times 1\times 1$\\
-\textbf{CV4}  & 1,8,16,32,64,128  & 72    & $28\times 28$   & $24 \times 1\times 1$\\
+\textbf{CONV3}  & 1,8,16,32,64,128  & 16    & $56\times 56$   & $72 \times 1\times 1$\\
+\textbf{CONV4}  & 1,8,16,32,64,128  & 72    & $28\times 28$   & $24 \times 1\times 1$\\
 %\textbf{CONV6}  & 1,8,16,32,64,128  & 24    & $28\times 28$   & 88  & $1\times 1$\\
 %\textbf{CONV7}  & 1,8,16,32,64,128  & 88    & $28\times 28$   & 24  & $1\times 1$\\
-\textbf{CV5}  & 1,8,16,32,64,128  & 24    & $28\times 28$   & $96 \times 1\times 1$\\
-\textbf{CV6}  & 1,8,16,32,64,128  & 96    & $14\times 14$   & $24 \times 1\times 1$\\
-\textbf{CV7} & 1,8,16,32,64,128  & 24    & $14\times 14$   & $96  \times 1\times 1$\\
+\textbf{CONV5}  & 1,8,16,32,64,128  & 24    & $28\times 28$   & $96 \times 1\times 1$\\
+\textbf{CONV6}  & 1,8,16,32,64,128  & 96    & $14\times 14$   & $24 \times 1\times 1$\\
+\textbf{CONV7} & 1,8,16,32,64,128  & 24    & $14\times 14$   & $96  \times 1\times 1$\\
 %\textbf{CONV11} & 1,8,16,32,64,128  & 96    & $14\times 14$   & 32  & $1\times 1$\\
-\textbf{CV8} & 1,8,16,32,64,128  & 32    & $14\times 14$   & $192 \times 1\times 1$\\
-\textbf{CV9} & 1,8,16,32,64,128  & 192   & $14\times 14$   & $48  \times 1\times 1$\\
+\textbf{CONV8} & 1,8,16,32,64,128  & 32    & $14\times 14$   & $192 \times 1\times 1$\\
+\textbf{CONV9} & 1,8,16,32,64,128  & 192   & $14\times 14$   & $48  \times 1\times 1$\\
 %\textbf{CONV14} & 1,8,16,32,64,128  & 48    & $14\times 14$   & 192 & $1\times 1$\\
 %\textbf{CONV15} & 1,8,16,32,64,128  & 192   & $14\times 14$   & 32  & $1\times 1$\\
 %\textbf{CONV16} & 1,8,16,32,64,128  & 32    & $14\times 14$   & 96  & $1\times 1$\\
-\textbf{CV10} & 1,8,16,32,64,128  & 96    & $14\times 14$   & $40 \times 1\times 1$\\
-\textbf{CV11} & 1,8,16,32,64,128  & 40    & $14\times 14$   & $120 \times 1\times 1$\\
-\textbf{CV12} & 1,8,16,32,64,128  & 120   & $14\times 14$   & $32 \times 1\times 1$\\
+\textbf{CONV10} & 1,8,16,32,64,128  & 96    & $14\times 14$   & $40 \times 1\times 1$\\
+\textbf{CONV11} & 1,8,16,32,64,128  & 40    & $14\times 14$   & $120 \times 1\times 1$\\
+\textbf{CONV12} & 1,8,16,32,64,128  & 120   & $14\times 14$   & $32 \times 1\times 1$\\
 %\textbf{CONV20} & 1,8,16,32,64,128  & 32    & $14\times 14$   & 120 & $1\times 1$\\
 %\textbf{CONV21} & 1,8,16,32,64,128  & 120   & $14\times 14$   & 40  & $1\times 1$\\
-\textbf{CV13} & 1,8,16,32,64,128  & 40    & $14\times 14$   & $240 \times 1\times 1$\\
-\textbf{CV14} & 1,8,16,32,64,128  & 240   & $7\times 7$     & $64  \times 1\times 1$\\
-\textbf{CV15} & 1,8,16,32,64,128  & 64    & $7\times 7$     & $240 \times 1\times 1$\\
+\textbf{CONV13} & 1,8,16,32,64,128  & 40    & $14\times 14$   & $240 \times 1\times 1$\\
+\textbf{CONV14} & 1,8,16,32,64,128  & 240   & $7\times 7$     & $64  \times 1\times 1$\\
+\textbf{CONV15} & 1,8,16,32,64,128  & 64    & $7\times 7$     & $240 \times 1\times 1$\\
 %\textbf{CONV25} & 1,8,16,32,64,128  & 240   & $7\times 7$     & 72  & $1\times 1$\\
-\textbf{CV16} & 1,8,16,32,64,128  & 72    & $7\times 7$     & $432 \times 1\times 1$\\
-\textbf{CV17} & 1,8,16,32,64,128  & 432   & $7\times 7$     & $112 \times 1\times 1$\\
-\textbf{CV18} & 1,8,16,32,64,128  & 112   & $7\times 7$     & $432 \times 1\times 1$\\
-\textbf{CV19} & 1,8,16,32,64,128  & 432   & $7\times 7$     & $72 \times 1\times 1$\\
-\textbf{CV20} & 1,8,16,32,64,128  & 432   & $7\times 7$     & $1024 \times 1\times 1$\\
+\textbf{CONV16} & 1,8,16,32,64,128  & 72    & $7\times 7$     & $432 \times 1\times 1$\\
+\textbf{CONV17} & 1,8,16,32,64,128  & 432   & $7\times 7$     & $112 \times 1\times 1$\\
+\textbf{CONV18} & 1,8,16,32,64,128  & 112   & $7\times 7$     & $432 \times 1\times 1$\\
+\textbf{CONV19} & 1,8,16,32,64,128  & 432   & $7\times 7$     & $72 \times 1\times 1$\\
+\textbf{CONV20} & 1,8,16,32,64,128  & 432   & $7\times 7$     & $1024 \times 1\times 1$\\
 
 \bottomrule
 \end{tabular}
@@ -368,8 +368,8 @@ experiment and  the notations can be found at Section \ref{sec:roadmap}.
 
 \subsubsection{Overall results}
 \mypara{FP32 implementation.}  Fig. \ref{fig:pwspeedupfp32} shows speedups of cuDNN implicit and our approach with FP32  for pointwise
-convolutions on two platforms. The baseline is cuDNN gemm. Our approach achieves the best performance for all layers except for CV20 where
-our approach gives modest slowdown over cuDNN gemm and implicit. Layer CV20 uses 1024 filters to convolve the input, \FIXME{explain why our
+convolutions on two platforms. The baseline is cuDNN gemm. Our approach achieves the best performance for all layers except for CONV20 where
+our approach gives modest slowdown over cuDNN gemm and implicit. Layer CONV20 uses 1024 filters to convolve the input, \FIXME{explain why our
 approach gives slowdown performance.}. On average, our implementation and cuDNN implicit achieve an average speedup of $3\times$ and
 $1.5\times$ over cuDNN gemm on 2080Ti respectively, and $2\times$ and $1.3\times$ on Xavier respectively. The performance delivered by our
 approach translates to an improvement of $2\times$ and $1.5\times$ over cuDNN implicit on 2080Ti and Xavier respectively.
@@ -395,6 +395,7 @@ obtains $1.3\times$ and $1.5\times$ improvement over cuDNN precomp on 2080Ti and
 \begin{figure*}[t!]
     \centering
     \includegraphics[width=0.97\textwidth,height=3cm]{./figure/longscore.eps}
+    \vspace{-3mm}
     \caption{The average number of cycles each warp spends on waiting for the global memory access to complete.}
     \label{fig:stalllongscore}
 \end{figure*}
