@@ -4,7 +4,7 @@ Winograd-based convolutions are broadly adopted convolution algorithms.
 
 GEMM-based convolution is the first attempt to optimize convolution. Chellapilla et al. \cite{Chellapilla2006High} developed an unrolling
 convolution algorithm  called the im2col convolution algorithm. They lowered the convolutions into a matrix multiplication, which is
-highly optimized on GPUs. Despite some duplicate input elements involved in the computation, the performance gain of this algorithm is impressive.
+highly optimized on GPUs. Despite some duplicate input elements involved in the computation, the performance gain of this algorithm is impressive. {\color{red}Abdelfattah et al. \cite{abdelfattah2019fast} uses a simple pruning strategy when searching for the optimal tiling size. However, their method is inefficient for depthwise separable convolution because they ignore SM utilization and arithmetic intensity when searching for the optimal tiling size.} Many works focus on auto-tunning GEMM kernels have been proposed, but 
 
 FFT- and Winograd-based convolutions can reduce computational complexity and improve convolution performance. Mathieu et al.
 \cite{mathieu2013fast} proposed an FFT-based convolution to compute convolutions as pointwise products in the Fourier domain and reuse the
@@ -26,4 +26,4 @@ registers. While their method uses fewer threads, each thread operates on a larg
 reduce the number of global memory transactions. Unlike \cite{Iandola2014Communication}, our approach promotes register use and can
 significantly reduce the number of memory accesses.
 
-Previous work \cite{oyama2018accelerating} splits batches into smaller batch sizes to mitigate workspace restriction, and thus let cuDNN select a more suitable algorithm without considering workspace requirements.
+{\color{red}Previous work \cite{oyama2018accelerating} splits batches into smaller batch sizes to mitigate workspace restriction, and thus let cuDNN select a more suitable algorithm without considering workspace requirements. Li et al. \cite{li2016optimizing} explores the impact of data layout on convolution operations. Zhang et al. \cite{zhang2018high} design a method to map computation to FMA (fused multiply-add) units and focus on maximizing arithmetic intensity. However, these methods do not consider SM utilization and have a poor performance for DSC.}

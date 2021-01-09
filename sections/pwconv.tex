@@ -1,6 +1,8 @@
 \section{Optimizing Pointwise Convolution}
 \label{sec:pwconv} In this section, we explain the workflow of our dynamic tile size scheme for pointwise convolution.
+{\color{red}Previous studies \cite{tanner2018tensile, kelefouras2016high, abdelfattah2019fast, kurzak2015implementation, jiang2020enabling, tillet2017input, lan2019feathercnn,zhang2012autogeneration} have explored tiling and autotuning for convolution and GEMM operations. However, these approaches have two main drawbacks when applying them to pointwise convolutions. They do not consider SM utilization when choosing the optimal tile size and can not deal with pointwise convolutions with small workload. 
 Our dynamic tile size scheme will search for the optimal tile size for the output based on the size of input and generate a proper number of tiles to saturate GPU and maximize data reuse.
+For pointwise convolutions with small workload, we distribute channels across threads within a warp.}
 Our approach consists of three stages, described as follows.
 
 In the first and second stages, we identify parameters related to the tile size and determine candidate values for each parameter. The first and second stages process input dependent and independent parameters respectively. 
@@ -8,7 +10,8 @@ In the third stage, as detailed in Algorithm \ref{algo:pwalgo}, we iterate over 
 
 
 In the following sections, we give a detailed description of three stages. 
-\subsection{Determine Candidates for Input Dependent Parameters}
+\subsection{Determine Candidates for Input Dependent Parameters\label{sec:pwinputdependent}}
+
 In our design, we use a 2-level tiling scheme, as shown in Fig. \ref{fig:pwworkflow}, to partition the output into block tiles and warp tiles.
 Each thread block processes one block tile and each warp processes one warp tile.
 The height dimension of the warp tile is shared among 32 threads of a warp and the width dimension of the warp tile is distributed across 32 threads of a warp.
@@ -47,7 +50,8 @@ The boundary between the large and small size of the input dimension is experime
 
 Compared to layout \textbf{\emph{L1}}, layout \textbf{\emph{L2}} swaps the input and filter dimensions. Hence, $Warp_H$ can be calculated with $Warp_H=F_N/4$ or $Warp_H=F_N/2$. The candidate values for large $Warp_W$ are $Warp_W=\{6,7,8,9,10,11,12\}$ and for small $Warp_W$ are $Warp_W=\{2,3,4,5,6,7,8\}$.
 
-\subsection{Determine Candidates for Input Independent Parameters}
+\subsection{Determine Candidates for Input Independent Parameters\label{sec:pwinputindependent}}
+
 There are three input independent parameters we need to consider, namely the number of warps in a thread block ($Warp_{num}$), the number of thread blocks that can run concurrently on an SM ($Block_{num}$) and the number of channels to be distributed ($C_{num}$).
 \subsubsection{Determine candidates for $Warp_{num}$ and $Block_{num}$}
 When determining candidates for $Warp_{num}$, we need to consider (1) a small warp number will decrease the opportunity to hide the memory access latency at the warp level, (2) a large warp number will decrease the number of thread blocks and may lead to SM underutilization. 
@@ -93,7 +97,7 @@ R_{result}+R_{operand}+R_{tmp}+extraR \leq Limit_R
 \end{equation}
 where $R_{tmp}$ is the number of temporary registers used to store filter and input elements loaded from global memory.
 $2 \times Warp_W$ and $2 \times Warp_H$ represent the width and height of the block tile respectively. 128 means each thread block has $Warp_{num} \times 32 = 4 \times 32=128$ threads to load data from global memory. 
-In Formula \ref{fo:limitr}, $extraR$ is the number of additional registers allocated by the compiler and its value is determined through an off-line method. In Formula \ref{fo:limits}, 4 means each element has 4 bytes and 2 means we use a double buffer method.
+In Formula \ref{fo:limitr}, $extraR$ is the number of additional registers allocated by the compiler and its value is determined through an off-line method. In Formula \ref{fo:limits}, 4 means each element has 4 bytes and 2 means we use a double buffer method \cite{abdelfattah2019fast,nichols2019magmadnn}.
 \begin{figure*}
 	\centering
     \includegraphics[width=0.95\textwidth,height=7cm]{./figure/pwworkflow.eps}

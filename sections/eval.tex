@@ -136,7 +136,7 @@ outperforms alternative methods by delivering the overall best performance.
 \begin{threeparttable}
 \begin{tabular}{lrrrrr}
 \toprule
-& \textbf{$I_N$} & \textbf{$I_C$} & \textbf{$I_H \times I_W$ }&  \textbf{$F_H \times F_W$} &\textbf{$S$}\\
+\textbf{\emph{LAYER}}& \textbf{$I_N$} & \textbf{$I_C$} & \textbf{$I_H \times I_W$ }&  \textbf{$F_H \times F_W$} &\textbf{$S$}\\
 \midrule
 \textbf{CONV1} & 1,8,16,32,64,128  & 16    & 112$\times$112 & $3 \times 3$, $5 \times 5$&2  \\
 \textbf{CONV2} & 1,8,16,32,64,128  & 72    & 56$\times$56  &$3 \times 3$, $5 \times 5$  &2 \\
@@ -156,16 +156,16 @@ outperforms alternative methods by delivering the overall best performance.
 
 \begin{figure*}[!t]
 \centering
-\subfloat[Speedups on 2080Ti for the $3 \times 3$ fitler.]{\includegraphics[width=0.4\textwidth,height=5.5cm]{./figure/dwspeeduprtxf3.eps}
+\subfloat[Speedups on 2080Ti for the $3 \times 3$ fitler.]{\includegraphics[height=5.5cm]{./figure/dwspeeduprtxf3.eps}
 	\label{fig:dwspeeduprtxf3}}
 \hspace{0em}
-\subfloat[Speedups on 2080Ti for the $5 \times 5$ fitler.]{\includegraphics[width=0.4\textwidth,height=5.5cm]{./figure/dwspeeduprtxf5.eps}
+\subfloat[Speedups on 2080Ti for the $5 \times 5$ fitler.]{\includegraphics[height=5.5cm]{./figure/dwspeeduprtxf5.eps}
 	\label{fig:dwspeeduprtxf5}}
 \hspace{0em}
-\subfloat[Speedups on Xavier for the $3 \times 3$ fitler.]{\includegraphics[width=0.4\textwidth,height=5.5cm]{./figure/dwspeedupjetsonf3.eps}
+\subfloat[Speedups on Xavier for the $3 \times 3$ fitler.]{\includegraphics[height=5.5cm]{./figure/dwspeedupjetsonf3.eps}
 	\label{fig:dwspeedupjetsonf3}}
 \hspace{0em}
-\subfloat[Speedups on Xavier for the $5 \times 5$ fitler.]{\includegraphics[width=0.4\textwidth,height=5.5cm]{./figure/dwspeedupjetsonf5.eps}
+\subfloat[Speedups on Xavier for the $5 \times 5$ fitler.]{\includegraphics[height=5.5cm]{./figure/dwspeedupjetsonf5.eps}
 	\label{fig:dwspeedupjetsonf5}}
 \caption{Speedups of cuDNN implicit and ours over the baseline implementation for FP32 depthwise convolution with filters of size $3 \times 3$ and $5 \times 5$ on two platforms.} \label{fig:dwspeedup}
 \end{figure*}
@@ -279,7 +279,7 @@ $2.8\times$ and $1.8\times$ when performing depthwise convolutions on 2080Ti and
 \begin{threeparttable}
 \begin{tabular}{lrrrrr}
 \toprule
-& \textbf{$I_N$} & \textbf{$I_C=F_C$} & \textbf{$I_H \times I_W$} & \textbf{$F_N \times F_H \times F_W$} \\
+\textbf{\emph{LAYER}}& \textbf{$I_N$} & \textbf{$I_C=F_C$} & \textbf{$I_H \times I_W$} & \textbf{$F_N \times F_H \times F_W$} \\
 \midrule
 \textbf{CONV1}  & 1,8,16,32,64,128  & 16    & $56\times 56$   & $8 \times 1\times 1$\\
 \textbf{CONV2}  & 1,8,16,32,64,128  & 8     & $56\times 56$   & $16 \times 1\times 1$\\
@@ -320,10 +320,10 @@ $2.8\times$ and $1.8\times$ when performing depthwise convolutions on 2080Ti and
 \begin{figure*}
 \captionsetup[subfloat]{labelformat=empty,skip=0pt}
 	\centering
-	\subfloat[]{\includegraphics[width=\textwidth,height=6.2cm]{./figure/pwspeeduprtx.eps}
+	\subfloat[]{\includegraphics[width=\textwidth]{./figure/pwspeeduprtx.eps}
 	\label{fig:pwspeeduprtx}}
 \vspace{-5mm}
-	\subfloat[]{\includegraphics[width=\textwidth,height=6.2cm]{./figure/pwspeedupjetson.eps}
+	\subfloat[]{\includegraphics[width=\textwidth]{./figure/pwspeedupjetson.eps}
 	\label{fig:pwspeedupjetson}}
 	\vspace{-6mm}
 	\caption{Speedups of cuDNN implicit and ours over cuDNN gemm for pointwise convolutions with FP32 on two platforms. Above: speedups on 2080Ti. Below: speedups on Xavier.}
@@ -334,10 +334,10 @@ $2.8\times$ and $1.8\times$ when performing depthwise convolutions on 2080Ti and
 \captionsetup[subfloat]{labelformat=empty,skip=0pt}
 
 	\centering
-	\subfloat[]{\includegraphics[width=\textwidth,height=6.2cm]{./figure/pwspeeduprtxint8.eps}
+	\subfloat[]{\includegraphics[width=\textwidth]{./figure/pwspeeduprtxint8.eps}
 	\label{fig:pwspeeduprtxint8}}
 	\vspace{-5mm}
-	\subfloat[]{\includegraphics[width=\textwidth,height=6.2cm]{./figure/pwspeedupjetsonint8.eps}
+	\subfloat[]{\includegraphics[width=\textwidth]{./figure/pwspeedupjetsonint8.eps}
 	\label{fig:pwspeedupjetsonint8}}
 	\vspace{-6mm}
 	\caption{Speedups of cuDNN precomp and ours over cuDNN implicit for pointwise convolutions with INT8 on two platforms. Above: speedups on 2080Ti. Below: speedups on Xavier.}
@@ -369,8 +369,7 @@ experiment and  the notations can be found at Section \ref{sec:roadmap}.
 \subsubsection{Overall results}
 \mypara{FP32 implementation.}  Fig. \ref{fig:pwspeedupfp32} shows speedups of cuDNN implicit and our approach with FP32  for pointwise
 convolutions on two platforms. The baseline is cuDNN gemm. Our approach achieves the best performance for all layers except for CONV20 where
-our approach gives modest slowdown over cuDNN gemm and implicit. Layer CONV20 uses 1024 filters to convolve the input, \FIXME{explain why our
-approach gives slowdown performance.}. On average, our implementation and cuDNN implicit achieve an average speedup of $3\times$ and
+our approach gives modest slowdown over cuDNN gemm and implicit. {\color{red}Layer CONV20 uses 1024 filters to convolve the input and both cuDNN and our approaches can generate enough thread blocks to saturate GPU, which makes memory performance more prominent. The assembly level optimizations in cuDNN can hide global memory access latency well (as shown in Fig. \ref{fig:stalllongscore}), and thus achieves better performance than our approach.} On average, our implementation and cuDNN implicit achieve an average speedup of $3\times$ and
 $1.5\times$ over cuDNN gemm on 2080Ti respectively, and $2\times$ and $1.3\times$ on Xavier respectively. The performance delivered by our
 approach translates to an improvement of $2\times$ and $1.5\times$ over cuDNN implicit on 2080Ti and Xavier respectively.
 
@@ -427,14 +426,14 @@ over cuDNN implicit due to our schemes for improving the SM utilization and hidi
 
 
 Our approach exhibits a much higher SM utilization than cuDNN implicit. Unlike depthwise convolution, improving SM utilization is key for
-optimizing pointwise convolution because \FIXME{xxx}.	As can be seen from Fig. \ref{fig:pwsmutil}, our approach has an average of
+optimizing pointwise convolution because {\color{red}utilizing more SMs can significantly accelerate the computation}.	As can be seen from Fig. \ref{fig:pwsmutil}, our approach has an average of
 $1.9\times$ higher SM utilization compared to cuDNN implicit. cuDNN implicit is optimized for training and large batch-sized inference. It
 uses a fixed block size work distribution strategy, which fails to utilize SMs efficiently when the batch size of 128 or smaller. Our
-dynamic block size scheme (\FIXME{Section \ref{}}) overcome this limitation by adaptively determining the right block size to use at
+dynamic block size scheme (Section \ref{sec:pwinputdependent}) overcome this limitation by adaptively determining the right block size to use at
 runtime, which thus leads to better SM utilization and performance improvement.
 
 To hide the global memory access latency, our approach employes double buffering and channel distribution techniques as described in
-Section \FIXME{\ref{}}. To quantify the benefit of our memory optimization strategies, consider now  Fig. \ref{fig:stalllongscore} that
+Section \ref{sec:pwinputindependent}. To quantify the benefit of our memory optimization strategies, consider now  Fig. \ref{fig:stalllongscore} that
 shows the average number of cycles each GPU warp spends on waiting for the GPU global memory access operation to complete. As a baseline,
 we implemented a simple pointwise without latency hiding, denoted as simple. We can see that our approach can significantly reduce the
 memory access latency compared to the simple implementation. Therefore, although our approach incurs a larger number of LDG instructions,
