@@ -3,18 +3,23 @@ Numerous efforts have been dedicated to optimizing convolution operations. As pr
 Winograd-based convolutions are broadly adopted convolution algorithms.
 
 GEMM-based convolution is the first attempt to optimize convolution. Chellapilla et al. \cite{Chellapilla2006High} developed an unrolling
-convolution algorithm  called the im2col convolution algorithm. They lowered the convolutions into a matrix multiplication, which is
-highly optimized on GPUs. Despite some duplicate input elements involved in the computation, the performance gain of this algorithm is impressive. {\color{red}Abdelfattah et al. \cite{abdelfattah2019fast} uses a simple pruning strategy when searching for the optimal tiling size. However, their method is inefficient for depthwise separable convolution because they ignore SM utilization and arithmetic intensity when searching for the optimal tiling size.} Many works focus on auto-tunning GEMM kernels have been proposed, but 
+convolution algorithm  called the im2col convolution algorithm. They lowered the convolutions into a matrix multiplication, which is highly
+optimized on GPUs. Despite some duplicate input elements involved in the computation, the performance gain of this algorithm is impressive.
+Abdelfattah et al. \cite{abdelfattah2019fast} use a simple pruning strategy to search for the optimal tiling size. However, their method is
+inadequate for depthwise separable convolution because they ignore SM utilization and arithmetic intensity when searching for the optimal
+tiling size. Our approach aovids this problem by dynamically adjusting the tiling size.
 
-FFT- and Winograd-based convolutions can reduce computational complexity and improve convolution performance. Mathieu et al.
+A wide range of techniques on auto-tunning GEMM kernels have been proposed. Among these, the FFT- and Winograd-based convolutions are the
+dominating methods because they can reduce computational complexity and improve convolution performance. Mathieu et al.
 \cite{mathieu2013fast} proposed an FFT-based convolution to compute convolutions as pointwise products in the Fourier domain and reuse the
-transformed input data, which significantly reduces the complexity of the convolution. However, FFT-based convolution is more suitable for large filters than
-for small ones. Because padding the filters to the same size as the input data is necessary, and  the latter (e.g., $3 \times 3$ filters) needs
-more memory than the former. Lavin et al. \cite{lavin2016fast} used Winograd's minimal filtering algorithm to
+transformed input data, which significantly reduces the complexity of the convolution. However, FFT-based convolution is more suitable for
+large filters than for small ones. Because padding the filters to the same size as the input data is necessary, and  the latter (e.g., $3
+\times 3$ filters) needs more memory than the former. Lavin et al. \cite{lavin2016fast} used Winograd's minimal filtering algorithm to
 accelerate the convolution on GPU. This algorithm can reduce the arithmetic complexity of convolution by up to four times compared with
-direct convolution. However, Winograd's algorithm is only suitable for small filters due to its numerical instability.
-Zhen et al. \cite{Zhen2018Optimizing} extended Winograd's algorithm to support any filter size. However, the traditional and extended Winograd-based
-algorithms need to transform the input and filter before performing matrix multiplication, and both require more operations than the FFT algorithm.
+direct convolution. However, Winograd's algorithm is only suitable for small filters due to its numerical instability. Zhen et al.
+\cite{Zhen2018Optimizing} extended Winograd's algorithm to support any filter size. However, the traditional and extended Winograd-based
+algorithms need to transform the input and filter before performing matrix multiplication, and both require more operations than the FFT
+algorithm.
 
 Transforming the input and filter before performing matrix multiplication incurs a large memory overhead, which can outweigh the
 performance gains obtained through lowering the computational complexity. Therefore, recent studies have looked into minimizing the memory
@@ -26,4 +31,8 @@ registers. While their method uses fewer threads, each thread operates on a larg
 reduce the number of global memory transactions. Unlike \cite{Iandola2014Communication}, our approach promotes register use and can
 significantly reduce the number of memory accesses.
 
-{\color{red}Previous work \cite{oyama2018accelerating} splits batches into smaller batch sizes to mitigate workspace restriction, and thus let cuDNN select a more suitable algorithm without considering workspace requirements. Li et al. \cite{li2016optimizing} explores the impact of data layout on convolution operations. Zhang et al. \cite{zhang2018high} design a method to map computation to FMA (fused multiply-add) units and focus on maximizing arithmetic intensity. However, these methods do not consider SM utilization and have a poor performance for DSC.}
+The work presented in \cite{oyama2018accelerating} splits larger batches into smaller batch sizes to mitigate computation resources
+restrictions of large batch size. Li et al. \cite{li2016optimizing} explore the impact of data layout on convolution operations. Zhang et
+al. \cite{zhang2018high} design a method to map computation to FMA (fused multiply-add) units and focus on maximizing arithmetic intensity.
+Unlike our approach, none of these methods explicitly considers SM utilization, which is vital for achieving good performance for DSC on
+GPUs.

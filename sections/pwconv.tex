@@ -1,22 +1,28 @@
 \section{Optimizing Pointwise Convolution}
-\label{sec:pwconv} In this section, we explain the workflow of our dynamic tile size scheme for pointwise convolution.
-{\color{red}Previous studies \cite{tanner2018tensile, kelefouras2016high, abdelfattah2019fast, kurzak2015implementation, jiang2020enabling, tillet2017input, lan2019feathercnn,zhang2012autogeneration} have explored tiling and autotuning for convolution and GEMM operations. However, these approaches have two main drawbacks when applying them to pointwise convolutions. They do not consider SM utilization when choosing the optimal tile size and can not deal with pointwise convolutions with small workload. 
-Our dynamic tile size scheme will search for the optimal tile size for the output based on the size of input and generate a proper number of tiles to saturate GPU and maximize data reuse.
-For pointwise convolutions with small workload, we distribute channels across threads within a warp.}
-Our approach consists of three stages, described as follows.
+\label{sec:pwconv} In this section, we explain the workflow of our dynamic tile size scheme for pointwise convolution. Our approach
+consists of three stages, described as follows.
 
-In the first and second stages, we identify parameters related to the tile size and determine candidate values for each parameter. The first and second stages process input dependent and independent parameters respectively. 
-In the third stage, as detailed in Algorithm \ref{algo:pwalgo}, we iterate over all combinations of parameters and search for the combination that achieves optimal SM utilization and data reuse.   
+In the first and second stages, we identify parameters related to the tile size and determine candidate values for each parameter (Section
+\ref{sec:pwinputdependent}). The first and second stages process input dependent and independent parameters respectively. In the third
+stage, as detailed in Algorithm \ref{algo:pwalgo}, we iterate over all combinations of parameters and search for the combination that
+achieves optimal SM utilization and data reuse (Section \ref{sec:pwinputindependent}).
+
+We note that previous studies \cite{tanner2018tensile, kelefouras2016high, abdelfattah2019fast, kurzak2015implementation,
+jiang2020enabling, tillet2017input, lan2019feathercnn,zhang2012autogeneration} have exploited tiling and autotuning for convolution and
+GEMM operations. However, these prior methods are inadequate for pointwise convolutions on GPUs due to two main drawbacks: they do not
+consider SM utilization when choosing the optimal tile size and is not designed for pointwise convolutions with small inputs. Our dynamic
+tile size scheme avoids these two drawbacks. To improve SM utilization, our approach searches for the optimal tile size for the output
+based on the input size to generate a proper number of tiles to saturate GPU and maximize data reuse. To optimize pointwise convolution
+with small inputs, we distribute channels across threads within a warp to \FIXME{xxx?}
 
 
-In the following sections, we give a detailed description of three stages. 
-\subsection{Determine Candidates for Input Dependent Parameters\label{sec:pwinputdependent}}
+\subsection{Determine Tiling Parameters\label{sec:pwinputdependent}}
 
 In our design, we use a 2-level tiling scheme, as shown in Fig. \ref{fig:pwworkflow}, to partition the output into block tiles and warp tiles.
 Each thread block processes one block tile and each warp processes one warp tile.
 The height dimension of the warp tile is shared among 32 threads of a warp and the width dimension of the warp tile is distributed across 32 threads of a warp.
 Hence, we have two input dependent parameters, namely the height and width of the warp tile, denoted as $Warp_H$ and $Warp_W$ respectively.
-Now we introduce how to use the 2-level tiling scheme to determine candidate values for $Warp_H$ and $Warp_W$. 
+Now we introduce how to use the 2-level tiling scheme to determine candidate values for $Warp_H$ and $Warp_W$.
 \subsubsection{2-level tiling scheme}
 To divide the output into block tiles, we utilize two logical layouts of the output, \textbf{\emph{L1}} and \textbf{\emph{L2}}, as shown in Fig. \ref{fig:pwworkflow}.
 $F_N$ and $I_N \times I_H \times I_W$ represent the filter and input dimensions of the output respectively.
@@ -54,19 +60,19 @@ Compared to layout \textbf{\emph{L1}}, layout \textbf{\emph{L2}} swaps the input
 
 There are three input independent parameters we need to consider, namely the number of warps in a thread block ($Warp_{num}$), the number of thread blocks that can run concurrently on an SM ($Block_{num}$) and the number of channels to be distributed ($C_{num}$).
 \subsubsection{Determine candidates for $Warp_{num}$ and $Block_{num}$}
-When determining candidates for $Warp_{num}$, we need to consider (1) a small warp number will decrease the opportunity to hide the memory access latency at the warp level, (2) a large warp number will decrease the number of thread blocks and may lead to SM underutilization. 
-We empirically set the warp number to be four ($Warp_{num}=4$), which gives good performance on our pilot study using microbenchmarks of hand-written pointwise convolution kernels. 
-For the number of thread blocks, $Block_{num}$, we use two values, 2 and 4, on our evaluation platforms. 
-These choices are justified as follows. For Nvidia GPUs, each GPU thread can use up to 255 registers, and each SM has 65,536 registers. 
-If we set $Block_{num}=1$ and $Warp_{num}=4$ (per our discussion above), each SM will have $Block_{num} \times Warp_{num}=4$ wraps. 
-This allows a thread block to use up to just half of the available registers of an SM because a thread block under this setting can use at most $4\ (warps\ in\ an\ SM) \times 32\ (threads\ per\ warp) \times 255\ (registers\ per\ thread)=32,640$ registers. 
-Therefore, to utilize the available hardware register, one should set $Block_{num}$ to be greater than one. 
+When determining candidates for $Warp_{num}$, we need to consider (1) a small warp number will decrease the opportunity to hide the memory access latency at the warp level, (2) a large warp number will decrease the number of thread blocks and may lead to SM underutilization.
+We empirically set the warp number to be four ($Warp_{num}=4$), which gives good performance on our pilot study using microbenchmarks of hand-written pointwise convolution kernels.
+For the number of thread blocks, $Block_{num}$, we use two values, 2 and 4, on our evaluation platforms.
+These choices are justified as follows. For Nvidia GPUs, each GPU thread can use up to 255 registers, and each SM has 65,536 registers.
+If we set $Block_{num}=1$ and $Warp_{num}=4$ (per our discussion above), each SM will have $Block_{num} \times Warp_{num}=4$ wraps.
+This allows a thread block to use up to just half of the available registers of an SM because a thread block under this setting can use at most $4\ (warps\ in\ an\ SM) \times 32\ (threads\ per\ warp) \times 255\ (registers\ per\ thread)=32,640$ registers.
+Therefore, to utilize the available hardware register, one should set $Block_{num}$ to be greater than one.
 We also found that setting $Block_{num}>4$ during searching offers little benefit and hence we set the $Block_{num}$ to be either 2 or 4 ($Block_{num}=\{2,4\}$).
 
 %To achieve the best performance, we iterate over all candidate combinations of $Block_{num}$, $C_{num}$ and $Warp_H$, and select the combination that leads to optimal SM utilization and arithmetic intensity.
 \subsubsection{Determine candidates for $C_{num}$}
 When searching for the optimal combination of parameters, a small tile size may be generated, which may lead to low arithmetic intensity and can not hide global memory access latency.
- For example, we assume that the warp tile size is $Warp_H \times Warp_W = 8 \times 64$ and has 56 channels, which means that one warp needs to convolve 8 input elements with 64 filter elements and accumulates results 56 times to generate $8 \times 64=512$ elements. Since the height dimension is shared among 32 threads of the warp, each thread loads 8 input elements, and width dimension is distributed across 32 threads, each thread loads 2 filter elements. Therefore, each thread accumulates 56 channels of $8 \times 2=16$ elements. Now we can estimate arithmetic intensity of each thread for one iteration as $\frac{number\ of\ multiplications}{number\ of\ elements}=\frac{8 \times 2}{8 + 2}=1.6$. We can improve arithmetic intensity by distributing channels across threads, as shown in Fig. \ref{fig:pwworkflow}. We distribute eight channels ($C_{num}=8$) of each filter element across 32 threads of the warp. 
+ For example, we assume that the warp tile size is $Warp_H \times Warp_W = 8 \times 64$ and has 56 channels, which means that one warp needs to convolve 8 input elements with 64 filter elements and accumulates results 56 times to generate $8 \times 64=512$ elements. Since the height dimension is shared among 32 threads of the warp, each thread loads 8 input elements, and width dimension is distributed across 32 threads, each thread loads 2 filter elements. Therefore, each thread accumulates 56 channels of $8 \times 2=16$ elements. Now we can estimate arithmetic intensity of each thread for one iteration as $\frac{number\ of\ multiplications}{number\ of\ elements}=\frac{8 \times 2}{8 + 2}=1.6$. We can improve arithmetic intensity by distributing channels across threads, as shown in Fig. \ref{fig:pwworkflow}. We distribute eight channels ($C_{num}=8$) of each filter element across 32 threads of the warp.
  In that case, each warp can process $F_{num}=32/C_{num}=32/8=4$ filter elements and each thread processes $T_{num}=Warp_W/F_{num}=64/4=16$ filter elements.
  The arithmetic intensity can be estimated as $\frac{Warp_H \times T_{num}}{Warp_H + T_{num}}=\frac{8 \times 16}{8+16}=5.3$.
  Higher arithmetic intensity increases the chance to hide global memory access latency.
@@ -74,11 +80,14 @@ To fully utilize a warp, candidate values for $C_{num}$ should be a power of 2.
 Thus, candidates for $C_{num}$ are $C_{num}=\{1,2,4,8,16,32\}$.
 
 
-\subsection{Searching For the Optimal Combination}
+\subsection{Search For the Optimal Combination}
 \subsubsection{Hardware resources constraints}
-When searching for the optimal combination, we only consider combinations that satisfy hardware resources constraints, including registers and shared memory.
-In the rest of this section, we take layout \textbf{\emph{L1}} as an illustration example.
-Based on $Block_{num}$, we calculate the number of registers each thread can use ($Limit_R$) and the size of shared memory each thread block can use ($Limit_S$) with formulas $Limit_R=Total_R/(Block_{num}\times Warp_{num} \times 32)$ and $Limit_S=Total_S/Block_{num}$ respectively. $Total_R$ and $Total_S$ represent the number of registers and the size of shared memory of an SM, respectively. On RTX 2080Ti, $Total_R=65536$ and $Total_S=64KB$ while  on Jetson AGX Xavier, $Total_R=65536$ and $Total_S=48KB$.
+When searching for the optimal combination of \FIXME{xx and xx}, we focus on combinations that can meet the hardware resources constraints,
+including registers and shared memory. In the rest of this section, we take layout \textbf{\emph{L1}} as an illustration example. Based on
+$Block_{num}$, we calculate the number of registers each thread can use ($Limit_R$) and the size of shared memory each thread block can use
+($Limit_S$) with formulas $Limit_R=Total_R/(Block_{num}\times Warp_{num} \times 32)$ and $Limit_S=Total_S/Block_{num}$ respectively.
+$Total_R$ and $Total_S$ represent the number of registers and the size of shared memory of an SM, respectively. On RTX 2080Ti,
+$Total_R=65536$ and $Total_S=64KB$ while  on Jetson AGX Xavier, $Total_R=65536$ and $Total_S=48KB$.
 
 In our approach, each warp processes one warp tile which contains $Warp_W \times Warp_H$ output elements.
 Each thread calculates $Warp_H \times T_{num}$ elements and thus needs $R_{result}=Warp_H \times T_{num}$, $R_{operand}=Warp_H+T_{num}$ registers to store results and operands respectively.
@@ -96,7 +105,7 @@ R_{result}+R_{operand}+R_{tmp}+extraR \leq Limit_R
 (2 \times Warp_H+2 \times Warp_W)\times C_{num} \times 4 \times 2 \leq Limit_S
 \end{equation}
 where $R_{tmp}$ is the number of temporary registers used to store filter and input elements loaded from global memory.
-$2 \times Warp_W$ and $2 \times Warp_H$ represent the width and height of the block tile respectively. 128 means each thread block has $Warp_{num} \times 32 = 4 \times 32=128$ threads to load data from global memory. 
+$2 \times Warp_W$ and $2 \times Warp_H$ represent the width and height of the block tile respectively. 128 means each thread block has $Warp_{num} \times 32 = 4 \times 32=128$ threads to load data from global memory.
 In Formula \ref{fo:limitr}, $extraR$ is the number of additional registers allocated by the compiler and its value is determined through an off-line method. In Formula \ref{fo:limits}, 4 means each element has 4 bytes and 2 means we use a double buffer method \cite{abdelfattah2019fast,nichols2019magmadnn}.
 \begin{figure*}
 	\centering
@@ -108,7 +117,7 @@ In Formula \ref{fo:limitr}, $extraR$ is the number of additional registers alloc
     \small
         \KwIn{$I$, $F$}
         \KwOut{$O$}
-        \tcp{below codes are executed on CPU}     
+        \tcp{below codes are executed on CPU}
         Determine candidates for relevant parameters\;
         \ForEach{parameter combination}{
             \If{not satisfy constraints of Formula \ref{fo:limitr} and \ref{fo:limits}}{
@@ -118,7 +127,7 @@ In Formula \ref{fo:limitr}, $extraR$ is the number of additional registers alloc
             Choose combinations whose $SM_{util}$ is close to 1\;
             Among chosen combinations, choose the combination with the maximal $AI$\;
         }
-        
+
         Choose the kernel based on the chosen combination.\;
         \tcp{below codes are executed on GPU}
         Load $C_{num}$ channels of a block tile into shared memory array $sharedBuf1$\;
