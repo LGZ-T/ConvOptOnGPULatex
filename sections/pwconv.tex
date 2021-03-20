@@ -13,7 +13,7 @@ GEMM operations. However, these prior methods are inadequate for pointwise convo
 consider SM utilization when choosing the optimal tile size and is not designed for pointwise convolutions with small inputs. Our dynamic
 tile size scheme avoids these two drawbacks. To improve SM utilization, our approach searches for the optimal tile size for the output
 based on the input size to generate a proper number of tiles to saturate GPU and maximize data reuse. To optimize pointwise convolution
-with small inputs, we distribute channels across threads within a warp to \FIXME{xxx?}
+with small inputs, we distribute channels across threads within a warp to increase the arithmetic intensity for each thread.
 
 
 \subsection{Determine Tiling Parameters\label{sec:pwinputdependent}}
@@ -82,7 +82,7 @@ Thus, candidates for $C_{num}$ are $C_{num}=\{1,2,4,8,16,32\}$.
 
 \subsection{Search For the Optimal Combination}
 \subsubsection{Hardware resources constraints}
-When searching for the optimal combination of \FIXME{xx and xx}, we focus on combinations that can meet the hardware resources constraints,
+When searching for the optimal combination of tiling and input independent parameters, we focus on combinations that can meet the hardware resources constraints,
 including registers and shared memory. In the rest of this section, we take layout \textbf{\emph{L1}} as an illustration example. Based on
 $Block_{num}$, we calculate the number of registers each thread can use ($Limit_R$) and the size of shared memory each thread block can use
 ($Limit_S$) with formulas $Limit_R=Total_R/(Block_{num}\times Warp_{num} \times 32)$ and $Limit_S=Total_S/Block_{num}$ respectively.

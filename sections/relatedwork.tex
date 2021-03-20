@@ -7,7 +7,7 @@ convolution algorithm  called the im2col convolution algorithm. They lowered the
 optimized on GPUs. Despite some duplicate input elements involved in the computation, the performance gain of this algorithm is impressive.
 Abdelfattah et al. \cite{abdelfattah2019fast} use a simple pruning strategy to search for the optimal tiling size. However, their method is
 inadequate for depthwise separable convolution because they ignore SM utilization and arithmetic intensity when searching for the optimal
-tiling size. Our approach aovids this problem by dynamically adjusting the tiling size.
+tiling size. Our approach avoids this problem by dynamically adjusting the tiling size.
 
 A wide range of techniques on auto-tunning GEMM kernels have been proposed. Among these, the FFT- and Winograd-based convolutions are the
 dominating methods because they can reduce computational complexity and improve convolution performance. Mathieu et al.
