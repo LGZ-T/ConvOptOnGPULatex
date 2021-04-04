@@ -13,19 +13,7 @@ Jetson AGX Xavier GPU (Xavier), which integrates 512 Volta cores and 48KB shared
 \subsection{Competing Methods} We compare our approach against cuDNN \cite{ChetlurWVCTCS14} which supports a wide range of convolution operations,
  including depthwise and pointwise convolutions optimized for GPUs.  Moreover, cuDNN can execute GEMM-, FFT- and Winograd-based convolutions, allowing
  us to compare our techniques with mainstream convolution methods.
-%  We take cuDNN GEMM implementation as a baseline for pointwise convolution.
-%  We implement a direct depthwise convolution without using the proposed reuse algorithms.
-%  We take this implementation as a baseline for depthwise convolution.
 
-
-%\subsection{Use Cases}
-%We apply our approach to depthwise convolution and pointwise convolution, described as follows.
-%
-%\mypara{Depthwise convolution.} This applies a bank of single-channel 2D filters to convolve with one multi-channel 2D input, e.g., an image of three color channels, R, G and B. We apply a 2D convolution filter to each of the input channels.
-%This technique has been widely used in many CNNs, including MobileNetv2 \cite{Sandler_2018_CVPR}, EfficientNet \cite{tan2019efficientnet} and ShuffleNetv2 \cite{Ma_2018_ECCV}.
-%
-%\mypara{Pointwise convolution.} This applies a bank of multi-channel 2D 1$\times$1 filters to convolve with one multi-channel 2D input.
-%The 2D convolution is performed between one filter channel and the corresponding input channel, and the results are sum up across channels to generate one output channel.
 
 
 \subsection{Performance Report}
@@ -51,78 +39,6 @@ on the standard and quantized MobileNetv2 to report the performance of both infe
 \ref{sec:pwconvexp}), as well as inference and training of MobileNetV2 (Section \ref{sec:inferexp}), showing that our approach consistently
 outperforms alternative methods by delivering the overall best performance.
 
-
-%\subsection{2D Convolution\label{sec:ex2dc}}
-%\begin{figure*}
-%\centering
-%\subfloat[][$3 \times 3$ filter]{\includegraphics[width=0.85\columnwidth]{./figure/2d_conv_f3.eps}
-%	\label{fig:2druntimef3c12080}}
-%\hspace{0em}
-%\subfloat[][$5 \times 5$ filter]{\includegraphics[width=0.85\columnwidth]{./figure/2d_conv_f5.eps}
-%	\label{fig:2druntimef5c12080}}
-%
-%\vspace{-1mm}	\caption{Speedups of 2D convolutions of four implementations over GEMM-im2col when using a $3 \times 3$ (a) and a $5 \times
-%5$ filter (b).} \label{fig:2druntime} \vspace{-3mm}
-%\end{figure*}
-%
-%
-%\subsubsection{Setup}
-%In this experiment, we compare our approach against the 2D convolution implementations from cuDNN, GEMM-im2col, ArrayFire, and
-%NPP. As cuDNN provides multiple implementations, we empirically choose the fastest version, denoted as cuDNN-fastest, for evaluation. We
-%apply each method to images with sizes ranging from $256 \times 256$ to $4K \times 4K$. We set the batch size, channel, height, and width
-%of the input to be 1.
-%
-%
-%\subsubsection{Overall results}
-% Figure
-%\ref{fig:2druntime} reports the speedups of cuDNN, ArrayFire, NPP and our approach over GEMM-im2col. While cuDNN has been heavily optimized
-%for NVIDIA GPUs, it does not show a notable performance advantage. When using a $3 \times 3$ filter, our approach gives the best overall
-%speedup of 5.4$\times$ (up to 9.7$\times$ for the largest input), which translates to an improvement of  more than 30\% over the second-best method, NPP.
-%We note that our approach is based on the standard 2D direct convolution by applying the column and row reuse algorithms. Therefore, the
-%performance gain is mainly attributed to the reduction of the number of memory transactions. When using a $5 \times 5$ filter, our approach
-%achieves a better overall speedup of $7.7\times$. A $5 \times 5$ filter has four overlapped columns and rows (instead of just one
-%overlapped column and row on width and height dimensions when using a $3 \times 3$ filter). The larger number of overlapped data thus gives
-%more room for performance optimization when using our column and row reuse algorithms. Our approach achieves the best overall performance
-%and demonstrates significant performance advantages when processing large input.
-%
-%\subsubsection{Further analysis}
-%\begin{figure}[t!]
-%\centering
-%
-%\subfloat[][Memory throughput]{\includegraphics[width=0.85\columnwidth]{./figure/2dmemthroughput.eps}
-%	\label{fig:2dmemthr}}
-%
-%\subfloat[][Maximum bandwidth]{\includegraphics[width=0.85\columnwidth]{./figure/2dmembandwidth.eps}
-%	\label{fig:2dmaxband}}
-%	
-%\caption{Memory throughput (a) and maximum bandwidth (b) of NPP and our implementation for the filter of size $3 \times 3$.}
-%\label{fig:2dmemanaly}
-%\vspace{-5mm}
-%\end{figure}
-%
-%On the test cases of small input sizes (i.e., $256 \times 256$ and $512 \times 512$), NPP gives the best performance. To understand the
-%performance gap on small input sizes, we use \emph{nvidia compute} to collect memory profiles, including memory throughput and max
-%bandwidth, of our implementation and NPP when using a $3 \times 3$ filter to perform convolution. The profiling results are shown in Figure
-%\ref{fig:2dmemanaly}.  We see that as the input size increases, the memory throughput and the maximum bandwidth also grow. This is expected
-%as the larger the input image, the larger number the memory transactions is likely to be when performing convolution.  We also observe that
-%our approach leads to higher memory throughput and the maximum bandwidth used when the input image size is greater or equal than $1K \times
-%1K$. This finding matches the results presented in Figure \ref{fig:2druntime}, where our approach gives the best performance when
-%processing an image whose size is $1K \times 1K$ or larger. This result also suggests that memory performance has a strong correlation with
-%the performance of 2D convolutions.
-%
-%
-%The reason why our approach gives lower memory throughput and achieves lower maximum bandwidth on small input sizes over NPP is explained
-%as follows. For 2D convolution, only one filter is used to convolve with one single-channel input feature map, which
-%requires much less computation compared to, e.g., the depth-wise or multi-channel 2D convolutions. Therefore, memory performance has a huge
-%impact on the performance of 2D convolutions. Our row reuse algorithm performs better when a thread operates on more rows of output.
-%However, the more rows a thread compute on, the fewer warps and thread blocks we can generate. Without enough warps issuing memory
-%requests, the memory throughput and maximum bandwidth will reduce significantly, which leads to slower performance over NPP. As the input
-%size increases, we can allocate more thread blocks and more warps per thread block. With enough memory requests and a reduction in redundant
-%memory transactions, we can increase the memory throughput and max bandwidth to improve the performance of 2D convolutions.
-%
-%\subsubsection{Summary} Overall, our optimization algorithms can greatly reduce the number of memory transactions and improve the performance of 2D
-%convolutions. Compared with state-of-the-art image processing libraries, NPP, our approach achieves average speedups of 1.4$\times$ and
-%1.3$\times$ when using a $3 \times 3$ and $5 \times 5$ filters, respectively.
 
 \subsection{Depthwise Convolution}
 \label{sec:depconvexp}
@@ -167,55 +83,32 @@ outperforms alternative methods by delivering the overall best performance.
 \hspace{0em}
 \subfloat[Speedups on Xavier for the $5 \times 5$ fitler.]{\includegraphics[height=5.12cm]{./figure/dwspeedupf5jetson.eps}
 	\label{fig:dwspeedupjetsonf5}}
-\caption{Speedups of cuDNN implicit and ours over the baseline implementation for FP32 depthwise convolution with filters of size $3 \times 3$ and $5 \times 5$ on two platforms.} \label{fig:dwspeedup}
+\caption{Speedups of {\color{red}cuDNN IMPLICIT, ours, Tensorflow and PyTorch} over the baseline implementation for FP32 depthwise convolution with filters of size $3 \times 3$ and $5 \times 5$ on two platforms.} \label{fig:dwspeedup}
 \end{figure*}
 
 
-%\begin{figure*}
-%\centering
-%	
-%\subfloat[][$3\times 3$ filter]{\includegraphics[width=\columnwidth]{./figure/depthwise_speedup_3f.eps}
-%	\label{fig:f3dwruntime2080}}
-%\subfloat[][$5\times 5$ filter]{\includegraphics[width=\columnwidth]{./figure/depthwise_speedup_5f.eps}
-%	\label{fig:f5dwruntime2080}}
-%
-%\vspace{-2mm} \caption{Speedups of our approach and cuDNN implicit algorithm over the baseline implementation of the depthwise convolution when using a
-%$3\times 3$ (a) and a $5\times 5$ filter (b).} \label{fig:dwruntime}
-%\vspace{-2mm}
-%\end{figure*}
-
 
 \subsubsection{Setup} In this experiment, we compare our approach against the depthwise convolution implementations of cuDNN.
-During the experiments, we have compared our approach to seven algorithms in cuDNN, including IMPLICIT\_GEMM (implicit),
-IMPLICIT\_PRECOMP\_GEMM (precomp), GEMM (gemm), FFT (fft), FFT\_TILING (tiling), WINOGRAD (winograd) and WINOGRAD\_NONFUSED (nonfused). We
-found implicit gives the best performance. Therefore, we report the results by comparing our approach against  the implicit algorithm of
+During the experiments, we have compared our approach to seven algorithms in cuDNN, including IMPLICIT\_GEMM (IMPLICIT),
+IMPLICIT\_PRECOMP\_GEMM (PRECOMP), GEMM, FFT, FFT\_TILING (TILING), WINOGRAD and WINOGRAD\_NONFUSED (NONFUSED). We
+found IMPLICIT gives the best performance. Therefore, we report the results by comparing our approach against  the IMPLICIT algorithm of
 cuDNN in this section. We use the depthwise convolution kernel from MobileNet (version 2) as our reference CNN model. Table
 \ref{tab:depconvconfigs} gives the layer configurations used in this experiment where the notations were defined earlier in Section
 \ref{sec:roadmap}.
 
-%In the depth-wise convolution, one input element only needs to be convolved with one filter, while in the multi-channel 2D convolution, one input element needs to be convolved with all filters.
-%Therefore, depth-wise convolutions require much less computation than multi-channel 2D convolutions, which makes depth-wise convolutions more sensitive to memory performance.
-%Nowadays, depth-wise convolutions have been widely used in embedded CNNs, including MobileNetv2 \cite{Sandler_2018_CVPR}, EfficientNet \cite{tan2019efficientnet} and ShuffleNetv2 \cite{Ma_2018_ECCV}.
-%In this section, we present the performance comparison of the depth-wise convolution between cuDNN and our implementation.
-%We implement a simple depth-wise convolution and report speedups of cuDNN and our implementation over the simple depth-wise convolution.
-%We evaluate 7 algorithms in cuDNN, including IMPLICIT\_GEMM (implicit), IMPLICIT\_PRECOMP\_GEMM (precomp), GEMM (gemm), FFT (fft), FFT\_TILING (tiling), WINOGRAD (winograd) and WINOGRAD\_NONFUSED (nonfused).
-%Winograd can not be applied on a $5 \times 5$ filter, thus we set speedups for this algorithm to 0.
-%We collect configurations of the convolutional layers using depth-wise convolution from three popular mobile embedded models,
-%namely, MobileNetv2, ShuffleNetv2 and EfficientNet.
-%Then, we set the number of the batch size to 512 ($I_N=O_N=512$). Other batch sizes demonstrate a similar performance because all tested implementations have a linear scale as the batch size. The exact configuration is presented in Table \ref{tab:3dconvconfigs}.
 
 \subsubsection{Overall results}
 \mypara{FP32 implementation.} Fig. \ref{fig:dwspeedup} shows that our approach gives the best speedup in nearly all test cases. Our
 approach delivers an average speedup of $5.4\times$ and $4.3\times$ for the $3 \times 3$ filter on 2080Ti and Xavier respectively, and
-$7.8\times$ and $2.2\times$ for the $5 \times 5$ filter on 2080Ti and Xavier respectively. The cuDNN implicit algorithm achieves an average
+$7.8\times$ and $2.2\times$ for the $5 \times 5$ filter on 2080Ti and Xavier respectively. The cuDNN IMPLICIT algorithm achieves an average
 speedup of $2.8\times$ and $3.1\times$ for the $3 \times 3$ filter on 2080Ti and Xavier respectively, and $2.2\times$ and $1.7\times$ for
 the $5 \times 5$ filter on 2080Ti and Xavier respectively. %Other algorithms of cuDNN perform poorly in all test cases. Since that cuDNN is
 %close-sourced, further analysis into the root casue is difficult.
 %We hypothesize that
-The FFT- and Winograd-based algorithms are designed to reduce computation and trade memory performance for speed. Precomp and gemm
+The FFT- and Winograd-based algorithms are designed to reduce computation and trade memory performance for speed. PRECOMP and GEMM
 algorithms need extra memory operations to compute output elements. As we have discussed in Section \ref{sec:intro}, depthwise convolution
 is more sensitive to memory performance than pointwise and multi-channel 2D convolutions. Consequently, these algorithms are not suitable
-for depthwise convolutions. Overall, our approach improves cuDNN implicit by $2.0\times$ and $1.4\times$ when using a $3 \times 3$  filter
+for depthwise convolutions. Overall, our approach improves cuDNN IMPLICIT by $2.0\times$ and $1.4\times$ when using a $3 \times 3$  filter
 on 2080Ti and Xavier respectively, and $3.5\times$ and $2.1\times$ when using a $5 \times 5$ filter on 2080Ti and Xavier respectively.
 
 \mypara{INT8 implementation.} We found using FP32 gives a speedup of more than $10\times$ over the INT8 version for depthwise convolution
@@ -224,40 +117,29 @@ convolution) and can not fully utilize DP4A instruction to accelerate INT8 convo
 speedup when using INT8 over cuDNN.
 
 
-
-%When using a $5 \times 5$ filter, our approach achieves a better overall speedup of $7.7\times$. A $5 \times 5$ filter has four overlapped columns and rows (instead of just one
-%overlapped column and row on width and height dimensions when using a $3 \times 3$ filter). The larger number of overlapped data thus gives
-%more room for performance optimization when using our column and row reuse algorithms.
-%The algorithms of cuDNN except implicit algorithm perform poorly in all test cases and the speedups of these algorithms all below 1.
-%Considering that cuDNN is a closed source, we can only guess that FFT- and Winograd- based algorithms focus on reduction of computation and
-%trades memory performance for speed. Precomp and gemm algorithms need extra memory operations to compute output elements. Moreover,
-%depth-wise convolution is more sensitive to memory performance than multi-channel 2D convolution. Consequently, these algorithms perform
-%poorly on depth-wise convolutions.
-
-
 \subsubsection{Further analysis}
 \begin{figure}[t!]
     \centering
-    \subfloat[][SM utilizations of the cuDNN implicit algorithm and our approach.]{\includegraphics[width=0.9\columnwidth]{./figure/smutil.eps}\label{fig:dwsmutil}}
+    \subfloat[][SM utilizations of the cuDNN IMPLICIT algorithm and our approach.]{\includegraphics[width=0.9\columnwidth]{./figure/smutil.eps}\label{fig:dwsmutil}}
     \qquad
     %\vspace{5mm}
-    \subfloat[][The ratio of executed LDG (load from global memory) instruction counts given by the cuDNN implicit algorithm over our approach ($ratio=\frac{LDG\ inst\ counts\ of\ cuDNN}{LDG\ inst\ counts\ of\ ours}$).]{\includegraphics[width=0.9\columnwidth]{./figure/ldginst.eps}\label{fig:dwldginst}}
+    \subfloat[][The ratio of executed LDG (load from global memory) instruction counts given by the cuDNN IMPLICIT algorithm over our approach ($ratio=\frac{LDG\ inst\ counts\ of\ cuDNN}{LDG\ inst\ counts\ of\ ours}$).]{\includegraphics[width=0.9\columnwidth]{./figure/ldginst.eps}\label{fig:dwldginst}}
     \vspace{-2mm}
     \caption{SM utilization and LDG instruction counts of depthwise convolutions with a batch size of 32 and a filter size of $3\times3$ on the NVIDIA 2080Ti GPU.}
     \label{fig:dwratio}
 \end{figure}
 Our performance gain is mainly attributed to the reduced number of memory accesses offered by our column and row reuse algorithms.
 
-Fig. \ref{fig:dwratio} reports the measured LDG (load from global memory) instruction counts and SM utilization for the fast cuDNN implicit
+Fig. \ref{fig:dwratio} reports the measured LDG (load from global memory) instruction counts and SM utilization for the fast cuDNN IMPLICIT
 algorithm and our approach when using a $3 \times 3$ filter and a batch size of 32 on 2080Ti. Other configurations follow a similar
-performance trend. We can see in Fig. \ref{fig:dwsmutil} that the cuDNN implicit algorithm has an average of $2\times$ higher SM
+performance trend. We can see in Fig. \ref{fig:dwsmutil} that the cuDNN IMPLICIT algorithm has an average of $2\times$ higher SM
 utilization compared to our approach. The reason our approach leads to lower SM utilization is explained as follows. Our row reuse
 algorithm performs better when a thread operates on more rows of the output. However, the more rows a thread compute on, the fewer warps
-and thread blocks we can generate. Without enough warps running on SMs, the SM utilization will degrade. Though cuDNN implicit has high SM
+and thread blocks we can generate. Without enough warps running on SMs, the SM utilization will degrade. Though cuDNN IMPLICIT has high SM
 utilization, it does not result in good performance for depthwise convolution. The reason is that depthwise convolution possesses a low
 computational requirement and is more sensitive to memory performance; hence the focus of performance optimization should be reducing the
 memory access latency.  If we now look at Fig. \ref{fig:dwldginst}, we see that row and column reuse techniques reduce memory operations
-with up to $4.5\times$ lower LDG instructions to be executed when compared to cuDNN implicit. By reducing the memory access overhead, which
+with up to $4.5\times$ lower LDG instructions to be executed when compared to cuDNN IMPLICIT. By reducing the memory access overhead, which
 dominates the execution time of depthwise convolution, our approach thus can lead to better overall performance compared to cuDNN, despite
 lower SM utilization.
 
@@ -270,52 +152,113 @@ $2.8\times$ and $1.8\times$ when performing depthwise convolutions on 2080Ti and
 \subsection{Pointwise Convolution}
 \label{sec:pwconvexp}
 
-\begin{table}[]
-\setlength{\tabcolsep}{4.2pt}
-\caption{Layer configurations of pointwise convolutions.}
-\vspace{-3mm}
-\label{tab:pwconv}
-\rowcolors{2}{}{Gray}
-\begin{threeparttable}
-\begin{tabular}{lrrrrr}
-\toprule
-\textbf{\emph{LAYER}}& \textbf{$I_N$} & \textbf{$I_C=F_C$} & \textbf{$I_H \times I_W$} & \textbf{$F_N \times F_H \times F_W$} \\
-\midrule
-\textbf{CONV1}  & 1,8,16,32,64,128  & 16    & $56\times 56$   & $8 \times 1\times 1$\\
-\textbf{CONV2}  & 1,8,16,32,64,128  & 8     & $56\times 56$   & $16 \times 1\times 1$\\
-%\textbf{CONV3}  & 1,8,16,32,64,128  & 16    & $56\times 56$   & 16  & $1\times 1$\\
-\textbf{CONV3}  & 1,8,16,32,64,128  & 16    & $56\times 56$   & $72 \times 1\times 1$\\
-\textbf{CONV4}  & 1,8,16,32,64,128  & 72    & $28\times 28$   & $24 \times 1\times 1$\\
-%\textbf{CONV6}  & 1,8,16,32,64,128  & 24    & $28\times 28$   & 88  & $1\times 1$\\
-%\textbf{CONV7}  & 1,8,16,32,64,128  & 88    & $28\times 28$   & 24  & $1\times 1$\\
-\textbf{CONV5}  & 1,8,16,32,64,128  & 24    & $28\times 28$   & $96 \times 1\times 1$\\
-\textbf{CONV6}  & 1,8,16,32,64,128  & 96    & $14\times 14$   & $24 \times 1\times 1$\\
-\textbf{CONV7} & 1,8,16,32,64,128  & 24    & $14\times 14$   & $96  \times 1\times 1$\\
-%\textbf{CONV11} & 1,8,16,32,64,128  & 96    & $14\times 14$   & 32  & $1\times 1$\\
-\textbf{CONV8} & 1,8,16,32,64,128  & 32    & $14\times 14$   & $192 \times 1\times 1$\\
-\textbf{CONV9} & 1,8,16,32,64,128  & 192   & $14\times 14$   & $48  \times 1\times 1$\\
-%\textbf{CONV14} & 1,8,16,32,64,128  & 48    & $14\times 14$   & 192 & $1\times 1$\\
-%\textbf{CONV15} & 1,8,16,32,64,128  & 192   & $14\times 14$   & 32  & $1\times 1$\\
-%\textbf{CONV16} & 1,8,16,32,64,128  & 32    & $14\times 14$   & 96  & $1\times 1$\\
-\textbf{CONV10} & 1,8,16,32,64,128  & 96    & $14\times 14$   & $40 \times 1\times 1$\\
-\textbf{CONV11} & 1,8,16,32,64,128  & 40    & $14\times 14$   & $120 \times 1\times 1$\\
-\textbf{CONV12} & 1,8,16,32,64,128  & 120   & $14\times 14$   & $32 \times 1\times 1$\\
-%\textbf{CONV20} & 1,8,16,32,64,128  & 32    & $14\times 14$   & 120 & $1\times 1$\\
-%\textbf{CONV21} & 1,8,16,32,64,128  & 120   & $14\times 14$   & 40  & $1\times 1$\\
-\textbf{CONV13} & 1,8,16,32,64,128  & 40    & $14\times 14$   & $240 \times 1\times 1$\\
-\textbf{CONV14} & 1,8,16,32,64,128  & 240   & $7\times 7$     & $64  \times 1\times 1$\\
-\textbf{CONV15} & 1,8,16,32,64,128  & 64    & $7\times 7$     & $240 \times 1\times 1$\\
-%\textbf{CONV25} & 1,8,16,32,64,128  & 240   & $7\times 7$     & 72  & $1\times 1$\\
-\textbf{CONV16} & 1,8,16,32,64,128  & 72    & $7\times 7$     & $432 \times 1\times 1$\\
-\textbf{CONV17} & 1,8,16,32,64,128  & 432   & $7\times 7$     & $112 \times 1\times 1$\\
-\textbf{CONV18} & 1,8,16,32,64,128  & 112   & $7\times 7$     & $432 \times 1\times 1$\\
-\textbf{CONV19} & 1,8,16,32,64,128  & 432   & $7\times 7$     & $72 \times 1\times 1$\\
-\textbf{CONV20} & 1,8,16,32,64,128  & 432   & $7\times 7$     & $1024 \times 1\times 1$\\
+%\begin{table}[]
+%\setlength{\tabcolsep}{3.5pt}
+%\caption{Layer configurations of pointwise convolutions.}
+%\vspace{-3mm}
+%\label{tab:pwconv}
+%\rowcolors{2}{}{Gray}
+%\begin{threeparttable}
+%\begin{tabular}{lrrrrr}
+%\toprule
+%\textbf{\emph{LAYER}}& \textbf{$I_N$} & \textbf{$I_C=F_C$} & \textbf{$I_H \times I_W$} & \textbf{$F_N \times F_H \times F_W$} \\
+%\midrule
+%\textbf{CONV1}  & 1,8,16,32,64,128  & 16    & $56\times 56$   & $8 \times 1\times 1$\\
+%\textbf{CONV2}  & 1,8,16,32,64,128  & 8     & $56\times 56$   & $16 \times 1\times 1$\\
+%%\textbf{CONV3}  & 1,8,16,32,64,128  & 16    & $56\times 56$   & 16  & $1\times 1$\\
+%\textbf{CONV3}  & 1,8,16,32,64,128  & 16    & $56\times 56$   & $72 \times 1\times 1$\\
+%\textbf{CONV4}  & 1,8,16,32,64,128  & 72    & $28\times 28$   & $24 \times 1\times 1$\\
+%%\textbf{CONV6}  & 1,8,16,32,64,128  & 24    & $28\times 28$   & 88  & $1\times 1$\\
+%%\textbf{CONV7}  & 1,8,16,32,64,128  & 88    & $28\times 28$   & 24  & $1\times 1$\\
+%\textbf{CONV5}  & 1,8,16,32,64,128  & 24    & $28\times 28$   & $96 \times 1\times 1$\\
+%\textbf{CONV6}  & 1,8,16,32,64,128  & 96    & $14\times 14$   & $24 \times 1\times 1$\\
+%\textbf{CONV7} & 1,8,16,32,64,128  & 24    & $14\times 14$   & $96  \times 1\times 1$\\
+%%\textbf{CONV11} & 1,8,16,32,64,128  & 96    & $14\times 14$   & 32  & $1\times 1$\\
+%\textbf{CONV8} & 1,8,16,32,64,128  & 32    & $14\times 14$   & $192 \times 1\times 1$\\
+%\textbf{CONV9} & 1,8,16,32,64,128  & 192   & $14\times 14$   & $48  \times 1\times 1$\\
+%%\textbf{CONV14} & 1,8,16,32,64,128  & 48    & $14\times 14$   & 192 & $1\times 1$\\
+%%\textbf{CONV15} & 1,8,16,32,64,128  & 192   & $14\times 14$   & 32  & $1\times 1$\\
+%%\textbf{CONV16} & 1,8,16,32,64,128  & 32    & $14\times 14$   & 96  & $1\times 1$\\
+%\textbf{CONV10} & 1,8,16,32,64,128  & 96    & $14\times 14$   & $40 \times 1\times 1$\\
+%\textbf{CONV11} & 1,8,16,32,64,128  & 40    & $14\times 14$   & $120 \times 1\times 1$\\
+%\textbf{CONV12} & 1,8,16,32,64,128  & 120   & $14\times 14$   & $32 \times 1\times 1$\\
+%%\textbf{CONV20} & 1,8,16,32,64,128  & 32    & $14\times 14$   & 120 & $1\times 1$\\
+%%\textbf{CONV21} & 1,8,16,32,64,128  & 120   & $14\times 14$   & 40  & $1\times 1$\\
+%\textbf{CONV13} & 1,8,16,32,64,128  & 40    & $14\times 14$   & $240 \times 1\times 1$\\
+%\textbf{CONV14} & 1,8,16,32,64,128  & 240   & $7\times 7$     & $64  \times 1\times 1$\\
+%\textbf{CONV15} & 1,8,16,32,64,128  & 64    & $7\times 7$     & $240 \times 1\times 1$\\
+%%\textbf{CONV25} & 1,8,16,32,64,128  & 240   & $7\times 7$     & 72  & $1\times 1$\\
+%\textbf{CONV16} & 1,8,16,32,64,128  & 72    & $7\times 7$     & $432 \times 1\times 1$\\
+%\textbf{CONV17} & 1,8,16,32,64,128  & 432   & $7\times 7$     & $112 \times 1\times 1$\\
+%\textbf{CONV18} & 1,8,16,32,64,128  & 112   & $7\times 7$     & $432 \times 1\times 1$\\
+%\textbf{CONV19} & 1,8,16,32,64,128  & 432   & $7\times 7$     & $72 \times 1\times 1$\\
+%\textbf{CONV20} & 1,8,16,32,64,128  & 432   & $7\times 7$     & $1024 \times 1\times 1$\\
+%
+%\bottomrule
+%\end{tabular}
+%\end{threeparttable}
+%\end{table}
 
+
+
+\begin{table*}[]
+\setlength{\tabcolsep}{5.5pt}
+\caption{{\color{red}Layer configurations of pointwise convolutions ($F_C=I_C$, $I_W=I_H$ and $F_W=F_H=1$) and parameter values of $Warp_H$, $Warp_W$, $Block_{num}$ and $C_{num}$ (the tuple ($Warp_H$, $Warp_W$, $Block_{num}$, $C_{num}$) and [$Warp_H$, $Warp_W$, $Block_{num}$, $C_{num}$] represent parameter values generated for 2080Ti and Xavier respectively).}}
+\vspace{-3mm}
+\label{tab:rtxparas}
+\rowcolors{99}{}{Gray}
+\begin{threeparttable}
+\begin{tabular}{lrrrrrrrrrr }
+\toprule
+\textbf{\emph{LAYER}}& \textbf{$I_C$} & \textbf{$I_H$} & \textbf{$F_N$}& \textbf{$I_N=1$} & \textbf{$I_N=8$} &\textbf{$I_N=16$} & \textbf{$I_N=32$} &\textbf{$I_N=64$} & \textbf{$I_N=128$}\\
+\midrule
+\rowcolor{Gray}& & & &(\hspace{0.5em}4,\hspace{1em}12,\hspace{0.5em}2,\hspace{0.5em}\hspace{0.5em}8) &(\hspace{0.5em}4,\hspace{1em}47,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}2) &(\hspace{0.5em}4,\hspace{0.5em}480,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}1) &(\hspace{0.5em}4,\hspace{0.5em}480,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}1) &(\hspace{0.5em}4,\hspace{0.5em}480,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}1) &(\hspace{0.5em}4,1216,\hspace{0.5em}2,\hspace{0.5em}32) \\
+\rowcolor{Gray}\multirow{-2}{*}{\textbf{CONV1}} &\multirow{-2}{*}{16}&\multirow{-2}{*}{$56$} & \multirow{-2}{*}{$8$}&[\hspace{0.5em}4,\hspace{1em}50,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}2] &[\hspace{0.5em}4,\hspace{0.5em}480,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}1] &[\hspace{0.5em}4,1216,\hspace{0.5em}2,\hspace{0.5em}32] &[\hspace{0.5em}4,1216,\hspace{0.5em}2,\hspace{0.5em}32] &[\hspace{0.5em}4,1216,\hspace{0.5em}2,\hspace{0.5em}32] &[\hspace{0.5em}4,1216,\hspace{0.5em}2,\hspace{0.5em}32] \\
+& & & &(\hspace{0.5em}8,\hspace{1em}12,\hspace{0.5em}2,\hspace{0.5em}\hspace{0.5em}8) &(\hspace{0.5em}8,\hspace{1em}47,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}4) &(\hspace{0.5em}8,\hspace{0.5em}256,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}1) &(\hspace{0.5em}8,\hspace{0.5em}256,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}1) &(\hspace{0.5em}8,\hspace{0.5em}672,\hspace{0.5em}2,\hspace{0.5em}32) &(\hspace{0.5em}8,\hspace{0.5em}672,\hspace{0.5em}2,\hspace{0.5em}32) \\
+\multirow{-2}{*}{\textbf{CONV2}} &\multirow{-2}{*}{8}&\multirow{-2}{*}{$56$} & \multirow{-2}{*}{$16$}&[\hspace{0.5em}8,\hspace{1em}50,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}4] &[\hspace{0.5em}8,\hspace{0.5em}672,\hspace{0.5em}2,\hspace{0.5em}32] &[\hspace{0.5em}8,\hspace{0.5em}672,\hspace{0.5em}2,\hspace{0.5em}32] &[\hspace{0.5em}8,\hspace{0.5em}672,\hspace{0.5em}2,\hspace{0.5em}32] &[\hspace{0.5em}8,\hspace{0.5em}672,\hspace{0.5em}2,\hspace{0.5em}32] &[\hspace{0.5em}8,\hspace{0.5em}672,\hspace{0.5em}2,\hspace{0.5em}32] \\
+\rowcolor{Gray}& & & &(12,\hspace{1em}36,\hspace{0.5em}2,\hspace{0.5em}\hspace{0.5em}8) &(12,\hspace{1em}36,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}4) &(12,\hspace{1em}36,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}4) &(12,\hspace{1em}36,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}4) &(12,\hspace{1em}36,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}4) &(12,\hspace{1em}36,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}4) \\
+\rowcolor{Gray}\multirow{-2}{*}{\textbf{CONV3}} &\multirow{-2}{*}{16}&\multirow{-2}{*}{$56$} & \multirow{-2}{*}{$72$}&[12,\hspace{1em}36,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}4] &[12,\hspace{1em}36,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}4] &[12,\hspace{1em}36,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}4] &[12,\hspace{1em}36,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}4] &[12,\hspace{1em}36,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}4] &[12,\hspace{1em}36,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}4] \\
+& & & &(\hspace{0.5em}6,\hspace{1.5em}6,\hspace{0.5em}2,\hspace{0.5em}32) &(\hspace{0.5em}6,\hspace{1em}47,\hspace{0.5em}2,\hspace{0.5em}\hspace{0.5em}4) &(\hspace{0.5em}6,\hspace{1em}47,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}4) &(\hspace{0.5em}6,\hspace{0.5em}320,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}1) &(\hspace{0.5em}6,\hspace{0.5em}320,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}1) &(\hspace{0.5em}6,\hspace{0.5em}864,\hspace{0.5em}2,\hspace{0.5em}32) \\
+\multirow{-2}{*}{\textbf{CONV4}} &\multirow{-2}{*}{72}&\multirow{-2}{*}{$28$} & \multirow{-2}{*}{$24$}&[\hspace{0.5em}6,\hspace{1em}50,\hspace{0.5em}2,\hspace{0.5em}\hspace{0.5em}4] &[\hspace{0.5em}6,\hspace{0.5em}320,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}1] &[\hspace{0.5em}6,\hspace{0.5em}864,\hspace{0.5em}2,\hspace{0.5em}32] &[\hspace{0.5em}6,\hspace{0.5em}864,\hspace{0.5em}2,\hspace{0.5em}32] &[\hspace{0.5em}6,\hspace{0.5em}864,\hspace{0.5em}2,\hspace{0.5em}32] &[\hspace{0.5em}6,\hspace{0.5em}864,\hspace{0.5em}2,\hspace{0.5em}32] \\
+\rowcolor{Gray}& & & &(\hspace{0.5em}3,\hspace{1em}48,\hspace{0.5em}2,\hspace{0.5em}\hspace{0.5em}2) &(12,\hspace{1em}48,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}2) &(12,\hspace{1em}48,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}2) &(12,\hspace{1em}48,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}2) &(12,\hspace{1em}48,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}2) &(12,\hspace{1em}48,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}2) \\
+\rowcolor{Gray}\multirow{-2}{*}{\textbf{CONV5}} &\multirow{-2}{*}{24}&\multirow{-2}{*}{$28$} & \multirow{-2}{*}{$96$}&[12,\hspace{1em}48,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}2] &[12,\hspace{1em}48,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}2] &[12,\hspace{1em}48,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}2] &[12,\hspace{1em}48,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}2] &[12,\hspace{1em}48,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}2] &[12,\hspace{1em}48,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}2] \\
+& & & &(\hspace{0.5em}6,\hspace{1.5em}2,\hspace{0.5em}2,\hspace{0.5em}32) &(\hspace{0.5em}6,\hspace{1em}12,\hspace{0.5em}2,\hspace{0.5em}16) &(\hspace{0.5em}6,\hspace{1em}24,\hspace{0.5em}2,\hspace{0.5em}\hspace{0.5em}8) &(\hspace{0.5em}6,\hspace{1em}47,\hspace{0.5em}2,\hspace{0.5em}\hspace{0.5em}4) &(\hspace{0.5em}6,\hspace{1em}47,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}4) &(\hspace{0.5em}6,\hspace{0.5em}320,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}1) \\
+\multirow{-2}{*}{\textbf{CONV6}} &\multirow{-2}{*}{96}&\multirow{-2}{*}{$14$} & \multirow{-2}{*}{$24$}&[\hspace{0.5em}6,\hspace{1em}13,\hspace{0.5em}2,\hspace{0.5em}16] &[\hspace{0.5em}6,\hspace{1em}50,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}4] &[\hspace{0.5em}6,\hspace{0.5em}320,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}1] &[\hspace{0.5em}6,\hspace{0.5em}320,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}1] &[\hspace{0.5em}6,\hspace{0.5em}864,\hspace{0.5em}2,\hspace{0.5em}32] &[\hspace{0.5em}6,\hspace{0.5em}864,\hspace{0.5em}2,\hspace{0.5em}32] \\
+\rowcolor{Gray}& & & &(\hspace{0.5em}2,\hspace{1em}48,\hspace{0.5em}2,\hspace{0.5em}\hspace{0.5em}1) &(\hspace{0.5em}6,\hspace{1em}48,\hspace{0.5em}2,\hspace{0.5em}\hspace{0.5em}4) &(12,\hspace{1em}48,\hspace{0.5em}2,\hspace{0.5em}\hspace{0.5em}8) &(12,\hspace{1em}48,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}2) &(12,\hspace{1em}48,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}2) &(12,\hspace{1em}48,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}2) \\
+\rowcolor{Gray}\multirow{-2}{*}{\textbf{CONV7}} &\multirow{-2}{*}{24}&\multirow{-2}{*}{$14$} & \multirow{-2}{*}{$96$}&[\hspace{0.5em}7,\hspace{1em}48,\hspace{0.5em}2,\hspace{0.5em}\hspace{0.5em}4] &[12,\hspace{1em}48,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}2] &[12,\hspace{1em}48,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}2] &[12,\hspace{1em}48,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}2] &[12,\hspace{1em}48,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}2] &[12,\hspace{1em}48,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}2] \\
+& & & &(\hspace{0.5em}2,\hspace{1em}96,\hspace{0.5em}2,\hspace{0.5em}\hspace{0.5em}1) &(\hspace{0.5em}6,\hspace{1em}96,\hspace{0.5em}2,\hspace{0.5em}\hspace{0.5em}2) &(12,\hspace{1em}96,\hspace{0.5em}2,\hspace{0.5em}\hspace{0.5em}4) &(12,\hspace{1em}96,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}1) &(12,\hspace{1em}96,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}1) &(12,\hspace{1em}96,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}1) \\
+\multirow{-2}{*}{\textbf{CONV8}} &\multirow{-2}{*}{32}&\multirow{-2}{*}{$14$} & \multirow{-2}{*}{$192$}&[\hspace{0.5em}7,\hspace{1em}96,\hspace{0.5em}2,\hspace{0.5em}\hspace{0.5em}2] &[12,\hspace{1em}96,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}1] &[12,\hspace{1em}96,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}1] &[12,\hspace{1em}96,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}1] &[12,\hspace{1em}96,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}1] &[12,\hspace{1em}96,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}1] \\
+\rowcolor{Gray}& & & &(12,\hspace{1.5em}2,\hspace{0.5em}2,\hspace{0.5em}32) &(12,\hspace{1em}12,\hspace{0.5em}2,\hspace{0.5em}32) &(12,\hspace{1em}24,\hspace{0.5em}2,\hspace{0.5em}16) &(12,\hspace{1em}47,\hspace{0.5em}2,\hspace{0.5em}\hspace{0.5em}8) &(12,\hspace{1em}47,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}2) &(12,\hspace{0.5em}160,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}1) \\
+\rowcolor{Gray}\multirow{-2}{*}{\textbf{CONV9}} &\multirow{-2}{*}{192}&\multirow{-2}{*}{$14$} & \multirow{-2}{*}{$48$}&[12,\hspace{1em}13,\hspace{0.5em}2,\hspace{0.5em}32] &[12,\hspace{1em}50,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}2] &[12,\hspace{0.5em}160,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}1] &[12,\hspace{0.5em}480,\hspace{0.5em}2,\hspace{0.5em}32] &[12,\hspace{0.5em}480,\hspace{0.5em}2,\hspace{0.5em}32] &[12,\hspace{0.5em}480,\hspace{0.5em}2,\hspace{0.5em}32] \\
+& & & &(10,\hspace{1.5em}2,\hspace{0.5em}2,\hspace{0.5em}32) &(10,\hspace{1em}12,\hspace{0.5em}2,\hspace{0.5em}32) &(10,\hspace{1em}24,\hspace{0.5em}2,\hspace{0.5em}16) &(10,\hspace{1em}47,\hspace{0.5em}2,\hspace{0.5em}\hspace{0.5em}8) &(10,\hspace{1em}47,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}4) &(10,\hspace{0.5em}192,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}1) \\
+\multirow{-2}{*}{\textbf{CONV10}} &\multirow{-2}{*}{96}&\multirow{-2}{*}{$14$} & \multirow{-2}{*}{$40$}&[10,\hspace{1em}13,\hspace{0.5em}2,\hspace{0.5em}16] &[10,\hspace{1em}50,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}2] &[10,\hspace{0.5em}192,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}1] &[10,\hspace{0.5em}544,\hspace{0.5em}2,\hspace{0.5em}32] &[10,\hspace{0.5em}544,\hspace{0.5em}2,\hspace{0.5em}32] &[10,\hspace{0.5em}544,\hspace{0.5em}2,\hspace{0.5em}32] \\
+\rowcolor{Gray}& & & &(\hspace{0.5em}2,\hspace{1em}60,\hspace{0.5em}2,\hspace{0.5em}\hspace{0.5em}1) &(\hspace{0.5em}6,\hspace{1em}60,\hspace{0.5em}2,\hspace{0.5em}\hspace{0.5em}2) &(12,\hspace{1em}60,\hspace{0.5em}2,\hspace{0.5em}\hspace{0.5em}4) &(12,\hspace{1em}60,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}2) &(12,\hspace{1em}60,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}2) &(12,\hspace{1em}60,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}2) \\
+\rowcolor{Gray}\multirow{-2}{*}{\textbf{CONV11}} &\multirow{-2}{*}{40}&\multirow{-2}{*}{$14$} & \multirow{-2}{*}{$120$}&[\hspace{0.5em}7,\hspace{1em}60,\hspace{0.5em}2,\hspace{0.5em}\hspace{0.5em}4] &[12,\hspace{1em}60,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}2] &[12,\hspace{1em}60,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}2] &[12,\hspace{1em}60,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}2] &[12,\hspace{1em}60,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}2] &[12,\hspace{1em}60,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}2] \\
+& & & &(\hspace{0.5em}8,\hspace{1.5em}2,\hspace{0.5em}2,\hspace{0.5em}32) &(\hspace{0.5em}8,\hspace{1em}12,\hspace{0.5em}2,\hspace{0.5em}16) &(\hspace{0.5em}8,\hspace{1em}24,\hspace{0.5em}2,\hspace{0.5em}\hspace{0.5em}8) &(\hspace{0.5em}8,\hspace{1em}47,\hspace{0.5em}2,\hspace{0.5em}\hspace{0.5em}4) &(\hspace{0.5em}8,\hspace{1em}47,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}4) &(\hspace{0.5em}8,\hspace{0.5em}256,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}1) \\
+\multirow{-2}{*}{\textbf{CONV12}} &\multirow{-2}{*}{120}&\multirow{-2}{*}{$14$} & \multirow{-2}{*}{$32$}&[\hspace{0.5em}8,\hspace{1em}13,\hspace{0.5em}2,\hspace{0.5em}16] &[\hspace{0.5em}8,\hspace{1em}50,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}4] &[\hspace{0.5em}8,\hspace{0.5em}256,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}1] &[\hspace{0.5em}8,\hspace{0.5em}256,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}1] &[\hspace{0.5em}8,\hspace{0.5em}672,\hspace{0.5em}2,\hspace{0.5em}32] &[\hspace{0.5em}8,\hspace{0.5em}672,\hspace{0.5em}2,\hspace{0.5em}32] \\
+\rowcolor{Gray}& & & &(\hspace{0.5em}2,\hspace{0.5em}120,\hspace{0.5em}2,\hspace{0.5em}\hspace{0.5em}1) &(\hspace{0.5em}6,\hspace{0.5em}120,\hspace{0.5em}2,\hspace{0.5em}\hspace{0.5em}1) &(12,\hspace{0.5em}120,\hspace{0.5em}2,\hspace{0.5em}\hspace{0.5em}4) &(12,\hspace{0.5em}120,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}1) &(12,\hspace{0.5em}120,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}1) &(12,\hspace{0.5em}120,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}1) \\
+\rowcolor{Gray}\multirow{-2}{*}{\textbf{CONV13}} &\multirow{-2}{*}{40}&\multirow{-2}{*}{$14$} & \multirow{-2}{*}{$240$}&[\hspace{0.5em}7,\hspace{0.5em}120,\hspace{0.5em}2,\hspace{0.5em}\hspace{0.5em}2] &[12,\hspace{0.5em}120,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}1] &[12,\hspace{0.5em}120,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}1] &[12,\hspace{0.5em}120,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}1] &[12,\hspace{0.5em}120,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}1] &[12,\hspace{0.5em}120,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}1] \\
+& & & &(\hspace{0.5em}2,\hspace{1em}32,\hspace{0.5em}2,\hspace{0.5em}\hspace{0.5em}2) &(\hspace{0.5em}2,\hspace{1em}32,\hspace{0.5em}2,\hspace{0.5em}\hspace{0.5em}2) &(\hspace{0.5em}3,\hspace{1em}32,\hspace{0.5em}2,\hspace{0.5em}\hspace{0.5em}2) &(\hspace{0.5em}6,\hspace{1em}32,\hspace{0.5em}2,\hspace{0.5em}\hspace{0.5em}4) &(12,\hspace{1em}32,\hspace{0.5em}2,\hspace{0.5em}\hspace{0.5em}8) &(12,\hspace{1em}32,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}4) \\
+\multirow{-2}{*}{\textbf{CONV14}} &\multirow{-2}{*}{240}&\multirow{-2}{*}{$7$} & \multirow{-2}{*}{$64$}&[\hspace{0.5em}2,\hspace{1em}32,\hspace{0.5em}2,\hspace{0.5em}\hspace{0.5em}2] &[\hspace{0.5em}7,\hspace{1em}32,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}8] &[12,\hspace{1em}32,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}4] &[12,\hspace{1em}32,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}4] &[12,\hspace{1em}32,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}4] &[12,\hspace{1em}32,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}4] \\
+\rowcolor{Gray}& & & &(\hspace{0.5em}2,\hspace{0.5em}120,\hspace{0.5em}2,\hspace{0.5em}\hspace{0.5em}1) &(\hspace{0.5em}2,\hspace{0.5em}120,\hspace{0.5em}2,\hspace{0.5em}\hspace{0.5em}1) &(\hspace{0.5em}3,\hspace{0.5em}120,\hspace{0.5em}2,\hspace{0.5em}\hspace{0.5em}1) &(\hspace{0.5em}6,\hspace{0.5em}120,\hspace{0.5em}2,\hspace{0.5em}\hspace{0.5em}1) &(12,\hspace{0.5em}120,\hspace{0.5em}2,\hspace{0.5em}\hspace{0.5em}4) &(12,\hspace{0.5em}120,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}1) \\
+\rowcolor{Gray}\multirow{-2}{*}{\textbf{CONV15}} &\multirow{-2}{*}{64}&\multirow{-2}{*}{$7$} & \multirow{-2}{*}{$240$}&[\hspace{0.5em}2,\hspace{0.5em}120,\hspace{0.5em}2,\hspace{0.5em}\hspace{0.5em}1] &[\hspace{0.5em}7,\hspace{0.5em}120,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}2] &[12,\hspace{0.5em}120,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}1] &[12,\hspace{0.5em}120,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}1] &[12,\hspace{0.5em}120,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}1] &[12,\hspace{0.5em}120,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}1] \\
+& & & &(\hspace{0.5em}2,\hspace{0.5em}216,\hspace{0.5em}2,\hspace{0.5em}\hspace{0.5em}1) &(\hspace{0.5em}2,\hspace{0.5em}216,\hspace{0.5em}2,\hspace{0.5em}\hspace{0.5em}1) &(\hspace{0.5em}3,\hspace{0.5em}216,\hspace{0.5em}2,\hspace{0.5em}\hspace{0.5em}1) &(\hspace{0.5em}6,\hspace{0.5em}216,\hspace{0.5em}2,\hspace{0.5em}\hspace{0.5em}1) &(12,\hspace{0.5em}216,\hspace{0.5em}2,\hspace{0.5em}\hspace{0.5em}2) &(\hspace{0.5em}9,\hspace{0.5em}216,\hspace{0.5em}4,\hspace{0.5em}32) \\
+\multirow{-2}{*}{\textbf{CONV16}} &\multirow{-2}{*}{72}&\multirow{-2}{*}{$7$} & \multirow{-2}{*}{$432$}&[\hspace{0.5em}2,\hspace{0.5em}216,\hspace{0.5em}2,\hspace{0.5em}\hspace{0.5em}1] &[\hspace{0.5em}7,\hspace{0.5em}216,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}1] &[\hspace{0.5em}9,\hspace{0.5em}216,\hspace{0.5em}4,\hspace{0.5em}32] &[\hspace{0.5em}9,\hspace{0.5em}216,\hspace{0.5em}4,\hspace{0.5em}32] &[\hspace{0.5em}9,\hspace{0.5em}216,\hspace{0.5em}4,\hspace{0.5em}32] &[\hspace{0.5em}9,\hspace{0.5em}216,\hspace{0.5em}4,\hspace{0.5em}32] \\
+\rowcolor{Gray}& & & &(\hspace{0.5em}2,\hspace{1em}56,\hspace{0.5em}2,\hspace{0.5em}\hspace{0.5em}1) &(\hspace{0.5em}2,\hspace{1em}56,\hspace{0.5em}2,\hspace{0.5em}\hspace{0.5em}1) &(\hspace{0.5em}3,\hspace{1em}56,\hspace{0.5em}2,\hspace{0.5em}\hspace{0.5em}1) &(\hspace{0.5em}6,\hspace{1em}56,\hspace{0.5em}2,\hspace{0.5em}\hspace{0.5em}4) &(12,\hspace{1em}56,\hspace{0.5em}2,\hspace{0.5em}\hspace{0.5em}8) &(12,\hspace{1em}56,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}2) \\
+\rowcolor{Gray}\multirow{-2}{*}{\textbf{CONV17}} &\multirow{-2}{*}{432}&\multirow{-2}{*}{$7$} & \multirow{-2}{*}{$112$}&[\hspace{0.5em}2,\hspace{1em}56,\hspace{0.5em}2,\hspace{0.5em}\hspace{0.5em}1] &[\hspace{0.5em}7,\hspace{1em}56,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}4] &[12,\hspace{1em}56,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}2] &[12,\hspace{1em}56,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}2] &[12,\hspace{1em}56,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}2] &[12,\hspace{1em}56,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}2] \\
+& & & &(\hspace{0.5em}2,\hspace{0.5em}216,\hspace{0.5em}2,\hspace{0.5em}\hspace{0.5em}1) &(\hspace{0.5em}2,\hspace{0.5em}216,\hspace{0.5em}2,\hspace{0.5em}\hspace{0.5em}1) &(\hspace{0.5em}3,\hspace{0.5em}216,\hspace{0.5em}2,\hspace{0.5em}\hspace{0.5em}1) &(\hspace{0.5em}6,\hspace{0.5em}216,\hspace{0.5em}2,\hspace{0.5em}\hspace{0.5em}1) &(12,\hspace{0.5em}216,\hspace{0.5em}2,\hspace{0.5em}\hspace{0.5em}2) &(\hspace{0.5em}9,\hspace{0.5em}216,\hspace{0.5em}4,\hspace{0.5em}32) \\
+\multirow{-2}{*}{\textbf{CONV18}} &\multirow{-2}{*}{112}&\multirow{-2}{*}{$7$} & \multirow{-2}{*}{$432$}&[\hspace{0.5em}2,\hspace{0.5em}216,\hspace{0.5em}2,\hspace{0.5em}\hspace{0.5em}1] &[\hspace{0.5em}7,\hspace{0.5em}216,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}1] &[\hspace{0.5em}9,\hspace{0.5em}216,\hspace{0.5em}4,\hspace{0.5em}32] &[\hspace{0.5em}9,\hspace{0.5em}216,\hspace{0.5em}4,\hspace{0.5em}32] &[\hspace{0.5em}9,\hspace{0.5em}216,\hspace{0.5em}4,\hspace{0.5em}32] &[\hspace{0.5em}9,\hspace{0.5em}216,\hspace{0.5em}4,\hspace{0.5em}32] \\
+\rowcolor{Gray}& & & &(\hspace{0.5em}2,\hspace{1em}36,\hspace{0.5em}2,\hspace{0.5em}\hspace{0.5em}1) &(\hspace{0.5em}2,\hspace{1em}36,\hspace{0.5em}2,\hspace{0.5em}\hspace{0.5em}1) &(\hspace{0.5em}3,\hspace{1em}36,\hspace{0.5em}2,\hspace{0.5em}\hspace{0.5em}2) &(\hspace{0.5em}6,\hspace{1em}36,\hspace{0.5em}2,\hspace{0.5em}\hspace{0.5em}4) &(12,\hspace{1em}36,\hspace{0.5em}2,\hspace{0.5em}\hspace{0.5em}8) &(12,\hspace{1em}36,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}4) \\
+\rowcolor{Gray}\multirow{-2}{*}{\textbf{CONV19}} &\multirow{-2}{*}{432}&\multirow{-2}{*}{$7$} & \multirow{-2}{*}{$72$}&[\hspace{0.5em}2,\hspace{1em}36,\hspace{0.5em}2,\hspace{0.5em}\hspace{0.5em}1] &[\hspace{0.5em}7,\hspace{1em}36,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}4] &[12,\hspace{1em}36,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}4] &[12,\hspace{1em}36,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}4] &[12,\hspace{1em}36,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}4] &[12,\hspace{1em}36,\hspace{0.5em}4,\hspace{0.5em}\hspace{0.5em}4] \\
+& & & &(\hspace{0.5em}2,\hspace{0.5em}256,\hspace{0.5em}2,\hspace{0.5em}\hspace{0.5em}1) &(\hspace{0.5em}3,\hspace{0.5em}256,\hspace{0.5em}2,\hspace{0.5em}\hspace{0.5em}1) &(\hspace{0.5em}6,\hspace{0.5em}256,\hspace{0.5em}2,\hspace{0.5em}\hspace{0.5em}1) &(12,\hspace{0.5em}256,\hspace{0.5em}2,\hspace{0.5em}\hspace{0.5em}1) &(\hspace{0.5em}8,\hspace{0.5em}256,\hspace{0.5em}4,\hspace{0.5em}32) &(\hspace{0.5em}8,\hspace{0.5em}256,\hspace{0.5em}4,\hspace{0.5em}32) \\
+\multirow{-2}{*}{\textbf{CONV20}} &\multirow{-2}{*}{432}&\multirow{-2}{*}{$7$} & \multirow{-2}{*}{$1024$}&[\hspace{0.5em}4,\hspace{0.5em}256,\hspace{0.5em}2,\hspace{0.5em}\hspace{0.5em}1] &[\hspace{0.5em}8,\hspace{0.5em}256,\hspace{0.5em}4,\hspace{0.5em}32] &[\hspace{0.5em}8,\hspace{0.5em}256,\hspace{0.5em}4,\hspace{0.5em}32] &[\hspace{0.5em}8,\hspace{0.5em}256,\hspace{0.5em}4,\hspace{0.5em}32] &[\hspace{0.5em}8,\hspace{0.5em}256,\hspace{0.5em}4,\hspace{0.5em}32] &[\hspace{0.5em}8,\hspace{0.5em}256,\hspace{0.5em}4,\hspace{0.5em}32] \\
 \bottomrule
 \end{tabular}
 \end{threeparttable}
-\end{table}
+\end{table*}
+
+
+
 
 \begin{figure*}
 \captionsetup[subfloat]{labelformat=empty,skip=0pt}
@@ -326,7 +269,7 @@ $2.8\times$ and $1.8\times$ when performing depthwise convolutions on 2080Ti and
 	\subfloat[]{\includegraphics[width=\textwidth]{./figure/pwspeedupjetson.eps}
 	\label{fig:pwspeedupjetson}}
 	\vspace{-6mm}
-	\caption{Speedups of cuDNN implicit and ours over cuDNN gemm for pointwise convolutions with FP32 on two platforms. Above: speedups on 2080Ti. Below: speedups on Xavier.}
+	\caption{Speedups of cuDNN IMPLICIT and ours over cuDNN GEMM for pointwise convolutions with FP32 on two platforms. Above: speedups on 2080Ti. Below: speedups on Xavier.}
 	\label{fig:pwspeedupfp32}
 \end{figure*}
 
@@ -340,18 +283,9 @@ $2.8\times$ and $1.8\times$ when performing depthwise convolutions on 2080Ti and
 	\subfloat[]{\includegraphics[width=\textwidth]{./figure/pwspeedupjetsonint8.eps}
 	\label{fig:pwspeedupjetsonint8}}
 	\vspace{-6mm}
-	\caption{Speedups of cuDNN precomp and ours over cuDNN implicit for pointwise convolutions with INT8 on two platforms. Above: speedups on 2080Ti. Below: speedups on Xavier.}
+	\caption{Speedups of cuDNN PRECOMP and ours over cuDNN IMPLICIT for pointwise convolutions with INT8 on two platforms. Above: speedups on 2080Ti. Below: speedups on Xavier.}
 	\label{fig:pwspeedupint8}
 \end{figure*}
-
-%\begin{figure}
-%\centering
-%	
-%\subfloat{\includegraphics[width=\columnwidth,height=13cm]{./figure/pwexectime.eps}}
-%\vspace{-2mm}
-%\caption{Speedups of cuDNN implicit and our approach over cuDNN gemm} \label{fig:pwexectime}
-%\vspace{-5mm}
-%\end{figure}
 
 
 \subsubsection{Setup} In this experiment, we compare our approach against all available pointwise convolution implementations in cuDNN.
@@ -361,36 +295,36 @@ model, there are 30 different configurations for pointwise convolution. We test 
 selected layers. The other 10 layers exhibit similar performance as the selected ones and hence are omitted for clarity. We report the
 performance when batch sizes are set to 1, 8, 16, 32, 64 and 128.
 
-When using data type FP32, cuDNN implicit performs best among all algorithm implementations in cuDNN. Therefore, we report the results of
-cuDNN implicit and take cuDNN gemm as the baseline implementation. When using data type INT8, cuDNN precomp performs best. Hence, we show
-results of cuDNN precomp and take cuDNN implicit as the baseline. Table \ref{tab:pwconv} lists the layer configurations used in this
+When using data type FP32, cuDNN IMPLICIT performs best among all algorithm implementations in cuDNN. Therefore, we report the results of
+cuDNN IMPLICIT and take cuDNN GEMM as the baseline implementation. When using data type INT8, cuDNN PRECOMP performs best. Hence, we show
+results of cuDNN PRECOMP and take cuDNN IMPLICIT as the baseline. Table \ref{tab:pwconv} lists the layer configurations used in this
 experiment and  the notations can be found at Section \ref{sec:roadmap}.
 
 \subsubsection{Overall results}
-\mypara{FP32 implementation.}  Fig. \ref{fig:pwspeedupfp32} shows speedups of cuDNN implicit and our approach with FP32  for pointwise
-convolutions on two platforms. The baseline is cuDNN gemm. Our approach achieves the best performance for all layers except for CONV20
-where our approach gives modest slowdown over cuDNN gemm and implicit. This large convolution layer uses 1024 filters to convolve the
+\mypara{FP32 implementation.}  Fig. \ref{fig:pwspeedupfp32} shows speedups of cuDNN IMPLICIT and our approach with FP32  for pointwise
+convolutions on two platforms. The baseline is cuDNN GEMM. Our approach achieves the best performance for all layers except for CONV20
+where our approach gives modest slowdown over cuDNN GEMM and IMPLICIT. This large convolution layer uses 1024 filters to convolve the
 input. Both cuDNN and our approaches are able to generate sufficient thread blocks to utilize the GPU cores. Under such scenarios, the
 memory access latency becomes the dominate bottleneck. The heavily optimized cuDNN enjoy the assembly level memory optimization to hide the
 goal memory access latency (as shown in Fig. \ref{fig:stalllongscore}), leading to better performance than our approach. Our approach can
-be further improved by employing a similar low-level optimization scheme. On average, our implementation and cuDNN implicit achieve an
-average speedup of $3\times$ and $1.5\times$ over cuDNN gemm on 2080Ti respectively, and $2\times$ and $1.3\times$ on Xavier respectively.
-The performance delivered by our approach translates to an improvement of $2\times$ and $1.5\times$ over cuDNN implicit on 2080Ti and
+be further improved by employing a similar low-level optimization scheme. On average, our implementation and cuDNN IMPLICIT achieve an
+average speedup of $3\times$ and $1.5\times$ over cuDNN GEMM on 2080Ti respectively, and $2\times$ and $1.3\times$ on Xavier respectively.
+The performance delivered by our approach translates to an improvement of $2\times$ and $1.5\times$ over cuDNN IMPLICIT on 2080Ti and
 Xavier respectively.
 
-\mypara{INT8 implementation.}  Fig. \ref{fig:pwspeedupint8} shows speedups of cuDNN precomp and our approach over cuDNN implicit for
-pointwise convolutions with INT8. On 2080Ti, our approach and cuDNN precomp achieve an average speedup of $1.7\times$ and $1.3\times$
-respectively. On Xavier, our approach and cuDNN precomp give an average speedup of $1.6\times$ and $1.2\times$ respectively. Our approach
-obtains $1.3\times$ and $1.5\times$ improvement over cuDNN precomp on 2080Ti and Xavier respectively.
+\mypara{INT8 implementation.}  Fig. \ref{fig:pwspeedupint8} shows speedups of cuDNN PRECOMP and our approach over cuDNN IMPLICIT for
+pointwise convolutions with INT8. On 2080Ti, our approach and cuDNN PRECOMP achieve an average speedup of $1.7\times$ and $1.3\times$
+respectively. On Xavier, our approach and cuDNN PRECOMP give an average speedup of $1.6\times$ and $1.2\times$ respectively. Our approach
+obtains $1.3\times$ and $1.5\times$ improvement over cuDNN PRECOMP on 2080Ti and Xavier respectively.
 
 
 \subsubsection{Further analysis}
 \begin{figure}[t!]
     \centering
-    \subfloat[][SM utilizations of cuDNN implicit and our approach.]{\includegraphics[width=\columnwidth]{./figure/pwsmutil.eps}\label{fig:pwsmutil}}
+    \subfloat[][SM utilizations of cuDNN IMPLICIT and our approach.]{\includegraphics[width=\columnwidth]{./figure/pwsmutil.eps}\label{fig:pwsmutil}}
     \qquad
 
-    \subfloat[][Ratios of executed LDG (load from global memory) instruction counts of cuDNN implicit to our approach ($ratio=\frac{LDG\ inst\ counts\ of\ cuDNN}{LDG\ inst\ counts\ of\ ours}$).]{\includegraphics[width=\columnwidth]{./figure/pwldginst.eps}\label{fig:pwldginst}}
+    \subfloat[][Ratios of executed LDG (load from global memory) instruction counts of cuDNN IMPLICIT to our approach ($ratio=\frac{LDG\ inst\ counts\ of\ cuDNN}{LDG\ inst\ counts\ of\ ours}$).]{\includegraphics[width=\columnwidth]{./figure/pwldginst.eps}\label{fig:pwldginst}}
     \vspace{-2mm}
     \caption{SM utilizations and ratios of executed LDG instruction counts for pointwise convolutions with a batch size of 32 on 2080Ti.}
     \label{fig:pwinfo}
@@ -404,35 +338,19 @@ obtains $1.3\times$ and $1.5\times$ improvement over cuDNN precomp on 2080Ti and
     \label{fig:stalllongscore}
 \end{figure*}
 
-Fig. \ref{fig:pwinfo} reports the measured SM utilizations and ratios of executed LDG instruction counts of cuDNN implicit to our approach when using a batch size of 32 on 2080Ti. Other configurations have the similar performance.
+Fig. \ref{fig:pwinfo} reports the measured SM utilizations and ratios of executed LDG instruction counts of cuDNN IMPLICIT to our approach when using a batch size of 32 on 2080Ti. Other configurations have the similar performance.
 
-%Given a specific layer configuration of pointwise convolution, our approach will try to create a suitable number of thread blocks to
-%saturate GPU. A potential perfor    mance issue is that more thread blocks may incur more reloads of filters or inputs which are shared
-%between thread blocks. As shown in Fig. \ref{fig:pwldginst}, our approach needs more than $2\times$ LDG instructions than cuDNN implicit in
-%some cases. In contrary to memory performance, the overall performance of our approach is $2\times$ faster than cuDNN implicit. There are
-%two reasons for the performance gain of our approach.
-%\begin{enumerate}
-%	\item Our approach exhibits a much higher SM utilization than cuDNN implicit.
-%	We can see in Fig. \ref{fig:pwsmutil} that our approach has an average of $1.9\times$ higher SM utilization compared to cuDNN implicit.
-%	When executing pointwise convolution with a batch size of 128 or below, cuDNN implicit can not utilize SMs efficiently because of its fixed block size.
-%	Based on our dynamic block size method, we improve SM utilization which leads to performance improvement for pointwise convolution.
-%	\item We use double buffer and channel distribution to hide memory access latency.
-%	Fig. \ref{fig:stalllongscore} shows the average number of cycles each warp spends on waiting for the global operation to complete.
-%	We implement a simple pointwise without latency hiding, denoted as simple.
-%	We can see that our approach can significantly reduce the memory access latency compared to the simple implementation.
-%	To further reduce memory access latency, we need assembly level optimizations which is not the focus of this work.
-%\end{enumerate}
 
 For a specific layer configuration, our approach tries to find a suitable number of thread blocks to utilize the GPU. While using a higher
 number of thread blocks can improve the GPU utilization, doing so can also incur frequent reloads of filters or inputs shared between
-thread blocks. As shown in Fig. \ref{fig:pwldginst}, our approach leads to $2\times$ more LDG instructions than cuDNN implicit in some
+thread blocks. As shown in Fig. \ref{fig:pwldginst}, our approach leads to $2\times$ more LDG instructions than cuDNN IMPLICIT in some
 cases. Although using more LDG instructions incurs extra memory load overhead, our approach still gives $2\times$ faster execution time
-over cuDNN implicit due to our schemes for improving the SM utilization and hiding memory, elaborating as follows.
+over cuDNN IMPLICIT due to our schemes for improving the SM utilization and hiding memory, elaborating as follows.
 
 
-Our approach exhibits a much higher SM utilization than cuDNN implicit. Unlike depthwise convolution, improving SM utilization is key for
+Our approach exhibits a much higher SM utilization than cuDNN IMPLICIT. Unlike depthwise convolution, improving SM utilization is key for
 optimizing pointwise convolution because utilizing more SMs can significantly accelerate the computation.	As can be seen from Fig.
-\ref{fig:pwsmutil}, our approach has an average of $1.9\times$ higher SM utilization compared to cuDNN implicit. cuDNN implicit is
+\ref{fig:pwsmutil}, our approach has an average of $1.9\times$ higher SM utilization compared to cuDNN IMPLICIT. cuDNN IMPLICIT is
 optimized for training and large batch-sized inference. It uses a fixed block size work distribution strategy, which fails to utilize SMs
 efficiently when the batch size of 128 or smaller. Our dynamic block size scheme (Section \ref{sec:pwinputdependent}) overcome this
 limitation by adaptively determining the right block size to use at runtime, which thus leads to better SM utilization and performance
@@ -454,7 +372,7 @@ sizes restrict choices of the number of channels distributed, which leads to sub
 This can be improved by having a better channel size allocation scheme for INT8. We leave this as our future work.
 
 \subsubsection{Summary} Our approach uses a dynamic block-size method to improve SM utilization and double-buffering and channel distribution to hide
-memory access latency. With the help of both methods, we achieve an average speedup of $2\times$ and $1.5\times$ over cuDNN implicit on
+memory access latency. With the help of both methods, we achieve an average speedup of $2\times$ and $1.5\times$ over cuDNN IMPLICIT on
 2080Ti and Xavier, respectively.
 
 
@@ -482,39 +400,39 @@ improvement of our approach compared to cuDNN implementations, denoted as \textb
 
 
 \subsubsection{Overall results}
-\begin{table}[]
-\setlength{\tabcolsep}{4.4pt}
-    \caption{Inference time of MobileNetV2 with FP32 and INT8 on 2080Ti and Xavier}
+\begin{table*}[]
+\setlength{\tabcolsep}{5.4pt}
+    \caption{Inference time of MobileNetV2 and EfficientNet-B0 with FP32 and INT8 on 2080Ti and Xavier}
     \vspace{-3mm}
     \label{tab:infertime}
     \centering
     %\rowcolors{2}{}{Gray}
     \begin{threeparttable}
-    \begin{tabular}{c|l|rrrrrr}
+    \begin{tabular}{c|l|rrrrrr|rrrrrr}
     \toprule
-    &\textbf{Batch} & 1 & 8 & 16& 32 &64 & 128\\
+    \multicolumn{2}{c|}{} & \multicolumn{6}{c|}{MobileNetV2} & \multicolumn{6}{c}{EfficientNet-B0}\\
+    \midrule
+    &\textbf{Batch} & 1 & 8 & 16& 32 &64 & 128& 1 & 8 & 16& 32 &64 & 128\\
     \midrule
     %normal MobileNetV2
-    \multirow{3}{*}{\textbf{\shortstack{2080Ti\\(FP32)}}}
-    &\textbf{cuDNN (ms)}   &7.5  &8.8  &9.7  &14.4 &19.1 &28.7 \\
-    &\textbf{Ours (ms)}    &6.1  &7.1  &8.0  &12.0 &16.9 &26.3\\
-    &\textbf{Improved (\%)} &18.6 &19.3 &17.5 &16.7 &11.5 &8.4 \\
+    \multirow{3}{*}{\textbf{\shortstack{2080Ti\\(FP32)}}}&\textbf{cuDNN (ms)}   &7.5  &8.8  &9.7  &14.4 &19.1 &28.7 &10.1&13.7&18.1&25.0&36.4&52.3\\
+    &\textbf{Ours (ms)}    &6.1  &7.1  &8.0  &12.0 &16.9 &26.3&7.9&11.3&15.3&21.9&32.6&47.6\\
+    &\textbf{Improved (\%)} &18.6 &19.3 &17.5 &16.7 &11.5 &8.4&21.8&17.5&15.5&12.4&10.4&9.0 \\
     \hline
-    \multirow{3}{*}{\textbf{\shortstack{Xavier\\(FP32)}}}
-    &\textbf{cuDNN (ms)}   &16.6 &22.3 &32.1 &52.6 &84.2 &140.1  \\
-    &\textbf{Ours (ms)}    &13.2 &18.9 &27.8 &44.7 &76.1 &130.0 \\
-    &\textbf{Improve (\%)} &20.5 &15.2 &13.4 &15.0 &9.6  &7.2 \\
+    \multirow{3}{*}{\textbf{\shortstack{Xavier\\(FP32)}}}&\textbf{cuDNN (ms)}   &16.6 &22.3 &32.1 &52.6 &84.2 &140.1&19.3&27.4&38.3&57.2&94.0&157.8  \\
+    &\textbf{Ours (ms)}    &13.2 &18.9 &27.8 &44.7 &76.1 &130.0&15.5&23.2&32.1&50.7&87.3&151.1 \\
+    &\textbf{Improve (\%)} &20.5 &15.2 &13.4 &15.0 &9.6  &7.2&19.7&15.3&16.3&11.4&7.1&4.2 \\
     \hline
     %quantized MobileNetV2
     \multirow{3}{*}{\textbf{\shortstack{2080Ti\\(INT8)}}}
-    &\textbf{cuDNN (ms)}   &6.3  &7.4  &7.7  &11.2 &14.6 &20.2 \\
-    &\textbf{Ours (ms)}    &5.5  &6.6  &6.8  &10.3 &14.0 &19.7\\
-    &\textbf{Improved (\%)} &12.7 &10.8 &11.7 &8.0  &4.1  &2.5 \\
+    &\textbf{cuDNN (ms)}   &6.3  &7.4  &7.7  &11.2 &14.6 &20.2&8.0&9.5&13.3&18.7&26.8&38.3 \\
+    &\textbf{Ours (ms)}    &5.5  &6.6  &6.8  &10.3 &14.0 &19.7&6.8&8.2&11.8&16.9&25.3&36.6\\
+    &\textbf{Improved (\%)} &12.7 &10.8 &11.7 &8.0  &4.1  &2.5&15&13.7&11.3&9.6&5.6&4.4 \\
     \hline
     \multirow{3}{*}{\textbf{\shortstack{Xavier\\(INT8)}}}
-    &\textbf{cuDNN (ms)}   &13.3 &18.0 &27.0 &42.6 &64.8 &103.7  \\
-    &\textbf{Ours (ms)}    &11.7 &15.4 &22.7 &38.8 &58.3 &94.4 \\
-    &\textbf{Improved (\%)} &12.0 &14.4 &16.0 &8.9 &10.0  &9.0 \\
+    &\textbf{cuDNN (ms)}   &13.3 &18.0 &27.0 &42.6 &64.8 &103.7&16.1&21.0&33.7&52.8&80.3&127.5  \\
+    &\textbf{Ours (ms)}    &11.7 &15.4 &22.7 &38.8 &58.3 &94.4&14.2&18.8&30.3&48.2&73.2&117.7 \\
+    &\textbf{Improved (\%)} &12.0 &14.4 &16.0 &8.9 &10.0  &9.0&11.8&10.5&10.1&8.7&8.8&7.7 \\
 
 
     \bottomrule
@@ -522,31 +440,36 @@ improvement of our approach compared to cuDNN implementations, denoted as \textb
     \footnotesize
     \end{threeparttable}
 
-\end{table}
+\end{table*}
 
 \begin{table}[]
-
-    \caption{Training time of MobileNetV2 with FP32 on 2080Ti}
+\setlength{\tabcolsep}{4.4pt}
+    \caption{Training time of MobileNetV2 and EfficientNet-B0 with FP32 on 2080Ti}
     \vspace{-3mm}
     \label{tab:traintime}
     \centering
     %\rowcolors{2}{}{Gray}
     \begin{threeparttable}
-    \begin{tabular}{c|l|rrrr}
+    \begin{tabular}{l|rrrr|rrrr}
     \toprule
-    &\textbf{Batch} & 16& 32 &64 & 128\\
+    &\multicolumn{4}{c|}{MobileNetV2} & \multicolumn{4}{c}{EfficientNet-B0}\\
     \midrule
-    \multirow{3}{*}{\textbf{2080Ti}}&\textbf{cuDNN (ms)} & 16.6 & 27.6 & 43,4 &75.4 \\
-    &\textbf{Ours (ms)} & 14.5  &24.1 &39.9 &71.3\\
-    &\textbf{Improved (\%)} &12.7  &12.7 &8.1 &5.4 \\
+    %\hline
+    \textbf{Batch} & 16& 32 &64 & 128& 16& 32 &64 & 128\\
+    \midrule
+    %\hline
+    \textbf{cuDNN (ms)} & 16.6 & 27.6 & 43,4 &75.4& 33.5 & 49.3 & 74.7 &116.2 \\
+    \textbf{Ours (ms)} & 14.5  &24.1 &39.9 &71.3& 30.0  &45.1 &69.6 &112.4\\
+    \textbf{Improved (\%)} &12.7  &12.7 &8.1 &5.4 &10.4  &8.5 &6.8 &3.3\\
     \bottomrule
     \end{tabular}
     \footnotesize
     \end{threeparttable}
     \vspace{-5mm}
 \end{table}
+
 Table \ref{tab:infertime} reports the measured inference time. For MobileNetV2 with FP32, our approach improves the performance of
-inference by 12.2\% and 13.5\% on average compared to cuDNN implicit on 2080Ti and Xavier, respectively. For MobileNetV2 with INT8, we
-obtain 8.5\% and 11.7\% improvements on average over cuDNN precomp on 2080Ti and Xavier, respectively. Table \ref{tab:traintime} shows that
-our approach reduces the training time by 9.7\% on average compared to cuDNN implicit on 2080Ti. The results show that our approach can
+inference by 12.2\% and 13.5\% on average compared to cuDNN IMPLICIT on 2080Ti and Xavier, respectively. For MobileNetV2 with INT8, we
+obtain 8.5\% and 11.7\% improvements on average over cuDNN PRECOMP on 2080Ti and Xavier, respectively. Table \ref{tab:traintime} shows that
+our approach reduces the training time by 9.7\% on average compared to cuDNN IMPLICIT on 2080Ti. The results show that our approach can
 significantly reduce both the model inference and training time by speeding up DSC operations.

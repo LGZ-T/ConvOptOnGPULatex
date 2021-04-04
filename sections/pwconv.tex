@@ -106,7 +106,7 @@ R_{result}+R_{operand}+R_{tmp}+extraR \leq Limit_R
 \end{equation}
 where $R_{tmp}$ is the number of temporary registers used to store filter and input elements loaded from global memory.
 $2 \times Warp_W$ and $2 \times Warp_H$ represent the width and height of the block tile respectively. 128 means each thread block has $Warp_{num} \times 32 = 4 \times 32=128$ threads to load data from global memory.
-In Formula \ref{fo:limitr}, $extraR$ is the number of additional registers allocated by the compiler and its value is determined through an off-line method. In Formula \ref{fo:limits}, 4 means each element has 4 bytes and 2 means we use a double buffer method \cite{abdelfattah2019fast,nichols2019magmadnn}.
+In Formula \ref{fo:limitr}, $extraR$ is the number of additional registers allocated by the compiler and its value is determined through an off-line method. {\color{red}In our experiments, we set $extraR=40$ because the CUDA compiler averagely allocate 40 extra registers for each kernel (RTX 2080Ti and Jetson AGX Xavier use the same value of $extraR$ because both platforms have the same size register file per SM).} In Formula \ref{fo:limits}, 4 means each element has 4 bytes and 2 means we use a double buffer method \cite{abdelfattah2019fast,nichols2019magmadnn}.
 \begin{figure*}
 	\centering
     \includegraphics[width=0.95\textwidth,height=7cm]{./figure/pwworkflow.eps}

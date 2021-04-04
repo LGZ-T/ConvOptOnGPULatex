@@ -51,7 +51,7 @@ access to the L1 cache still takes around 30 cycles on a 2080Ti GPU. To reduce t
 memory accesses.
 
 \subsubsection{An optimized implementation} To eliminate the redundant loads, we could use the shuffle instructions supported by both CUDA and OpenCL to exchange input elements among
-different threads. Fig. \ref{fig:optalgo1} depicts such an optimization. Specifically, in steps 1 and 2 of Fig. \ref{fig:optalgo1},
+different threads {\color{red}\cite{lu2020optimizing}}. Fig. \ref{fig:optalgo1} depicts such an optimization. Specifically, in steps 1 and 2 of Fig. \ref{fig:optalgo1},
 each thread loads the corresponding first and fifth input elements from the global memory. In step 3, each thread utilizes the shuffle
 instruction to retrieve the third element from another thread. For example, threads $t0$ and $t1$ could retrieve the third element from
 threads $t2$ and $t3$, respectively, and provide the fifth element (dashed squares in step 2) for both threads. Similarly, threads $t2$ and

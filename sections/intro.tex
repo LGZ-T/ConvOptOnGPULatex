@@ -30,18 +30,6 @@ arithmetic computation \cite{zlateski2019anatomy,yan2020optimizing}, but not mem
 depthwise convolution \cite{cudaperformance} due to its lower arithmetic operations compared to a standard 2D convolution.  Both methods
 are also ill-suite for pointwise convolution (that applies a $1 \times 1$ kernel) because FFT is designed to operate on a large filter and
 Winograd works best when the filter size is $3 \times 3$.
-%Both methods are not implemented for pointwise convolution in cuDNN.
-
-%In summary, GEMM is the most suitable algorithm for depthwise and pointwise convolutions. The state-of-the-art GEMM-based method is
-%implicit GEMM implemented by cuDNN \cite{ChetlurWVCTCS14}. Though the GEMM algorithm has been well optimized by cuDNN, we find two
-%performance issues when applying cuDNN on depthwise separable convolutions with batch sizes of 128 or below.
-%\begin{itemize}
-%    \item Depthwise convolution possesses a much lower computational workload than standard 2D convolution. Therefore the memory performance is one of the most important gating factors \cite{cudaperformance}.
-%    However, the implicit GEMM of cuDNN uses more global memory access operations than necessary to complete convolution (as shown in Figure \ref{fig:dwldginst} of Section \ref{sec:depconvexp}), which significantly degrades the performance of depthwise convolution.
-%    \item The implementation of pointwise convolution in cuDNN can not utilize GPU efficiently (as shown in Figure \ref{fig:pwsmutil} of Section \ref{sec:pwconvexp}).
-%    The reason is that cuDNN uses a fixed block size without considering the total amount of computation, which results in a small number of thread blocks when the computational workload is low.
-%\end{itemize}
-
 
 While GEMM is a good fit for pointwise convolution (that is also adopted by cuDNN \cite{ChetlurWVCTCS14}), the current implementation of
 GEMM for CNNs can lead to poor GPU performance during model deployment. A typical GEMM implementation uses a fixed tile size to distribute
@@ -52,32 +40,9 @@ particular problem for two real-life scenarios: when running a trained model for
 or a few samples (an hence a small batch size) - or performing on-device distributed training on an embedded device - where the number of
 training samples is likely to be small due to resource constraints.
 
-
-
-%In this work, we propose two approaches targeting memory performance and GPU utilization to improve the performance of depthwise and pointwise convolutions, respectively.
-%
-%To improve the memory performance of depthwise convolution, we introduce two novel optimization techniques for operations performed on columns and rows.
-%The first technique exploits column reuse by utilizing shuffle instructions (supported by both CUDA and OpenCL and hence is applicable to mainstream GPUs) to exchange elements among threads within a warp (or working group).
-%In this way, we can avoid reloading the same elements shared among different threads.
-%We further extend the shuffle instructions to facilitate dynamic indexing, which is not supported in the previous study \cite{vasilache2014fast}.
-%The second technique targets row reuse by multiplying one input row with multiple rows of a convolutional kernel (or filter) to compute multiple output elements.
-%This strategy improves the data locality of elements within a row, reducing the number of memory transactions compared with that of the existing convolution processing pipeline.
-%By reducing the number of memory transactions, our approach thus can improve the performance of depthwise convolution.
-%
-%To increase GPU utilization for pointwise convolution, we propose a dynamic block size method.
-%Previous work \cite{li2019coordinated,pourghassemi2020limits} employs a heuristic method to select the best block size for general matrix multiplication (GEMM) operation.
-%But there is a major restriction when applying their method to convolution operations.
-%When converting the convolution operation into GEMM, the resultant matrix size is usually smaller than the expected matrix size.
-%Then they try to combine multiple convolutions that can be calculated concurrently into one GEMM kernel to increase the computation workload.
-%This is possible for CNNs which has multiple parallel convolutions within the same layer (e.g. inception layers in GoogleNet \cite{szegedy2015going}).
-%But many other CNNs must perform convolution operations one by one to ensure correctness, which makes their method unsuitable in these CNNs.
-%In our dynamic block size method, we first decrease the computational workload of each thread and create more thread blocks to saturate GPU.
-%But this simple method will let each thread suffer from long global memory access latency since there are not enough arithmetic operations to hide the latency.
-%To address this problem, we design a dynamic block size method that distributes input or filter channels across threads within a warp.
-
 Our work addresses the memory latency and work distribution issues identified above. By addressing these two issues together, our approach
 enables efficient DSC because it accelerates not only depthwise convolution by reducing the GPU memory access latency and also pointwise
-convolution for model inference and small-batch-sized training.
+convolution for model inference and small-batch-sized training. {\color{red}The approach proposed in this work is an extension of our prior work that targets on memory optimizations.}
 
 
 To improve the memory performance of depthwise convolution (that operates on the width and the height directions of the input matrix), we
