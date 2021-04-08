@@ -28,7 +28,7 @@ matrix multiplication (GEMM) \cite{Vasudevan2017Parallel,li2019coordinated,wu202
 benefit for depthwise convolutions compared to standard 2D convolution. This is because FFT and Winograd are designed to optimize
 arithmetic computation \cite{zlateski2019anatomy,yan2020optimizing}, but not memory accesses. However, the memory access latency often dominates the execution time of
 depthwise convolution \cite{cudaperformance} due to its lower arithmetic operations compared to a standard 2D convolution.  Both methods
-are also ill-suite for pointwise convolution (that applies a $1 \times 1$ kernel) because FFT is designed to operate on a large filter and
+are also ill-suited for pointwise convolution (that applies a $1 \times 1$ kernel) because FFT is designed to operate on a large filter and
 Winograd works best when the filter size is $3 \times 3$.
 
 While GEMM is a good fit for pointwise convolution (that is also adopted by cuDNN \cite{ChetlurWVCTCS14}), the current implementation of
@@ -37,12 +37,12 @@ work across parallel threads, without taking into consideration the amount of co
 such a strategy cannot make effective use of the GPU parallelism when the batch size (i.e., the number of samples to be processed at once)
 is small (e.g., $<= 128$). The ineffective use of GPU resources leads to low GPU utilization and sub-optimal performance. This is a
 particular problem for two real-life scenarios: when running a trained model for inferencing - where the model typically only takes in one
-or a few samples (an hence a small batch size) - or performing on-device distributed training on an embedded device - where the number of
+or a few samples (and hence a small batch size) - or performing on-device distributed training on an embedded device - where the number of
 training samples is likely to be small due to resource constraints.
 
 Our work addresses the memory latency and work distribution issues identified above. By addressing these two issues together, our approach
 enables efficient DSC because it accelerates not only depthwise convolution by reducing the GPU memory access latency and also pointwise
-convolution for model inference and small-batch-sized training. {\color{red}The approach proposed in this work is an extension of our prior work that targets on memory optimizations.}
+convolution for model inference and small-batch-sized training. {\color{red}The approach proposed in this work is an extension of our prior work \cite{lu2020optimizing} that targets on memory optimizations.}
 
 
 To improve the memory performance of depthwise convolution (that operates on the width and the height directions of the input matrix), we
@@ -51,7 +51,7 @@ reduces the number of memory accesses required by reusing data. To improve colum
 both CUDA and OpenCL and hence is applicable to mainstream GPUs) to exchange elements among threads within a GPU warp (or working group).
 In this way, we can avoid reloading the same elements shared among different threads. We also apply shuffle instructions to converting
 dynamic indices to static indices to assist register promotion, an optimization strategy that is not exploited in previous studies
-\cite{vasilache2014fast}. To increase row data reuse, we multiple one input row with multiple rows of a convolutional kernel (or filter) to
+\cite{vasilache2014fast}. To increase row data reuse, we multiply one input row with multiple rows of a convolutional kernel (or filter) to
 compute multiple output elements at the same time. This strategy improves the data locality of elements within a row, reducing the number
 of memory transactions compared with that of the existing convolution processing pipeline. By reducing the number of memory accesses, our
 approach improves the performance of depthwise convolution.
@@ -73,8 +73,7 @@ these prior approaches.
 We evaluate our approach by applying it to both depthwise and pointwise convolutions with FP32 and INT8 of DSC on two GPU platforms: an NVIDIA RTX 2080Ti GPU
 and an embedded NVIDIA Jetson AGX Xavier GPU. We compared our approach against cuDNN, an industry strengthened DNN library that is heavily
 optimized for the NVIDIA GPU architecture. Experimental results show that our approach delivers over $3\times$ and $2\times$ faster
-performance than cuDNN for depthwise and pointwise convolutions, respectively. We show that our approach reduces the end-to-end training
-and inference time of MobileNet \cite{Sandler_2018_CVPR,howard2019searching} when the batch size is $<=$ 128 by 11.5\% and 9.7\% on average, respectively.
+performance than cuDNN for depthwise and pointwise convolutions, respectively. We show that our approach improves the end-to-end training and inferencing performance of MobileNet \cite{Sandler_2018_CVPR,howard2019searching} and EfficientNet-B0 \cite{tan2019efficientnet} when the batch size is $<=$ 128 by 10.6\% and 10.7\% on average, respectively.
 
 
 

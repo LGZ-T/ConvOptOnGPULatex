@@ -1,6 +1,6 @@
 \section{Optimizing Depthwise Convolution}
 \label{sec:strategies} In this section, we describe our two optimizations, column reuse (Section \ref{sec:creuse}) and row reuse (Section
-\ref{sec:rowreuse}), for reducing the number of GPU memory accesses for depthwise convolution.
+\ref{sec:rowreuse}), for reducing the number of GPU memory accesses for depthwise convolution. {\color{red}Both optimizations are proposed and briefly described in our previous work \cite{lu2020optimizing}. In this paper, we give a detailed description of both optimizations.}
 \subsection{Column Reuse Optimization}
 \label{sec:creuse}
 
@@ -51,7 +51,7 @@ access to the L1 cache still takes around 30 cycles on a 2080Ti GPU. To reduce t
 memory accesses.
 
 \subsubsection{An optimized implementation} To eliminate the redundant loads, we could use the shuffle instructions supported by both CUDA and OpenCL to exchange input elements among
-different threads {\color{red}\cite{lu2020optimizing}}. Fig. \ref{fig:optalgo1} depicts such an optimization. Specifically, in steps 1 and 2 of Fig. \ref{fig:optalgo1},
+different threads. {\color{red}This optimized implementation is introduced in our previous work \cite{lu2020optimizing}}. Fig. \ref{fig:optalgo1} depicts such an optimization. Specifically, in steps 1 and 2 of Fig. \ref{fig:optalgo1},
 each thread loads the corresponding first and fifth input elements from the global memory. In step 3, each thread utilizes the shuffle
 instruction to retrieve the third element from another thread. For example, threads $t0$ and $t1$ could retrieve the third element from
 threads $t2$ and $t3$, respectively, and provide the fifth element (dashed squares in step 2) for both threads. Similarly, threads $t2$ and

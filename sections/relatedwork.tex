@@ -34,5 +34,4 @@ significantly reduce the number of memory accesses.
 The work presented in \cite{oyama2018accelerating} splits larger batches into smaller batch sizes to mitigate computation resources
 restrictions of large batch size. Li et al. \cite{li2016optimizing} explore the impact of data layout on convolution operations. Zhang et
 al. \cite{zhang2018high} design a method to map computation to FMA (fused multiply-add) units and focus on maximizing arithmetic intensity.
-Unlike our approach, none of these methods explicitly considers SM utilization, which is vital for achieving good performance for DSC on
-GPUs.
+Unlike our approach, none of these methods explicitly considers SM utilization, which is vital for achieving good performance for DSC on GPUs. {\color{red}Chen et al. \cite{chen2019versatile} proposed similar optimizations as our column and row reuse methods. But their optimizations need more warps and registers compared with our approach.}
