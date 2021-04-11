@@ -52,7 +52,7 @@ the input. We iteratively apply the depthwise convolution kernel to all channels
 The output of the depthwise convolution kernel is fed
 into a pointwise convolution kernel which uses a $1 \times 1$ filter to iterates through every single point. This kernel has a depth of the
 number of input channels (i.e., $c$). The DSC reduces the computation by reducing the number of input transformations needed when compared
-to a standard depthwise convolution. Fig. \ref{fig:pwdemo} shows an example of pointwise convolution, where four $1 \times 1 \times 3$ filters are used to convolve with the $8 \times 8 \times 3$ feature map iteratively and each filter generate one channel of a $8 \times 8 \times 3$ output.
+to a standard depthwise convolution. Fig. \ref{fig:pwdemo} shows an example of pointwise convolution, where four $1 \times 1 \times 3$ filters are used to convolve with the $8 \times 8 \times 3$ feature map iteratively and each filter generates one channel of the $8 \times 8 \times 3$ output.
 
 
 \subsection{Roadmap and Notations\label{sec:roadmap}} We present our approach for optimizing the two convolutional kernels of DSC in

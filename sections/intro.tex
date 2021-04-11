@@ -1,9 +1,6 @@
 \section{Introduction\label{sec:intro}}
-%\IEEEPARstart{N}{owadays}, many researchers construct the fundamental building block of their CNNs with depthwise separable convolutions initially introduced in \cite{sifre2014rigid} to reduce the computational cost of standard 2D convolutions.
-%This kind of CNNs, including MobileNet \cite{Sandler_2018_CVPR,howard2019searching}, EfficientNet \cite{tan2019efficientnet} and ShuffleNet \cite{Ma_2018_ECCV}, has been widely used in image classification, object detection and  semantic segmentation.
-%Depthwise separable convolution splits the computation of 2D convolution into depthwise convolution and pointwise convolution.
 
-In recent years, deep neural networks (DNNs) have made astonishing success in solving a wide range of tasks \cite{zoran2020towards,yang2020gated,wang2020rdsnet,chen2020mnasfpn,zhong2020squeeze,tokunaga2019adaptive}. One of the
+\IEEEPARstart{I}{n} recent years, deep neural networks (DNNs) have made astonishing success in solving a wide range of tasks \cite{zoran2020towards,yang2020gated,wang2020rdsnet,chen2020mnasfpn,zhong2020squeeze,tokunaga2019adaptive}. One of the
 most successful DNN architectures is the convolutional neural network (CNN) that is widely used in tasks like image classification
 \cite{zoran2020towards,yang2020gated}, object detection \cite{wang2020rdsnet,chen2020mnasfpn} and  semantic segmentation \cite{zhong2020squeeze,tokunaga2019adaptive}. CNN models are typically trained and run on
 GPUs due to their computation requirements.
@@ -28,7 +25,7 @@ matrix multiplication (GEMM) \cite{Vasudevan2017Parallel,li2019coordinated,wu202
 benefit for depthwise convolutions compared to standard 2D convolution. This is because FFT and Winograd are designed to optimize
 arithmetic computation \cite{zlateski2019anatomy,yan2020optimizing}, but not memory accesses. However, the memory access latency often dominates the execution time of
 depthwise convolution \cite{cudaperformance} due to its lower arithmetic operations compared to a standard 2D convolution.  Both methods
-are also ill-suited for pointwise convolution (that applies a $1 \times 1$ kernel) because FFT is designed to operate on a large filter and
+are also ill-suited for pointwise convolutions (that apply a $1 \times 1$ kernel) because FFT is designed to operate on a large filter and
 Winograd works best when the filter size is $3 \times 3$.
 
 While GEMM is a good fit for pointwise convolution (that is also adopted by cuDNN \cite{ChetlurWVCTCS14}), the current implementation of
@@ -42,7 +39,7 @@ training samples is likely to be small due to resource constraints.
 
 Our work addresses the memory latency and work distribution issues identified above. By addressing these two issues together, our approach
 enables efficient DSC because it accelerates not only depthwise convolution by reducing the GPU memory access latency and also pointwise
-convolution for model inference and small-batch-sized training. {\color{red}The approach proposed in this work is an extension of our prior work \cite{lu2020optimizing} that targets on memory optimizations.}
+convolution for model inference and small-batch-sized training. {\color{red}The approach proposed in this work is an extension of our prior work \cite{lu2020optimizing} that targets memory performance optimizations.}
 
 
 To improve the memory performance of depthwise convolution (that operates on the width and the height directions of the input matrix), we
@@ -73,7 +70,8 @@ these prior approaches.
 We evaluate our approach by applying it to both depthwise and pointwise convolutions with FP32 and INT8 of DSC on two GPU platforms: an NVIDIA RTX 2080Ti GPU
 and an embedded NVIDIA Jetson AGX Xavier GPU. We compared our approach against cuDNN, an industry strengthened DNN library that is heavily
 optimized for the NVIDIA GPU architecture. Experimental results show that our approach delivers over $3\times$ and $2\times$ faster
-performance than cuDNN for depthwise and pointwise convolutions, respectively. We show that our approach improves the end-to-end training and inferencing performance of MobileNet \cite{Sandler_2018_CVPR,howard2019searching} and EfficientNet-B0 \cite{tan2019efficientnet} when the batch size is $<=$ 128 by 10.6\% and 10.7\% on average, respectively.
+performance than cuDNN for depthwise and pointwise convolutions, respectively.
+We show that, when the batch size is $<=$ 128, our approach averagely improves the end-to-end training performance of MobileNet \cite{Sandler_2018_CVPR,howard2019searching} and EfficientNet-B0 \cite{tan2019efficientnet} by 11.5\% and 7.3\% respectively, and improves the end-to-end inference performance of MobileNet and EfficentNet-B0 by 9.7\% and 11.6\% respectively.
 
 
 
@@ -82,7 +80,7 @@ This paper makes the following technical contributions:
     \item It presents two novel algorithms for column and row reuse (Section \ref{sec:strategies}) for depthwise
         convolution, improving the data locality and the memory access latency for depthwise convolution.
     \item It describes a novel method for transforming dynamic indices into static indices to assist register promotion for performance
-        optimization (Section \ref{exp}).
-    \item It presents a dynamic tile size for pointwise convolution, increasing GPU utilization while minimizing the global memory
+        optimization (Section \ref{sec:columnreuse}).
+    \item It presents a dynamic tile size scheme for pointwise convolution, increasing GPU utilization while minimizing the global memory
         access latency (Section \ref{sec:pwconv}).
 \end{itemize}

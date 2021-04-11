@@ -2,7 +2,7 @@
 We have presented two novel approaches to optimize memory performance and SM utilization for depthwise and pointwise convolutions respectively. 
 Our approach improves the data locality for convolutional operations performed on the row and column directions to reduce the memory access. 
 Our techniques utilize the common GPU shuffle operations supported by mainstream GPU programming models, including CUDA and OpenCL, and do not require hardware modifications.
-For pointwise convolution, the main problem is low SM utilization because cuDNN uses a fixed block size for all pointwise convolutions. We design a dynamic block size method and meanwhile hide the memory access latency. 
+For pointwise convolution, the main problem is low SM utilization because cuDNN uses a fixed tile size for all pointwise convolutions. We design a dynamic tile size method and meanwhile hide the memory access latency. 
 We evaluate our approach for FP32 and INT8 on NVIDIA RTX 2080Ti and Jetson AGX Xavier GPUs. 
 We compare our approach against a wide range of heavily optimized convolution algorithms. 
 Experimental results show that our approach consistently outperforms the competing methods by delivering the best overall performance for depthwise and pointwise convolutions.

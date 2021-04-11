@@ -1,5 +1,5 @@
 \section{Optimizing Pointwise Convolution}
-\label{sec:pwconv} In this section, we explain the workflow of our dynamic tile size scheme for pointwise convolution. {\color{red}This approach is an extension of our previous work \cite{lu2020optimizing} which only focuses on optimization memory performance for convolution operations}. Our approach
+\label{sec:pwconv} In this section, we explain the workflow of our dynamic tile size scheme for pointwise convolution. {\color{red}This approach is an extension of our previous work \cite{lu2020optimizing} which only focuses on optimizating memory performance for convolution operations}. Our approach
 consists of three stages, described as follows.
 
 In the first and second stages, we identify parameters related to the tile size and determine candidate values for each parameter (Section
@@ -10,7 +10,7 @@ achieves optimal SM utilization and data reuse (Section \ref{sec:pwinputindepend
 We note that previous studies \cite{tanner2018tensile, kelefouras2016high, abdelfattah2019fast, kurzak2015implementation,
 jiang2020enabling, tillet2017input, lan2019feathercnn,zhang2012autogeneration} have exploited tiling and autotuning for convolution and
 GEMM operations. However, these prior methods are inadequate for pointwise convolutions on GPUs due to two main drawbacks: they do not
-consider SM utilization when choosing the optimal tile size and is not designed for pointwise convolutions with small inputs. Our dynamic
+consider SM utilization when choosing the optimal tile size and are not designed for pointwise convolutions with small inputs. Our dynamic
 tile size scheme avoids these two drawbacks. To improve SM utilization, our approach searches for the optimal tile size for the output
 based on the input size to generate a proper number of tiles to saturate GPU and maximize data reuse. To optimize pointwise convolution
 with small inputs, we distribute channels across threads within a warp to increase the arithmetic intensity for each thread.
@@ -72,7 +72,7 @@ We also found that setting $Block_{num}>4$ during searching offers little benefi
 %To achieve the best performance, we iterate over all candidate combinations of $Block_{num}$, $C_{num}$ and $Warp_H$, and select the combination that leads to optimal SM utilization and arithmetic intensity.
 \subsubsection{Determine candidates for $C_{num}$\label{sec:cnum}} 
 When searching for the optimal combination of parameters, a small tile size may be generated, which may lead to low arithmetic intensity and can not hide global memory access latency.
- For example, we assume that the warp tile size is $Warp_H \times Warp_W = 8 \times 64$ and has 56 channels, which means that one warp needs to convolve 8 input elements with 64 filter elements and accumulates results 56 times to generate $8 \times 64=512$ elements. Since the height dimension is shared among 32 threads of the warp, each thread loads 8 input elements, and width dimension is distributed across 32 threads, each thread loads 2 filter elements. Therefore, each thread accumulates 56 channels of $8 \times 2=16$ elements. Now we can estimate arithmetic intensity of each thread for one iteration as $\frac{number\ of\ multiplications}{number\ of\ elements}=\frac{8 \times 2}{8 + 2}=1.6$. We can improve arithmetic intensity by distributing channels across threads, as shown in Fig. \ref{fig:pwworkflow}. We distribute eight channels ($C_{num}=8$) of each filter element across 32 threads of the warp.
+ For example, we assume that the warp tile size is $Warp_H \times Warp_W = 8 \times 64$ and has 56 channels, which means that one warp needs to convolve 8 input elements with 64 filter elements and accumulates results 56 times to generate $8 \times 64=512$ elements. Since the height dimension is shared among 32 threads of the warp, each thread loads 8 input elements, and the width dimension is distributed across 32 threads, each thread loads 2 filter elements. Therefore, each thread accumulates 56 channels of $8 \times 2=16$ elements. Now we can estimate the arithmetic intensity of each thread for one iteration as $\frac{number\ of\ multiplications}{number\ of\ elements}=\frac{8 \times 2}{8 + 2}=1.6$. We can improve arithmetic intensity by distributing channels across threads, as shown in Fig. \ref{fig:pwworkflow}. We distribute eight channels ($C_{num}=8$) of each filter element across 32 threads of the warp.
  In that case, each warp can process $F_{num}=32/C_{num}=32/8=4$ filter elements and each thread processes $T_{num}=Warp_W/F_{num}=64/4=16$ filter elements.
  The arithmetic intensity can be estimated as $\frac{Warp_H \times T_{num}}{Warp_H + T_{num}}=\frac{8 \times 16}{8+16}=5.3$.
  Higher arithmetic intensity increases the chance to hide global memory access latency.
@@ -158,7 +158,7 @@ Two metrics can be calculated as follows:
     AI = \frac{Warp_H \times T_{num}}{Warp_H+T_{num}}
     \label{fo:diff}
 \end{equation}
-where $Block_{count}$ is the number of generated thread blocks, $SM_{num}$ is the number of SMs on a GPU. For RTX 2080Ti and AGX Xavier, $SM_{num}=68$ and $SM_{num}=8$ respectively.
+where $Block_{count}$ is the number of generated thread blocks, $SM_{num}$ is the number of SMs on a GPU. For RTX 2080Ti and Jetson AGX Xavier, $SM_{num}=68$ and $SM_{num}=8$ respectively.
 
 The whole workflow is described in Algorithm \ref{algo:pwalgo}.
 We first determine candidates for relevant parameters, including $Warp_H$, $Warp_W$, $Warp_{num}$, $Block_{num}$ and $C_{num}$, based on the size of input and filter (Line 1).

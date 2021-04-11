@@ -17,18 +17,18 @@ Jetson AGX Xavier GPU (Xavier), which integrates 512 Volta cores and 48KB shared
 
 
 \subsection{Performance Report}
-We apply our approach to depthwise convolution and pointwise convolution of DSC.  We run each test case ten times with batch sizes of 1, 8,
+We apply our approach to depthwise convolution and pointwise convolutions of DSC.  We run each test case ten times with batch sizes of 1, 8,
 16, 32, 64 and 128 on an unloaded machine and report the averaged running time. We found little variance during execution runs, less than
-2\%. We run convolutions with two data types, 32-bit floating points (FP32) for normal CNNs and 8-bit integer (INT8) for quantized CNNs
+2\%. We run convolutions with two data types, 32-bit floating point (FP32) for normal CNNs and 8-bit integer (INT8) for quantized CNNs
 \cite{nagel2019data}. In our experiments, we utilize data layouts $NCHW$ and $NHWC$ for FP32 and INT8, respectively, where $N, C, H, W$
-respectively denote for the batch size, the number of channels, the height and the width. CUDA \cite{cudatoolkit} provides 8-bit integer
+respectively denote the batch size, the number of channels, the height and the width. CUDA \cite{cudatoolkit} provides 8-bit integer
 4-element vector dot product (DP4A) instruction that performs the vector dot product between two 4-element vectors and accumulates the
 result in a 32-bit integer. Utilizing the DP4A instruction, we can group four contiguous channels of the INT8 data type into a 4-element
 vector to perform convolution. Therefore, we utilize $NHWC$ data layout for the INT8 data type due to its better performance over $NCHW$.
 
 In this work, we first test depthwise convolution with two filter sizes, $3 \times 3$ and $5 \times 5$, because these are commonly used
 filter sizes. Then, we report the performance of pointwise convolution. Lastly, we apply our optimized depthwise and pointwise convolutions
-on the standard and quantized MobileNetv2 to report the performance of both inference and training.
+on the standard and quantized MobileNetV2 and EfficientNet-B0 to report the performance of both inference and training.
 %
 %\subsection{Notations}
 %Throughout the evaluation, we use $I$, $F$, and $O$ to represent the input, the filter, and the output respectively, $N$, $C$, $H$, and $W$
@@ -36,7 +36,7 @@ on the standard and quantized MobileNetv2 to report the performance of both infe
 
 \section{Experimental Results}
 \label{exp} In this section, we report results for depthwise convolution (Section \ref{sec:depconvexp}) and pointwise convolution (Section
-\ref{sec:pwconvexp}), as well as inference and training of MobileNetV2 (Section \ref{sec:inferexp}), showing that our approach consistently
+\ref{sec:pwconvexp}), as well as inference and training of MobileNetV2 and EffcientNet-B0 (Section \ref{sec:inferexp}), showing that our approach consistently
 outperforms alternative methods by delivering the overall best performance.
 
 
@@ -83,34 +83,46 @@ outperforms alternative methods by delivering the overall best performance.
 \hspace{0em}
 \subfloat[Speedups on Xavier for the $5 \times 5$ fitler.]{\includegraphics[height=5.12cm]{./figure/dwspeedupf5jetson.eps}
 	\label{fig:dwspeedupjetsonf5}}
-\caption{Speedups of {\color{red}cuDNN IMPLICIT, ours, Tensorflow and PyTorch} over the baseline implementation for FP32 depthwise convolution with filters of size $3 \times 3$ and $5 \times 5$ on two platforms.} \label{fig:dwspeedup}
+\caption{Speedups of {\color{red}cuDNN IMPLICIT, our approach, Tensorflow and PyTorch} over the cuDNN GEMM implementation for FP32 depthwise convolution with filters of size $3 \times 3$ and $5 \times 5$ on two platforms.} \label{fig:dwspeedup}
 \end{figure*}
 
 
 
 \subsubsection{Setup} In this experiment, we compare our approach against the depthwise convolution implementations of cuDNN, PyTorch and TensorFlow.
 During the experiments, we have compared our approach to seven algorithms in cuDNN, including IMPLICIT\_GEMM (IMPLICIT),
-IMPLICIT\_PRECOMP\_GEMM (PRECOMP), GEMM, FFT, FFT\_TILING (TILING), WINOGRAD and WINOGRAD\_NONFUSED (NONFUSED). We
-found IMPLICIT gives the best performance {\color{red} in all test cases. Therefore, we report the results by comparing our approach against the IMPLICIT algorithm of
+IMPLICIT\_PRECOMP\_GEMM (PRECOMP), GEMM, FFT, FFT\_TILING (TILING), WINOGRAD and WINOGRAD\_NONFUSED (NONFUSED). Among these algorithms, IMPLICIT gives the best performance {\color{red} in all test cases. Therefore, we report the results by comparing our approach against the IMPLICIT algorithm of
 cuDNN and take cuDNN GEMM as the baseline in this section.} Table
 \ref{tab:depconvconfigs} gives the layer configurations used in this experiment where the notations were defined earlier in Section
 \ref{sec:roadmap}.
 
 
 \subsubsection{Overall results}
-\mypara{FP32 implementation.} Fig. \ref{fig:dwspeedup} shows that our approach gives the best speedup in nearly all test cases. Our
-approach delivers an average speedup of $2.2\times$ and $42.8\times$ for the $3 \times 3$ filter on 2080Ti and Xavier respectively, and
-$3.9\times$ and $39.4\times$ for the $5 \times 5$ filter on 2080Ti and Xavier respectively. The cuDNN IMPLICIT algorithm achieves an average
-speedup of $1.1\times$ and $32.8\times$ for the $3 \times 3$ filter on 2080Ti and Xavier respectively, and $1.1\times$ and $20.0\times$ for
-the $5 \times 5$ filter on 2080Ti and Xavier respectively. 
-{\color{red}PyTorch achieves an average speedup of $1.6\times$ and $30.1\times$ for the $3 \times 3$ filter on 2080Ti and Xavier respectively, and $1.9\times$ and $19.1\times$ for
-the $5 \times 5$ filter on 2080Ti and Xavier respectively. TensorFlow achieves an average speedup of $1.8\times$ and $34.6\times$ for the $3 \times 3$ filter on 2080Ti and Xavier respectively, and $2.2\times$ and $25.3\times$ for
-the $5 \times 5$ filter on 2080Ti and Xavier respectively.
-PyTorch and TensorFlow implementations focus on increasing GPU utilization without considering memory performance.} PRECOMP and GEMM
-algorithms need extra memory operations to compute output elements. As we have discussed in Section \ref{sec:intro}, depthwise convolution
-is more sensitive to memory performance than pointwise and multi-channel 2D convolutions. Consequently, these algorithms are not suitable
-for depthwise convolutions. Overall, our approach improves cuDNN IMPLICIT by $2.0\times$ and $1.4\times$ when using a $3 \times 3$  filter
-on 2080Ti and Xavier respectively, and $3.5\times$ and $2.1\times$ when using a $5 \times 5$ filter on 2080Ti and Xavier respectively.
+\mypara{FP32 implementation.} Fig. \ref{fig:dwspeedup} shows that our approach gives the best speedup in nearly all test cases. Table \ref{tab:dwspeedups} presents average speedups of cuDNN IMPLICIT, our approach, TensorFlow and PyTorch over cuDNN GEMM for $3 \times 3$ and $5 \times 5$ filter sizes on 2080Ti and Xavier.
+ 
+\begin{table}[]
+\setlength{\tabcolsep}{2.3pt}
+\caption{Average speedups of four implementations over cuDNN GEMM.}
+\vspace{-3mm}
+\label{tab:dwspeedups}
+\centering
+\rowcolors{2}{}{Gray}
+\begin{threeparttable}
+\begin{tabular}{l|r|r|r|r}
+\toprule
+& $3 \times 3$, 2080Ti & $3 \times 3$, Xavier &$5 \times 5$, 2080Ti&$5 \times 5$, Xavier\\
+\midrule
+IMPLICIT & 1.1 & 32.8 & 1.1 & 20.0\\
+ours & 2.2 & 42.8 & 3.9 &39.4 \\
+TensorFlow & 1.8 & 34.6 & 2.2 & 25.3\\
+PyTorch & 1.6 & 30.1 & 1.9 & 19.1 \\
+
+\bottomrule
+\end{tabular}
+\end{threeparttable}
+\end{table}
+
+%For the $3 \times 3$ filter on 2080Ti, Our approach delivers an average speedup of $2.2\times$ and $42.8\times$ for the $3 \times 3$ filter on 2080Ti and Xavier respectively, and $3.9\times$ and $39.4\times$ for the $5 \times 5$ filter on 2080Ti and Xavier respectively. The cuDNN IMPLICIT algorithm achieves an average speedup of $1.1\times$ and $32.8\times$ for the $3 \times 3$ filter on 2080Ti and Xavier respectively, and $1.1\times$ and $20.0\times$ for the $5 \times 5$ filter on 2080Ti and Xavier respectively.  {\color{red}PyTorch achieves an average speedup of $1.6\times$ and $30.1\times$ for the $3 \times 3$ filter on 2080Ti and Xavier respectively, and $1.9\times$ and $19.1\times$ for the $5 \times 5$ filter on 2080Ti and Xavier respectively. TensorFlow achieves an average speedup of $1.8\times$ and $34.6\times$ for the $3 \times 3$ filter on 2080Ti and Xavier respectively, and $2.2\times$ and $25.3\times$ for the $5 \times 5$ filter on 2080Ti and Xavier respectively.} PRECOMP and GEMM algorithms need extra memory operations to compute output elements.
+TensorFlow achieves better speedups than PyTorch because it employs several specially designed kernels to increase GPU utilization for different input sizes. However, both TensorFlow and PyTorch do not optimize memory performance for depthwise convolutions. Compared to TensorFlow, our approach achieves an average speedup of $1.5 \times$ and $1.6 \times$ when using a $3 \times 3$ filter on 2080Ti and Xavier respectively, and $2.2 \times$ and $1.7 \times$ when using a $5 \times 5$ filter on 2080Ti and Xavier respectively. Since cuDNN is closed source, we analyze its performance through CUDA Nsight Compute \cite{nsightcompute} and present the results in Section \ref{sec:dwfurther}. Overall, our approach improves cuDNN IMPLICIT by $2.0\times$ and $1.4\times$ when using a $3 \times 3$  filter on 2080Ti and Xavier respectively, and $3.5\times$ and $2.1\times$ when using a $5 \times 5$ filter on 2080Ti and Xavier respectively.
 
 \mypara{INT8 implementation.} We found using FP32 gives a speedup of more than $10\times$ over the INT8 version for depthwise convolution
 in cuDNN. This is because the INT8 version has the overhead of dequantization (i.e., converting the results from INT8 to FP32 after
@@ -118,7 +130,8 @@ convolution) and can not fully utilize DP4A instruction to accelerate INT8 convo
 speedups when using INT8 over cuDNN, PyTorch and TensorFlow.}
 
 
-\subsubsection{Further analysis}
+\subsubsection{Further analysis\label{sec:dwfurther}}
+
 \begin{figure}[t!]
     \centering
     \subfloat[][SM utilizations of the cuDNN IMPLICIT algorithm and our approach.]{\includegraphics[width=0.9\columnwidth]{./figure/smutil.eps}\label{fig:dwsmutil}}
@@ -135,7 +148,7 @@ Fig. \ref{fig:dwratio} reports the measured LDG (load from global memory) instru
 algorithm and our approach when using a $3 \times 3$ filter and a batch size of 32 on 2080Ti. Other configurations follow a similar
 performance trend. We can see in Fig. \ref{fig:dwsmutil} that the cuDNN IMPLICIT algorithm has an average of $2\times$ higher SM
 utilization compared to our approach. The reason our approach leads to lower SM utilization is explained as follows. Our row reuse
-algorithm performs better when a thread operates on more rows of the output. However, the more rows a thread compute on, the fewer warps
+algorithm performs better when a thread operates on more rows of the output. However, the more rows a thread computes on, the fewer warps
 and thread blocks we can generate. Without enough warps running on SMs, the SM utilization will degrade. Though cuDNN IMPLICIT has high SM
 utilization, it does not result in good performance for depthwise convolution. The reason is that depthwise convolution possesses a low
 computational requirement and is more sensitive to memory performance; hence the focus of performance optimization should be reducing the
@@ -144,7 +157,7 @@ with up to $4.5\times$ lower LDG instructions to be executed when compared to cu
 dominates the execution time of depthwise convolution, our approach thus can lead to better overall performance compared to cuDNN, despite
 lower SM utilization.
 
-{\color{red}From Fig. \ref{fig:dwspeedup} we can observe that speedups of our approach over cuDNN IMPLICIT fluctuate in a small range as batch size increases. The reason is that depthwise convolutions are memory bound and our column and row reuse techniques focus on optimizing memory performance of depthwise convolutions, thus high GPU utilization contributes to neither our approach nor cuDNN IMPLICIT.}
+{\color{red}From Fig. \ref{fig:dwspeedup} we can observe that speedups of our approach over cuDNN IMPLICIT fluctuate in a small range as batch size increases. The reason is that depthwise convolution is memory bound and our column and row reuse techniques focus on optimizing memory performance of depthwise convolution, thus high GPU utilization contributes to neither our approach nor cuDNN IMPLICIT.}
 
 \subsubsection{Summary}
 By reducing the number of memory accesses, our approach leads to faster memory access time and overall quick computation time when
@@ -242,7 +255,7 @@ $2.8\times$ and $1.8\times$ when performing depthwise convolutions on 2080Ti and
 \end{figure*}
 
 
-\subsubsection{Setup} In this experiment, {\color{red}PyTorch and TensorFlow use cuDNN implementations. Therefore we only need to} compare our approach against all available pointwise convolution implementations in cuDNN.
+\subsubsection{Setup}{\color{red}PyTorch and TensorFlow use cuDNN implementations, therefore we only need to} compare our approach against all available pointwise convolution implementations in cuDNN.
 The reported execution time of our approach includes the code running on both the CPU and the GPU, as described in Algorithm
 \ref{algo:pwalgo}. We use the layer configurations from MobileNet (version 2) and EfficientNet-B0 in this experiment. Across different layers of the MobileNet and EfficientNet-B0
 models, there are 30 different configurations for pointwise convolution. We test all these configurations and report the performance of 20
@@ -251,16 +264,16 @@ performance when batch sizes are set to 1, 8, 16, 32, 64 and 128.
 
 When using data type FP32, cuDNN IMPLICIT performs best {\color{red}in 152 out of 180 test cases on 2080Ti and 147 out of 180 test cases on Xavier}. Therefore, we report the results of
 cuDNN IMPLICIT and take cuDNN GEMM as the baseline implementation. When using data type INT8, cuDNN PRECOMP performs best {\color{red}in 180 out of 180 test cases on 2080Ti and 127 out of 180 test cases on Xavier. Hence, we show
-the results of cuDNN PRECOMP. In cuDNN, only PRECOMP and IMPLICIT are supported for INT8, thus we choose cuDNN IMPLICIT as the baseline}. Table \ref{tab:pwconvandparas} lists the layer configurations {\color{red}and parameter values generated for $Warp_H$, $Warp_W$, $Block_{num}$ and $C_{num}$.} The notations can be found at Section \ref{sec:roadmap}.
+the results of cuDNN PRECOMP. In cuDNN, only PRECOMP and IMPLICIT are supported for INT8, thus we choose cuDNN IMPLICIT as the baseline}. Table \ref{tab:pwconvandparas} lists the layer configurations {\color{red}and parameter values generated for $Warp_H$, $Warp_W$, $Block_{num}$ and $C_{num}$.} The notations can be found in Section \ref{sec:roadmap}.
 
-{\color{red}Normally, for a given convolution layer configuration, when the width of the logical layout of output (Fig. \ref{fig:pwworkflow}) is small, our scheme tends to choose a small $C_{num}$, which can generate more warps to saturate GPU. On the other hand, our scheme tends to choose a large $C_{num}$ to reduce the number of warps because there are already enough warps to saturate GPU. An exceptional parameter tuple (we take parameter tuples generated for 2080Ti as examples) is the layer configuration \textbf{CONV9} with $I_N = 1$. The width of the logical layout of \textbf{CONV9} is small, hence we would like to search for a small $C_{num}$. However, in this case, $C_{num} = 32$ is large. The reason is that our scheme finds that different values of $C_{num}$ produce similar GPU utilization, then it tries to maximize AI (Formula \ref{fo:diff}) and then choose $C_{num} = 32$ (the relationship of AI and $C_{num}$ is detailed in Section \ref{sec:cnum}).}
+{\color{red}Normally, for a given convolution layer configuration, when the width of the logical layout of output (Fig. \ref{fig:pwworkflow}) is small, our scheme tends to choose a small $C_{num}$, which can generate more warps to saturate GPU. Otherwise, our scheme tends to choose a large $C_{num}$ to reduce the number of warps because there are already enough warps to saturate GPU. An exceptional parameter tuple (we take parameter tuples generated for 2080Ti as examples) is the layer configuration CONV9 with $I_N = 1$. The width of the logical layout of CONV9 is small, hence we would like to search for a small $C_{num}$. However, in this case, $C_{num} = 32$ is large. The reason is that our scheme finds that different values of $C_{num}$ produce similar GPU utilization, then it tries to maximize AI (Formula \ref{fo:diff}) and then choose $C_{num} = 32$ (the relationship of AI and $C_{num}$ is detailed in Section \ref{sec:cnum}).}
 
 \subsubsection{Overall results}
 \mypara{FP32 implementation.}  Fig. \ref{fig:pwspeedupfp32} shows speedups of cuDNN IMPLICIT and our approach with FP32  for pointwise
 convolutions on two platforms. The baseline is cuDNN GEMM. Our approach achieves the best performance for all layers except for CONV20
 where our approach gives modest slowdown over cuDNN GEMM and IMPLICIT. This large convolution layer uses 1024 filters to convolve the
 input. Both cuDNN and our approaches are able to generate sufficient thread blocks to utilize the GPU cores. Under such scenarios, the
-memory access latency becomes the dominate bottleneck. The heavily optimized cuDNN enjoy the assembly level memory optimization to hide the
+memory access latency becomes the dominant bottleneck. The heavily optimized cuDNN enjoys the assembly level memory optimization to hide the
 goal memory access latency (as shown in Fig. \ref{fig:stalllongscore}), leading to better performance than our approach. Our approach can
 be further improved by employing a similar low-level optimization scheme. On average, our implementation and cuDNN IMPLICIT achieve an
 average speedup of $3\times$ and $1.5\times$ over cuDNN GEMM on 2080Ti respectively, and $2\times$ and $1.3\times$ on Xavier respectively.
@@ -293,7 +306,7 @@ obtains $1.3\times$ and $1.5\times$ improvement over cuDNN PRECOMP on 2080Ti and
     \label{fig:stalllongscore}
 \end{figure*}
 
-Fig. \ref{fig:pwinfo} reports the measured SM utilizations and ratios of executed LDG instruction counts of cuDNN IMPLICIT to our approach when using a batch size of 32 on 2080Ti. Other configurations have the similar performance.
+Fig. \ref{fig:pwinfo} reports the measured SM utilizations and ratios of executed LDG instruction counts of cuDNN IMPLICIT to our approach when using a batch size of 32 on 2080Ti. Other configurations have a similar performance.
 
 
 For a specific layer configuration, our approach tries to find a suitable number of thread blocks to utilize the GPU. While using a higher
@@ -306,12 +319,12 @@ over cuDNN IMPLICIT due to our schemes for improving the SM utilization and hidi
 Our approach exhibits a much higher SM utilization than cuDNN IMPLICIT. Unlike depthwise convolution, improving SM utilization is key for
 optimizing pointwise convolution because utilizing more SMs can significantly accelerate the computation.	As can be seen from Fig.
 \ref{fig:pwsmutil}, our approach has an average of $1.9\times$ higher SM utilization compared to cuDNN IMPLICIT. cuDNN IMPLICIT is
-optimized for training and large batch-sized inference. It uses a fixed block size work distribution strategy, which fails to utilize SMs
-efficiently when the batch size of 128 or smaller. Our dynamic block size scheme (Section \ref{sec:pwinputdependent}) overcome this
+optimized for training and large batch-sized inference. It uses a fixed tile size work distribution strategy, which fails to utilize SMs
+efficiently when the batch size of 128 or smaller. Our dynamic tile size scheme (Section \ref{sec:pwinputdependent}) overcomes this
 limitation by adaptively determining the right block size to use at runtime, which thus leads to better SM utilization and performance
 improvement.
 
-To hide the global memory access latency, our approach employes double buffering and channel distribution techniques as described in
+To hide the global memory access latency, our approach employs double buffering and channel distribution techniques as described in
 Section \ref{sec:pwinputindependent}. To quantify the benefit of our memory optimization strategies, consider now  Fig. \ref{fig:stalllongscore} that
 shows the average number of cycles each GPU warp spends on waiting for the GPU global memory access operation to complete. As a baseline,
 we implemented a simple pointwise without latency hiding, denoted as simple. We can see that our approach can significantly reduce the
@@ -322,13 +335,13 @@ much of the memory access overhead can be hidden by our memory optimization stra
 
 Furthermore, we observe some performance degradation for pointwise convolutions with the INT8 data type. When performing pointwise
 convolutions with INT8, we use $NHWC$ data format, and four continuous INT8 channels can be viewed as an INT32 channel. Thus, the size of
-channel dimension is reduced to one-fourth of the original size. For small channel sizes ($I_C \leq 96$), the corresponding reduced channel
+the channel dimension is reduced to one-fourth of the original size. For small channel sizes ($I_C \leq 96$), the corresponding reduced channel
 sizes restrict choices of the number of channels distributed, which leads to suboptimal performance compared to original channel sizes.
 This can be improved by having a better channel size allocation scheme for INT8. We leave this as our future work.
 
-{\color{red}From Fig. \ref{fig:pwspeedupfp32} and \ref{fig:pwspeedupint8} we can observe that as batch size increases, speedups of our approach over cuDNN IMPLICIT and cuDNN PRECOMP tend to become lower. The reason is that pointwise convolution is more sensitive to GPU utilization. As batch size increases, generated warps can saturate GPU, thus cuDNN IMPLICIT and PRECOMP can fully utilize GPU and our dynamic blocking size scheme will lose its advantage.}
+{\color{red}From Fig. \ref{fig:pwspeedupfp32} and \ref{fig:pwspeedupint8} we can observe that as batch size increases, speedups of our approach over cuDNN IMPLICIT and cuDNN PRECOMP tend to become lower. The reason is that pointwise convolution is more sensitive to GPU utilization. As batch size increases, generated warps can saturate GPU, thus cuDNN IMPLICIT and PRECOMP can fully utilize GPU and our dynamic tile size scheme will lose its advantage.}
 
-\subsubsection{Summary} Our approach uses a dynamic block-size method to improve SM utilization and double-buffering and channel distribution to hide
+\subsubsection{Summary} Our approach uses a dynamic tile-size method to improve SM utilization and double-buffering and channel distribution to hide
 memory access latency. With the help of both methods, we achieve an average speedup of $2\times$ and $1.5\times$ over cuDNN IMPLICIT on
 2080Ti and Xavier, respectively.
 
@@ -426,7 +439,7 @@ improvement of our approach compared to cuDNN implementations, denoted as \textb
 
 Table \ref{tab:infertime} reports the measured inference time. For MobileNetV2 with FP32, our approach improves the performance of
 inference by 12.2\% and 13.5\% on average compared to cuDNN IMPLICIT on 2080Ti and Xavier, respectively. For MobileNetV2 with INT8, we
-obtain 8.5\% and 11.7\% improvements on average over cuDNN PRECOMP on 2080Ti and Xavier, respectively. {\color{red}For EfficientNet-B0 with FP32, our approach improves cuDNN IMPLICIT by 14.4\% and 12.3\% on average compared on 2080Ti and Xavier, respectively. For EfficientNet-B0 with INT8, we obtain 9.9\% and 9.6\% improvements on average over cuDNN PRECOMP on 2080Ti and Xavier, respectively.}
+obtain 8.5\% and 11.7\% improvements on average over cuDNN PRECOMP on 2080Ti and Xavier, respectively. {\color{red}For EfficientNet-B0 with FP32, our approach improves cuDNN IMPLICIT by 14.4\% and 12.3\% on average on 2080Ti and Xavier, respectively. For EfficientNet-B0 with INT8, we obtain 9.9\% and 9.6\% improvements on average over cuDNN PRECOMP on 2080Ti and Xavier, respectively.}
 Table \ref{tab:traintime} shows that
-our approach reduces the training time by 8.5\% on average compared to cuDNN IMPLICIT on 2080Ti. The results show that our approach can
+our approach averagely reduces the training time of MobileNetV2 and EfficientNet-B0 by 9.7\% and 7.3\% on compared to cuDNN IMPLICIT on 2080Ti, respectively. The results show that our approach can
 significantly reduce both the model inference and training time by speeding up DSC operations.

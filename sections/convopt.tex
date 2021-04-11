@@ -18,7 +18,7 @@ on convolution operations.
 To apply our approach to depthwise convolution that works on a 2D matrix, we first divide the output into sub-blocks. Each sub-block
 contains exactly $n$ columns (in this work, $n = 32$, which is the default warp size of our GPU platform). The only exception is the last
 sub-block, which may contain less than $n$ columns. If a sub-block contains more than $k$ rows ($k=56$ in this work), we then further
-breakdown the sub-block along the height dimension. Each GPU thread block will process one or multiple sub-blocks, and each warp will
+break down the sub-block along the height dimension. Each GPU thread block will process one or multiple sub-blocks, and each warp will
 compute one sub-block. As a result, the threads within the same warp will process the adjacent columns of one sub-block.
 
 
@@ -64,10 +64,10 @@ warp, we divide elements of the last two columns evenly among the four threads.
 
 \subsubsection{Generalization} In Algorithm \ref{algo:overalldesign}, we describe our generalized solution. Here, we process the sub-blocks
 with exactly 32 columns (i.e., the default wrap size of our evaluation GPU) and the last sub-block in Lines 4-15 and 16-19, respectively.
-In this way, each GPU thread calculates one column of the output elements. This is done through a number of steps. First, each thread block
+In this way, each GPU thread calculates one column of the output elements. This is done through several steps. First, each thread block
 loads the filter into shared memory and divides the filter into a combination of 3-column and 5-column sub-filters. Next, each thread
 calculates the address of the first input element it needs (Lines 6). For each output element and sub-filter, each thread loads
-corresponding input elements into $iTemp$ and passes it to Algorithms \ref{algo:basic} and \ref{algo:basic2} to fill the row vector $iTemp$
+corresponding input elements into $iTemp$ and passes $iTemp$ to Algorithms \ref{algo:basic} and \ref{algo:basic2} to fill the row vector $iTemp$
 (Line 10). Then, each thread passes the filled vector $iTemp$ to Algorithm \ref{algo:rowreuse} to calculate multiple output elements and
 store results in the register array $sum$ (Line 11). Finally, when the calculation of one output element is completed, we write the
 corresponding result in $sum$ into the result array $O$ (Line 13).
