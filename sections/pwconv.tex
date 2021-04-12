@@ -27,7 +27,7 @@ Hence, we have two input dependent parameters, namely the height and width of th
 Now we introduce how to use the 2-level tiling scheme to determine candidate values for $Warp_H$ and $Warp_W$.
 \subsubsection{2-level tiling scheme}
 To divide the output into block tiles, we utilize two logical layouts of the output, \textbf{\emph{L1}} and \textbf{\emph{L2}}, as shown in Fig. \ref{fig:pwworkflow}.
-$F_N$ and $I_N \times I_H \times I_W$ represent the filter and input dimensions of the output respectively.
+$F_N$ and $I_N \times I_H \times I_W$ represent the filter and input dimensions of the output respectively. \RV{Notice that our 2-level tiling can handle arbitrary input sizes since we do not require $I_H = I_W$.}
 Before partitioning the output, we first select the layout of the output based on the size of the filter dimension.
 The rationale behind choosing the filter dimension instead of the input dimension can be described as follows.
 The number of filters, $F_N$, is fixed once the structure of a CNN is determined.

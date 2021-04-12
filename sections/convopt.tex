@@ -18,7 +18,7 @@ on convolution operations.
 To apply our approach to depthwise convolution that works on a 2D matrix, we first divide the output into sub-blocks. Each sub-block
 contains exactly $n$ columns (in this work, $n = 32$, which is the default warp size of our GPU platform). The only exception is the last
 sub-block, which may contain less than $n$ columns. If a sub-block contains more than $k$ rows ($k=56$ in this work), we then further
-break down the sub-block along the height dimension. Each GPU thread block will process one or multiple sub-blocks, and each warp will
+break down the sub-block along the height dimension. \RV{The blocking method implies that our approach can handle arbitrary input sizes}. Each GPU thread block will process one or multiple sub-blocks, and each warp will
 compute one sub-block. As a result, the threads within the same warp will process the adjacent columns of one sub-block.
 
 
