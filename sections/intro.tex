@@ -39,7 +39,7 @@ training samples is likely to be small due to resource constraints.
 
 Our work addresses the memory latency and work distribution issues identified above. By addressing these two issues together, our approach
 enables efficient DSC because it accelerates not only depthwise convolution by reducing the GPU memory access latency and also pointwise
-convolution for model inference and small-batch-sized training. {\color{red}The approach proposed in this work is an extension of our prior work \cite{lu2020optimizing} that targets memory performance optimizations.}
+convolution for model inference and small-batch-sized training.
 
 
 To improve the memory performance of depthwise convolution (that operates on the width and the height directions of the input matrix), we
@@ -84,3 +84,8 @@ This paper makes the following technical contributions:
     \item It presents a dynamic tile size scheme for pointwise convolution, increasing GPU utilization while minimizing the global memory
         access latency (Section \ref{sec:pwconv}).
 \end{itemize}
+
+\RV{This work extends our prior work \cite{lu2020optimizing} by proposing a new dynamic tile size scheme to optimize pointwise convolution,
+which is a key component of depthwise separable convolution. We also added new experiments performed on embedded devices and using 8-int
+integers for the neural networks. The new experiments demonstrate the robustness of the proposed approach, showing that it consistently
+outperforms cuDNN by delivering the overall best performance.}

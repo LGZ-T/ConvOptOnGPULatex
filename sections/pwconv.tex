@@ -1,5 +1,7 @@
 \section{Optimizing Pointwise Convolution}
-\label{sec:pwconv} In this section, we explain the workflow of our dynamic tile size scheme for pointwise convolution. {\color{red}This approach is an extension of our previous work \cite{lu2020optimizing} which only focuses on optimizating memory performance for convolution operations}. Our approach
+\label{sec:pwconv} 
+In this section, we explain the workflow of our dynamic tile size scheme for pointwise convolution. \RV{This approach
+extends the optimization for convolution operations in our prior work \cite{lu2020optimizing} to pointwise convolution}. Our approach
 consists of three stages, described as follows.
 
 In the first and second stages, we identify parameters related to the tile size and determine candidate values for each parameter (Section
@@ -70,7 +72,7 @@ Therefore, to utilize the available hardware register, one should set $Block_{nu
 We also found that setting $Block_{num}>4$ during searching offers little benefit and hence we set the $Block_{num}$ to be either 2 or 4 ($Block_{num}=\{2,4\}$).
 
 %To achieve the best performance, we iterate over all candidate combinations of $Block_{num}$, $C_{num}$ and $Warp_H$, and select the combination that leads to optimal SM utilization and arithmetic intensity.
-\subsubsection{Determine candidates for $C_{num}$\label{sec:cnum}} 
+\subsubsection{Determine candidates for $C_{num}$\label{sec:cnum}}
 When searching for the optimal combination of parameters, a small tile size may be generated, which may lead to low arithmetic intensity and can not hide global memory access latency.
  For example, we assume that the warp tile size is $Warp_H \times Warp_W = 8 \times 64$ and has 56 channels, which means that one warp needs to convolve 8 input elements with 64 filter elements and accumulates results 56 times to generate $8 \times 64=512$ elements. Since the height dimension is shared among 32 threads of the warp, each thread loads 8 input elements, and the width dimension is distributed across 32 threads, each thread loads 2 filter elements. Therefore, each thread accumulates 56 channels of $8 \times 2=16$ elements. Now we can estimate the arithmetic intensity of each thread for one iteration as $\frac{number\ of\ multiplications}{number\ of\ elements}=\frac{8 \times 2}{8 + 2}=1.6$. We can improve arithmetic intensity by distributing channels across threads, as shown in Fig. \ref{fig:pwworkflow}. We distribute eight channels ($C_{num}=8$) of each filter element across 32 threads of the warp.
  In that case, each warp can process $F_{num}=32/C_{num}=32/8=4$ filter elements and each thread processes $T_{num}=Warp_W/F_{num}=64/4=16$ filter elements.
@@ -104,9 +106,13 @@ R_{result}+R_{operand}+R_{tmp}+extraR \leq Limit_R
     \label{fo:limits}
 (2 \times Warp_H+2 \times Warp_W)\times C_{num} \times 4 \times 2 \leq Limit_S
 \end{equation}
-where $R_{tmp}$ is the number of temporary registers used to store filter and input elements loaded from global memory.
-$2 \times Warp_W$ and $2 \times Warp_H$ represent the width and height of the block tile respectively. 128 means each thread block has $Warp_{num} \times 32 = 4 \times 32=128$ threads to load data from global memory.
-In Formula \ref{fo:limitr}, $extraR$ is the number of additional registers allocated by the compiler and its value is determined through an off-line method. {\color{red}In our experiments, we set $extraR=40$ because CUDA compiler averagely allocates 40 extra registers for each kernel on both RTX 2080Ti and Jetson AGX Xavier.} In Formula \ref{fo:limits}, 4 means each element has 4 bytes and 2 means we use a double buffer method \cite{abdelfattah2019fast,nichols2019magmadnn}.
+where $R_{tmp}$ is the number of temporary registers used to store filter and input elements loaded from global memory. $2 \times Warp_W$
+and $2 \times Warp_H$ represent the width and height of the block tile respectively. 128 means each thread block has $Warp_{num} \times 32
+= 4 \times 32=128$ threads to load data from global memory. In Formula \ref{fo:limitr}, $extraR$ is the number of additional registers
+allocated by the compiler and its value is determined through an off-line method. \RV{In our experiments, we set $extraR=40$ because the
+NVIDIA CUDA runtime, on average, allocates 40 additional registers for each kernel on our evaluation platforms. These additional registers
+are usually used to store temporary variables for utilizing GPU arithmetic pipelines.} In Formula \ref{fo:limits}, 4 means each element has
+4 bytes and 2 means we use a double buffer method \cite{abdelfattah2019fast,nichols2019magmadnn}.
 \begin{figure*}
 	\centering
     \includegraphics[width=0.95\textwidth,height=7cm]{./figure/pwworkflow.eps}
