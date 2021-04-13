@@ -12,7 +12,7 @@ dimension (e.g., the RGB channels of an image) of an input. It achieves this by 
 that perform two convolutions: a depthwise convolution and a pointwise convolution. The former applies a single convolutional filter for
 each input channel, and the latter uses a $1 \times 1$ kernel to iterate through every single point of the input (e.g., the kernel has a
 depth of however many channels the input image has). Compare to a classical 2D convolution that operates on a 2D input of
-$channels \times width \times height$, the DSC reduces the number of multiplication operations as well as the number of parameters needed
+$channels \times height \times width$, the DSC reduces the number of multiplication operations as well as the number of parameters needed
 for the convolution filter (and hence the chance of model over-fitting) as well as computation time by having fewer arithmetic operations.
 For this reason, the DSC is widely used in latency-sensitive scenarios, such as using a trained CNN on embedded devices or performing
 distributed, on-device learning on resource-constrained systems~\cite{espeholt2019seed}.
@@ -42,13 +42,15 @@ enables efficient DSC because it accelerates not only depthwise convolution by r
 convolution for model inference and small-batch-sized training.
 
 
-To improve the memory performance of depthwise convolution (that operates on the width and the height directions of the input matrix), we
-introduce two novel optimization techniques for operations performed on rows (i.e., widths) and columns (i.e., heights). Our approach
+To improve the memory performance of depthwise convolution,
+%(that operates on the width and the height directions of the input matrix)
+we
+introduce two novel optimization techniques for operations performed on rows and columns. Our approach
 reduces the number of memory accesses required by reusing data. To improve column data reuse, we use the shuffle instructions (supported by
 both CUDA and OpenCL and hence is applicable to mainstream GPUs) to exchange elements among threads within a GPU warp (or working group).
 In this way, we can avoid reloading the same elements shared among different threads. We also apply shuffle instructions to converting
 dynamic indices to static indices to assist register promotion, an optimization strategy that is not exploited in previous studies
-\cite{vasilache2014fast}. To increase row data reuse, we multiply one input row with multiple rows of a convolutional kernel (or filter) to
+\cite{vasilache2014fast,chen2019versatile}. To increase row data reuse, we multiply one input row with multiple rows of a convolutional kernel (or filter) to
 compute multiple output elements at the same time. This strategy improves the data locality of elements within a row, reducing the number
 of memory transactions compared with that of the existing convolution processing pipeline. By reducing the number of memory accesses, our
 approach improves the performance of depthwise convolution.
@@ -59,7 +61,7 @@ threads to improve the GPU utilization. A challenge here is how to assign the ri
 access latency can be adequately hidden through computation. Having too little work per GPU thread will make the GPU memory access
 dominates the execution while having too large work assignment will lead to low GPU utilization (as only a small number of GPU threads will
 receive a tile to work on). To this end, our dynamic scheme distributes input or filter channels across threads within a warp to minimize
-memory latency with improved GPU parallelism. Some recent work \cite{li2019coordinated,pourghassemi2020limits} employ a heuristic method
+memory latency with improved GPU parallelism. Recent works \cite{li2019coordinated,pourghassemi2020limits} employ a heuristic method
 to maximize parallelism for GEMM. They achieve this by trying to combine multiple convolutions that can be computed concurrently into one
 GEMM kernel. Such a strategy assumes multiple parallel convolutions can be performed within a single GEMM kernel. However, this strong
 assumption is only valid for some special CNN structures like the inception layer in GoogleNet \cite{szegedy2015going}. As a result, these
@@ -67,11 +69,11 @@ prior methods are not applicable to the more general case of CNNs where convolut
 dependence. Our dynamic work distribution strategy does not rely on this assumption and hence is more generally applicable compared to
 these prior approaches.
 
-We evaluate our approach by applying it to both depthwise and pointwise convolutions with FP32 and INT8 of DSC on two GPU platforms: an NVIDIA RTX 2080Ti GPU
+We evaluate our approach by applying it to both depthwise and pointwise convolutions with FP32 and INT8 on two GPU platforms: an NVIDIA RTX 2080Ti GPU
 and an embedded NVIDIA Jetson AGX Xavier GPU. We compared our approach against cuDNN, an industry strengthened DNN library that is heavily
 optimized for the NVIDIA GPU architecture. Experimental results show that our approach delivers over $3\times$ and $2\times$ faster
 performance than cuDNN for depthwise and pointwise convolutions, respectively.
-We show that, when the batch size is $<=$ 128, our approach averagely improves the end-to-end training performance of MobileNet \cite{Sandler_2018_CVPR,howard2019searching} and EfficientNet-B0 \cite{tan2019efficientnet} by 11.5\% and 7.3\% respectively, and improves the end-to-end inference performance of MobileNet and EfficentNet-B0 by 9.7\% and 11.6\% respectively.
+We show that, when the batch size is $<=$ 128, our approach averagely improves the end-to-end training performance of MobileNetV2 \cite{Sandler_2018_CVPR,howard2019searching} and EfficientNet-B0 \cite{tan2019efficientnet} by 11.5\% and 7.3\% respectively, and improves the end-to-end inference performance of MobileNetV2 and EfficentNet-B0 by 9.7\% and 11.6\% respectively.
 
 
 
@@ -86,6 +88,6 @@ This paper makes the following technical contributions:
 \end{itemize}
 
 \RV{This work extends our prior work \cite{lu2020optimizing} by proposing a new dynamic tile size scheme to optimize pointwise convolution,
-which is a key component of depthwise separable convolution. We also added new experiments performed on embedded devices and using 8-int
+which is a key component of depthwise separable convolution. We also added new experiments performed on embedded devices and using 8-bit
 integers for the neural networks. The new experiments demonstrate the robustness of the proposed approach, showing that it consistently
 outperforms cuDNN by delivering the overall best performance.}

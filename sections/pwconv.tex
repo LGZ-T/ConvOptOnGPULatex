@@ -4,10 +4,9 @@ In this section, we explain the workflow of our dynamic tile size scheme for poi
 extends the optimization for convolution operations in our prior work \cite{lu2020optimizing} to pointwise convolution}. Our approach
 consists of three stages, described as follows.
 
-In the first and second stages, we identify parameters related to the tile size and determine candidate values for each parameter (Section
-\ref{sec:pwinputdependent}). The first and second stages process input dependent and independent parameters respectively. In the third
+In the first and second stages, we identify parameters related to the tile size and determine candidate values for each parameter (Section \ref{sec:pwinputdependent} and Section \ref{sec:pwinputindependent}). The first and second stages process input dependent and independent parameters respectively. In the third
 stage, as detailed in Algorithm \ref{algo:pwalgo}, we iterate over all combinations of parameters and search for the combination that
-achieves optimal SM utilization and data reuse (Section \ref{sec:pwinputindependent}).
+achieves optimal SM utilization and data reuse (Section \ref{sec:searchoptimal}).
 
 We note that previous studies \cite{tanner2018tensile, kelefouras2016high, abdelfattah2019fast, kurzak2015implementation,
 jiang2020enabling, tillet2017input, lan2019feathercnn,zhang2012autogeneration} have exploited tiling and autotuning for convolution and
@@ -83,6 +82,7 @@ Thus, candidates for $C_{num}$ are $C_{num}=\{1,2,4,8,16,32\}$.
 
 
 \subsection{Search For the Optimal Combination}
+\label{sec:searchoptimal}
 \subsubsection{Hardware resources constraints}
 When searching for the optimal combination of tiling and input independent parameters, we focus on combinations that can meet the hardware resources constraints,
 including registers and shared memory. In the rest of this section, we take layout \textbf{\emph{L1}} as an illustration example. Based on
@@ -91,7 +91,7 @@ $Block_{num}$, we calculate the number of registers each thread can use ($Limit_
 $Total_R$ and $Total_S$ represent the number of registers and the size of shared memory of an SM, respectively. On RTX 2080Ti,
 $Total_R=65536$ and $Total_S=64KB$ while  on Jetson AGX Xavier, $Total_R=65536$ and $Total_S=48KB$.
 
-In our approach, each warp processes one warp tile which contains $Warp_W \times Warp_H$ output elements.
+In our approach, each warp processes one warp tile which contains $Warp_H \times Warp_W$ output elements.
 Each thread calculates $Warp_H \times T_{num}$ elements and thus needs $R_{result}=Warp_H \times T_{num}$, $R_{operand}=Warp_H+T_{num}$ registers to store results and operands respectively.
 %In cases where the computational workload is small, we try to let each thread accumulates $Warp_H \times T_{num}$ output elements $k \in \{1,2,3,4\}$ times.
 The constraints can be formulated as follows:
@@ -106,18 +106,18 @@ R_{result}+R_{operand}+R_{tmp}+extraR \leq Limit_R
     \label{fo:limits}
 (2 \times Warp_H+2 \times Warp_W)\times C_{num} \times 4 \times 2 \leq Limit_S
 \end{equation}
-where $R_{tmp}$ is the number of temporary registers used to store filter and input elements loaded from global memory. $2 \times Warp_W$
-and $2 \times Warp_H$ represent the width and height of the block tile respectively. 128 means each thread block has $Warp_{num} \times 32
+where $R_{tmp}$ is the number of temporary registers used to store filter and input elements loaded from global memory. $2 \times Warp_H$
+and $2 \times Warp_W$ represent the height and width of the block tile respectively. 128 means each thread block has $Warp_{num} \times 32
 = 4 \times 32=128$ threads to load data from global memory. In Formula \ref{fo:limitr}, $extraR$ is the number of additional registers
 allocated by the compiler and its value is determined through an off-line method. \RV{In our experiments, we set $extraR=40$ because the
-NVIDIA CUDA runtime, on average, allocates 40 additional registers for each kernel on our evaluation platforms. These additional registers
+NVIDIA CUDA compiler, on average, allocates 40 additional registers for each kernel on our evaluation platforms. These additional registers
 are usually used to store temporary variables for utilizing GPU arithmetic pipelines.} In Formula \ref{fo:limits}, 4 means each element has
 4 bytes and 2 means we use a double buffer method \cite{abdelfattah2019fast,nichols2019magmadnn}.
 \begin{figure*}
 	\centering
     \includegraphics[width=0.95\textwidth,height=7cm]{./figure/pwworkflow.eps}
     \vspace{-3mm}
-    \caption{Workflow of our 2-level partition and channel distribution methods.} \label{fig:pwworkflow}
+    \caption{Workflow of our 2-level tiling and channel distribution methods.} \label{fig:pwworkflow}
 \end{figure*}
 \begin{algorithm}[t!]
     \small
@@ -147,7 +147,7 @@ are usually used to store temporary variables for utilizing GPU arithmetic pipel
             Repeat above steps but swap $sharedBuf1$ and $sharedBuf2$\;
         }
         Use segmented parallel reduction to get the final output elements and write the result to $O$\;
-        \caption{Pointwise Convolution Optimization}
+        \caption{Optimized Pointwise Convolution}
         \label{algo:pwalgo}
 \end{algorithm}
 \subsubsection{Searching workflow}
@@ -167,7 +167,7 @@ Two metrics can be calculated as follows:
 where $Block_{count}$ is the number of generated thread blocks, $SM_{num}$ is the number of SMs on a GPU. For RTX 2080Ti and Jetson AGX Xavier, $SM_{num}=68$ and $SM_{num}=8$ respectively.
 
 The whole workflow is described in Algorithm \ref{algo:pwalgo}.
-We first determine candidates for relevant parameters, including $Warp_H$, $Warp_W$, $Warp_{num}$, $Block_{num}$ and $C_{num}$, based on the size of input and filter (Line 1).
+We first determine candidates for relevant parameters, including $Warp_H$, $Warp_W$, $Warp_{num}$, $Block_{num}$ and $C_{num}$, based on the size of the input and filter (Line 1).
 Then we iterate over all combinations of parameters (Line 2), and keep the combinations that satisfy the constraints $Limit_R$ (Formula \ref{fo:limitr}) and $Limit_S$ (Formula \ref{fo:limits}) (Line 3).
 
 Next, we calculate values of $SM_{util}$ (Formula \ref{fo:smutil}) and $AI$ (Formula \ref{fo:diff}) for all satisfied combinations (Line 5) and select the optimal combination with following steps (Line 6-7):

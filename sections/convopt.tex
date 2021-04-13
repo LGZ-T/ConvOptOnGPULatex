@@ -10,8 +10,8 @@ that the warp size is 4 and thus having $laneid=threadid\%4$.} \label{fig:overal
 \end{figure}
 
 
-We have individually demonstrated how our column and row reuse optimizations can be used together to optimize GPU memory accesses for
-depthwise convolution operations. We now take the widely used 2D convolution as an example to illustrate how to apply both reuse algorithms
+%We have individually demonstrated how our column and row reuse optimizations can be used together to optimize GPU memory accesses for depthwise convolution operations. 
+We now take the widely used 2D convolution as an example to illustrate how to apply both reuse algorithms
 on convolution operations.
 
 
@@ -19,7 +19,8 @@ To apply our approach to depthwise convolution that works on a 2D matrix, we fir
 contains exactly $n$ columns (in this work, $n = 32$, which is the default warp size of our GPU platform). The only exception is the last
 sub-block, which may contain less than $n$ columns. If a sub-block contains more than $k$ rows ($k=56$ in this work), we then further
 break down the sub-block along the height dimension. \RV{The blocking method implies that our approach can handle arbitrary input sizes}. Each GPU thread block will process one or multiple sub-blocks, and each warp will
-compute one sub-block. As a result, the threads within the same warp will process the adjacent columns of one sub-block.
+compute one sub-block.
+%As a result, the threads within the same warp will process the adjacent columns of one sub-block.
 
 
 \begin{algorithm}[t!]
@@ -46,7 +47,7 @@ compute one sub-block. As a result, the threads within the same warp will proces
 		Divide columns of the last sub-block into multiple partitions and try to evenly assign those partitions to threads of a warp. Each thread uses a direct method to calculate elements of $O$.\;
 		The same method is adopted when processing the edge elements of $O$\;
 	}
-	\caption{Depthwise Convolution}
+	\caption{Optimized Depthwise Convolution}
 	\label{algo:overalldesign}
 \end{algorithm}
 
@@ -66,7 +67,7 @@ warp, we divide elements of the last two columns evenly among the four threads.
 with exactly 32 columns (i.e., the default wrap size of our evaluation GPU) and the last sub-block in Lines 4-15 and 16-19, respectively.
 In this way, each GPU thread calculates one column of the output elements. This is done through several steps. First, each thread block
 loads the filter into shared memory and divides the filter into a combination of 3-column and 5-column sub-filters. Next, each thread
-calculates the address of the first input element it needs (Lines 6). For each output element and sub-filter, each thread loads
+calculates the address of the first input element it needs (Line 6). For each output element and sub-filter, each thread loads
 corresponding input elements into $iTemp$ and passes $iTemp$ to Algorithms \ref{algo:basic} and \ref{algo:basic2} to fill the row vector $iTemp$
 (Line 10). Then, each thread passes the filled vector $iTemp$ to Algorithm \ref{algo:rowreuse} to calculate multiple output elements and
 store results in the register array $sum$ (Line 11). Finally, when the calculation of one output element is completed, we write the
