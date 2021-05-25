@@ -48,7 +48,7 @@ transaction. As a result, each step will incur one memory access, five for the f
 \ref{fig:directalgo}. After completing step 5, each pair of adjacent threads will have four duplicate input elements, corresponding to the
 duplicate columns in Fig. \ref{fig:twostrategies}. Specifically, input elements 1, 2 and 3 loaded in step 2 would have already been
 loaded by threads $t1$, $t2$ and $t3$ in the previous step (Fig. \ref{fig:directalgo}). The repeated load to these elements leads to
-redundant memory accesses and unnecessary memory access latency. Even the elements may be prefetched to the L1 cache before the next step,
+redundant memory accesses and unnecessary memory access latency. Even if the elements may be prefetched to the L1 cache before the next step,
 access to the L1 cache still takes around 30 cycles on a 2080Ti GPU. To reduce the memory overhead, we would like to avoid such redundant
 memory accesses.
 
@@ -107,7 +107,7 @@ $iTemp[1]$. Finally, we use the shuffle instruction to exchange the elements amo
 Using Algorithm \ref{algo:basic}, we can replace the compile-time undecidable dynamic index $i$ in $shfl\_xor(iTemp[i],2)$ with static
 indexing $1$ in $shfl\_xor(iTemp[1],2)$ of our working example. By doing so, we promote register allocation by allowing the compiler to put
 all the thread-local variables into the fast GPU registers (that have access latency of 1 to 2 cycles as opposed to 500 cycles when the
-data are stored in the local memory). Since steps 4 and 5 of our implementation (Fig. \ref{fig:optalgo2}) adopt a similar procedure as
+data are stored in the local memory). \RV{Note that this approach will not improve the register usage.} Since steps 4 and 5 of our implementation (Fig. \ref{fig:optalgo2}) adopt a similar procedure as
 step 3 in Fig. \ref{fig:optalgo1}, we can adapt Algorithm \ref{algo:basic} to obtain Algorithm \ref{algo:basic2} with minor
 modifications. The main distinction between the two algorithms comes from how we process steps 3-5 shown in Fig. \ref{fig:optalgo2}.
 Specifically, we use four threads to exchange the elements in step 3 for Algorithm \ref{algo:basic}, but use only two adjacent threads in
