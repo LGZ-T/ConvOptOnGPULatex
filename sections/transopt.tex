@@ -1,15 +1,14 @@
 \section{Optimizing Depthwise Convolution}
 \label{sec:strategies} In this section, we describe our two optimizations, column reuse (Section \ref{sec:creuse}) and row reuse (Section
 \ref{sec:rowreuse}), for reducing the number of GPU memory accesses for depthwise convolution.
-%{\color{red}Both optimizations are proposed and briefly described in our previous work \cite{lu2020optimizing}. In this paper, we give a
-%detailed description of both optimizations.}
+
 \subsection{Column Reuse Optimization}
 \label{sec:creuse}
 
 
 \begin{figure}[t!]
 \centering
-  \includegraphics[width=0.9\columnwidth,height=5.5cm]{./figure/twostrategies.eps}
+  \includegraphics[width=0.9\columnwidth,height=5.5cm]{figure/twostrategies.eps}
   \vspace{-3mm}
   \caption{A working example of performing a depthwise convolution using a GPU. Here, the filter size is $5 \times 5$, the input image size is $6 \times 11$
   and the output size is $2 \times 7$.}
@@ -29,13 +28,13 @@ overlapped regions and generates four duplicate rows.
 
 \begin{figure*}[!t]
 \centering
-\subfloat[Direct convolution: Each thread loads 5 input elements from global memory.]{\includegraphics[width=0.3\textwidth,height=3.2cm]{./figure/directconv.eps}
+\subfloat[Direct convolution: Each thread loads 5 input elements from global memory.]{\includegraphics[width=0.3\textwidth,height=3.2cm]{figure/directconv.eps}
 	\label{fig:directalgo}}
 \hspace{0em}
-\subfloat[Optimized convolution: each thread retrieves its third element from the corresponding thread.]{\includegraphics[width=0.3\textwidth,height=3.2cm]{./figure/optalgo1.eps}
+\subfloat[Optimized convolution: each thread retrieves its third element from the corresponding thread.]{\includegraphics[width=0.3\textwidth,height=3.2cm]{figure/optalgo1.eps}
 	\label{fig:optalgo1}}
 \hspace{0em}
-\subfloat[Our approach: each thread retrieves its second and fourth elements from corresponding threads.]{\includegraphics[width=0.3\textwidth,height=3.2cm]{./figure/optalgo2.eps}
+\subfloat[Our approach: each thread retrieves its second and fourth elements from corresponding threads.]{\includegraphics[width=0.3\textwidth,height=3.2cm]{figure/optalgo2.eps}
 	\label{fig:optalgo2}}
 
 \caption{Illustration of direct and optimized convolutions. We use a $5 \times 5$ filter  and each thread calculates the convolution for
@@ -48,7 +47,7 @@ transaction. As a result, each step will incur one memory access, five for the f
 \ref{fig:directalgo}. After completing step 5, each pair of adjacent threads will have four duplicate input elements, corresponding to the
 duplicate columns in Fig. \ref{fig:twostrategies}. Specifically, input elements 1, 2 and 3 loaded in step 2 would have already been
 loaded by threads $t1$, $t2$ and $t3$ in the previous step (Fig. \ref{fig:directalgo}). The repeated load to these elements leads to
-redundant memory accesses and unnecessary memory access latency. Even if the elements may be prefetched to the L1 cache before the next step,
+redundant memory accesses and unnecessary memory access latency. Even the elements may be prefetched to the L1 cache before the next step,
 access to the L1 cache still takes around 30 cycles on a 2080Ti GPU. To reduce the memory overhead, we would like to avoid such redundant
 memory accesses.
 
@@ -89,7 +88,6 @@ $iTemp[1]$. Finally, we use the shuffle instruction to exchange the elements amo
 \small
 
 \tcp{$iTemp$: Buffer for storing input elements loaded from memory or generated through  \emph{shuffle} instructions.}
-%\tcp{$iTemp$ contains input elements either loaded from global memory or through \emph{shuffle} instructions.}
 \KwIn{$iTemp$}
 	\KwOut{$iTemp$}
 	$tid \gets threadIdx.x$\;
@@ -122,20 +120,12 @@ So far we have described our approach using a concrete working example with a pr
 filter size, but our algorithms can be generalized to filters with an arbitrary size. To apply our approach to a filter of size $n \times
 n$, we will first divide the filter into several $n \times 5$ sub-filters. Next, we divide the remaining columns into several $n \times 3$
 sub-filters with some overlap columns. 
-%{\color{red}Delete:For example, and as illustrated in Fig. \ref{fig:split7x7}, a $7 \times 7$ filter can be divided into a $7 \times 5$ sub-filter and a $7 \times 3$ sub-filter with one overlap column.}
- Each $n \times 5$ and $n \times 3$ filters can then be directly processed by Algorithm \ref{algo:basic} and Algorithm \ref{algo:basic2}.
+Each $n \times 5$ and $n \times 3$ filters can then be directly processed by Algorithm \ref{algo:basic} and Algorithm \ref{algo:basic2}.
 
-%\begin{figure}[t!]
-%\centering
-%  \includegraphics[height=3cm]{./figure/split7x7.eps}
-%  \vspace{-3mm}
-%  \caption{Divide a $7 \times 7$ filter into one $7 \times 5$ filter and one $7 \times 3$ filter.}
-%  \label{fig:split7x7}
-%\end{figure}
 
 \begin{figure}[t!]
 	\centering
-	\includegraphics[width=0.8\columnwidth,height=3.5cm]{./figure/exchange.eps}
+	\includegraphics[width=0.8\columnwidth,height=3.5cm]{figure/exchange.eps}
 	\vspace{-3mm}
 \caption{Convert dynamic indexing of array $iTemp$ into static indexing, allowing  $iTemp$ to be allocated in registers instead of the local memory.}
 \label{fig:exchange}
@@ -160,7 +150,7 @@ sub-filters with some overlap columns.
 \label{sec:rowreuse}
 \begin{figure}[t!]
 	\centering
-	\includegraphics[width=0.8\columnwidth,height=3cm]{./figure/rowreuse.eps}
+	\includegraphics[width=0.8\columnwidth,height=3cm]{figure/rowreuse.eps}
 	\vspace{-3mm}
 \caption{A $3 \times 3$ filter is used to slide over the input image along the height dimension, which produces a column of output elements.}
 \label{fig:rowreuse}
@@ -181,8 +171,7 @@ As can be seen from the above equations, $row_{i1}$ and $row_{i3}$ are loaded tw
 
 \subsubsection{Our optimization}
 To remove redundant loads to the same row, we redesign the execution flow of the standard depthwise convolution. Specifically, after
-fetching a row from the input, we compute the number of output elements that depend on the loaded row. 
-%For our working example, the computation of element $out_0$ in the output column depends on $row_{i0}$. Similarly, output elements $out_0$ and $out_1$ will need $row_{i1}$. 
+fetching a row from the input, we compute the number of output elements that depend on the loaded row.  
 With this information in place, we use the loaded row to perform inner products with corresponding rows of the filter to
 calculate the output elements whose outcomes depending on the loaded row. Our approach translates the execution flow of the working example
 presented in Fig. \ref {fig:rowreuse} to:

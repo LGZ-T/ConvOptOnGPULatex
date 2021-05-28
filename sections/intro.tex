@@ -59,7 +59,7 @@ To overcome the drawback of fixed tile size work partition of a GEMM kernel for 
 scheme. Our approach first adjusts the work assigned to each GPU thread so that we have a sufficient number of tiles to be distributed to GPU
 threads to improve the GPU utilization. A challenge here is how to assign the right amount of work to GPU threads so that the global memory
 access latency can be adequately hidden through computation. Having too little work per GPU thread will make the GPU memory access
-dominate the execution while having too large work assignment will lead to low GPU utilization (as only a small number of GPU threads will
+dominates the execution while having too large work assignment will lead to low GPU utilization (as only a small number of GPU threads will
 receive a tile to work on). To this end, our dynamic scheme distributes input or filter channels across threads within a warp to minimize
 memory latency with improved GPU parallelism. Recent works \cite{li2019coordinated,pourghassemi2020limits} employ a heuristic method
 to maximize parallelism for GEMM. They achieve this by trying to combine multiple convolutions that can be computed concurrently into one

@@ -71,16 +71,16 @@ outperforms alternative methods by delivering the overall best performance.
 
 \begin{figure*}[!t]
 \centering
-\subfloat[Speedups on 2080Ti for the $3 \times 3$ fitler.]{\includegraphics[height=5.12cm]{./figure/dwspeedupf3rtx.eps}
+\subfloat[Speedups on 2080Ti for the $3 \times 3$ fitler.]{\includegraphics[height=5.12cm]{figure/dwspeedupf3rtx.eps}
 	\label{fig:dwspeeduprtxf3}}
 \hspace{0em}
-\subfloat[Speedups on 2080Ti for the $5 \times 5$ fitler.]{\includegraphics[height=5.12cm]{./figure/dwspeedupf5rtx.eps}
+\subfloat[Speedups on 2080Ti for the $5 \times 5$ fitler.]{\includegraphics[height=5.12cm]{figure/dwspeedupf5rtx.eps}
 	\label{fig:dwspeeduprtxf5}}
 \hspace{0em}
-\subfloat[Speedups on Xavier for the $3 \times 3$ fitler.]{\includegraphics[height=5.12cm]{./figure/dwspeedupf3jetson.eps}
+\subfloat[Speedups on Xavier for the $3 \times 3$ fitler.]{\includegraphics[height=5.12cm]{figure/dwspeedupf3jetson.eps}
 	\label{fig:dwspeedupjetsonf3}}
 \hspace{0em}
-\subfloat[Speedups on Xavier for the $5 \times 5$ fitler.]{\includegraphics[height=5.12cm]{./figure/dwspeedupf5jetson.eps}
+\subfloat[Speedups on Xavier for the $5 \times 5$ fitler.]{\includegraphics[height=5.12cm]{figure/dwspeedupf5jetson.eps}
 	\label{fig:dwspeedupjetsonf5}}
 \caption{\RV{Speedups of IMPLICIT, PRECOMP, our approach and TensorFlow over the baseline implementation (GEMM) for FP32 depthwise convolution with filters of size $3 \times 3$ and $5 \times 5$ on two platforms.}} \label{fig:dwspeedup}
 \end{figure*}
@@ -127,12 +127,12 @@ convolution) and can not fully utilize DP4A instruction to accelerate INT8 convo
 
 \begin{figure}[t!]
     \centering
-    \subfloat[][SM utilizations of IMPLICIT and our approach.]{\includegraphics[width=0.9\columnwidth]{./figure/smutil.eps}\label{fig:dwsmutil}}
+    \subfloat[][SM utilizations of IMPLICIT and our approach.]{\includegraphics[width=0.9\columnwidth]{figure/smutil.eps}\label{fig:dwsmutil}}
     \qquad
     %\vspace{5mm}
     \subfloat[][The ratio of executed LDG (load from global memory) instruction counts given by IMPLICIT over our
     approach ($ratio=\frac{LDG\ inst\ counts\ of\ cuDNN}{LDG\ inst\ counts\ of\
-    ours}$).]{\includegraphics[width=0.9\columnwidth]{./figure/ldginst.eps}\label{fig:dwldginst}} \vspace{-2mm} \caption{SM utilizations and ratios of
+    ours}$).]{\includegraphics[width=0.9\columnwidth]{figure/ldginst.eps}\label{fig:dwldginst}} \vspace{-2mm} \caption{SM utilizations and ratios of
     executed LDG instruction counts for depthwise convolutions with a batch size of 32 and a filter size of $3\times3$ on the NVIDIA 2080Ti GPU.}
     \label{fig:dwratio}
 \end{figure}
@@ -222,10 +222,10 @@ and [$Warp_H$, $Warp_W$, $Block_{num}$, $C_{num}$] to represent parameter values
 \begin{figure*}
 \captionsetup[subfloat]{labelformat=empty,skip=0pt}
 	\centering
-	\subfloat[]{\includegraphics[width=\textwidth]{./figure/pwspeeduprtx.eps}
+	\subfloat[]{\includegraphics[width=\textwidth]{figure/pwspeeduprtx.eps}
 	\label{fig:pwspeeduprtx}}
 \vspace{-5mm}
-	\subfloat[]{\includegraphics[width=\textwidth]{./figure/pwspeedupjetson.eps}
+	\subfloat[]{\includegraphics[width=\textwidth]{figure/pwspeedupjetson.eps}
 	\label{fig:pwspeedupjetson}}
 	\vspace{-6mm}
 	\caption{\RV{Speedups of IMPLICIT, PRECOMP and ours over GEMM for pointwise convolutions with FP32 on 2080Ti (top) and Xavier (bottom).}}
@@ -236,10 +236,10 @@ and [$Warp_H$, $Warp_W$, $Block_{num}$, $C_{num}$] to represent parameter values
 \captionsetup[subfloat]{labelformat=empty,skip=0pt}
 
 	\centering
-	\subfloat[]{\includegraphics[width=\textwidth]{./figure/pwspeeduprtxint8.eps}
+	\subfloat[]{\includegraphics[width=\textwidth]{figure/pwspeeduprtxint8.eps}
 	\label{fig:pwspeeduprtxint8}}
 	\vspace{-5mm}
-	\subfloat[]{\includegraphics[width=\textwidth]{./figure/pwspeedupjetsonint8.eps}
+	\subfloat[]{\includegraphics[width=\textwidth]{figure/pwspeedupjetsonint8.eps}
 	\label{fig:pwspeedupjetsonint8}}
 	\vspace{-6mm}
 	\caption{Speedups of PRECOMP and ours over IMPLICIT for pointwise convolutions with INT8 on 2080Ti (top) and Xavier (bottom).}
@@ -309,10 +309,10 @@ pointwise convolution. Table \ref{tab:pwspeedups} presents average speedups of P
 \subsubsection{Further analysis}
 \begin{figure}[t!]
     \centering
-    \subfloat[][SM utilizations of IMPLICIT and our approach.]{\includegraphics[width=\columnwidth]{./figure/pwsmutil.eps}\label{fig:pwsmutil}}
+    \subfloat[][SM utilizations of IMPLICIT and our approach.]{\includegraphics[width=\columnwidth]{figure/pwsmutil.eps}\label{fig:pwsmutil}}
     \qquad
 
-    \subfloat[][Ratios of executed LDG (load from global memory) instruction counts of IMPLICIT to our approach ($ratio=\frac{LDG\ inst\ counts\ of\ cuDNN}{LDG\ inst\ counts\ of\ ours}$).]{\includegraphics[width=\columnwidth]{./figure/pwldginst.eps}\label{fig:pwldginst}}
+    \subfloat[][Ratios of executed LDG (load from global memory) instruction counts of IMPLICIT to our approach ($ratio=\frac{LDG\ inst\ counts\ of\ cuDNN}{LDG\ inst\ counts\ of\ ours}$).]{\includegraphics[width=\columnwidth]{figure/pwldginst.eps}\label{fig:pwldginst}}
     \vspace{-2mm}
     \caption{SM utilizations and ratios of executed LDG instruction counts for pointwise convolutions with a batch size of 32 on 2080Ti.}
     \label{fig:pwinfo}
@@ -320,7 +320,7 @@ pointwise convolution. Table \ref{tab:pwspeedups} presents average speedups of P
 
 \begin{figure*}[t!]
     \centering
-    \includegraphics[width=0.97\textwidth,height=3cm]{./figure/longscore.eps}
+    \includegraphics[width=0.97\textwidth,height=3cm]{figure/longscore.eps}
     \vspace{-3mm}
     \caption{The average number of cycles each warp spends on waiting for the global memory access to complete.}
     \label{fig:stalllongscore}
