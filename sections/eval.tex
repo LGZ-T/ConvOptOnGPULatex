@@ -93,7 +93,7 @@ During the experiments, we have compared our approach to seven algorithms in cuD
 
 \subsubsection{Overall results}
 \mypara{FP32 implementation.} Fig. \ref{fig:dwspeedup} shows that our approach gives the best speedup in nearly all test cases. \RV{Table \ref{tab:dwspeedups} presents average speedups of IMPLICIT, PRECOMP, our approach and TensorFlow over GEMM for $3 \times 3$ and $5 \times 5$ filter sizes on 2080Ti and Xavier.}
- 
+
 \begin{table}[]
 \setlength{\tabcolsep}{2.3pt}
 \caption{\RV{Average speedups of four depthwise convolution implementations with FP32 over GEMM.}}
@@ -271,13 +271,13 @@ detailed in Section \ref{sec:cnum}). }
 
 \subsubsection{Overall results}
 \mypara{FP32 implementation.}  Fig. \ref{fig:pwspeedupfp32} shows speedups of IMPLICIT, PRECOMP and our approach for pointwise
-convolutions on two platforms. The baseline is GEMM. 
+convolutions on two platforms. The baseline is GEMM.
 %Our approach achieves the best performance for all layers except for CONV20
 %where our approach gives modest slowdown over IMPLICIT and PRECOMP. This large convolution layer uses 1024 filters to convolve the
 %input. Both cuDNN and our approaches are able to generate sufficient thread blocks to utilize the GPU cores. Under such scenarios, the
 %memory access latency becomes the dominant bottleneck. The heavily optimized cuDNN enjoys the assembly level memory optimization to hide the
 %goal memory access latency (as shown in Fig. \ref{fig:stalllongscore}), leading to better performance than our approach. Our approach can
-%be further improved by employing a similar low-level optimization scheme. 
+%be further improved by employing a similar low-level optimization scheme.
 \RV{Average speedups of IMPLICIT, PRECOMP and our approach on 2080Ti and Xavier are shown in Table \ref{tab:pwspeedups}. The performance delivered by our approach translates to an improvement of $2\times$ and $1.5\times$ over IMPLICIT on 2080Ti and Xavier respectively.}
 
 \begin{table}[]
@@ -288,7 +288,7 @@ convolutions on two platforms. The baseline is GEMM.
 \centering
 \rowcolors{2}{}{Gray}
 \begin{threeparttable}
-\begin{tabular}{l|r|r|r|r}
+\begin{tabular}{lrrrr}
 \toprule
 & FP32, 2080Ti & FP32, Xavier &INT8, 2080Ti&INT8, Xavier\\
 \midrule

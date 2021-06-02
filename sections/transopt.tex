@@ -68,21 +68,20 @@ Since the indices and the access pattern to $iTemp$ are not available at compile
 If we can promote register allocation for $iTemp$, we can then further improve the performance of convolution.
 
 \subsubsection{Our approach}
-\label{sec:columnreuse}
-Our column reuse approach (Fig. \ref {fig:optalgo2}) thus converts dynamic indexing to static array access to promote register
-allocation. This approach is described in Algorithms \ref{algo:basic} and \ref{algo:basic2}, where the first algorithm is used for step 3,
-and the latter is used for steps 4 and 5. Note that these two algorithms can be used for different sized convolution kernels, which we
-will discuss in Section \ref {sec:otherfiltersize}.
+\label{sec:columnreuse} Our column reuse scheme (Fig. \ref {fig:optalgo2}) converts dynamic indexing to static array accesses to promote
+register allocation. This strategy is described in Algorithms \ref{algo:basic} and \ref{algo:basic2}, where the first algorithm is used for
+step 3, and the latter is used for steps 4 and 5. Note that these two algorithms can be used for different sized convolution kernels, for
+which we will discuss in Section \ref {sec:otherfiltersize}.
 
-Fig. \ref{fig:exchange} shows the process of Algorithm \ref{algo:basic}. Here, we first load the corresponding first and fifth input
-elements into $iTemp$ before passing it to Algorithm \ref{algo:basic}. Then, we pack two 32-bit elements into a 64-bit variable $exchange$,
-where $iTemp[4]$ and $iTemp[0]$ are the high and low 32 bits, respectively (Line 2). As threads $t0$ and $t1$ will provide the fifth
-element of the data they load, which are the high 32 bits of $exchange$, we right shift $exchange$ for both threads by an offset of 32 to
-place $iTemp[4]$ in the low 32 bits. Now turning our attention to threads $t2$ and $t3$ that will provide the first element of the data
-they load. Since the elements are the low 32 bits of $exchange$, we right shift $exchange$ in both threads by an offset of 0. The number
-of places to be shifted for each thread is calculated based on the thread ID (Line 3). Next, we unpack $exchange$ into $iTemp[2]$ (high 32
-bits) and $iTemp[1]$ (low 32 bits) (Line 5). By doing so, we can retrieve the element a thread needs to supply from a fixed location,
-$iTemp[1]$. Finally, we use the shuffle instruction to exchange the elements among threads (Line 6).
+Fig. \ref{fig:exchange} gives a working example of Algorithm \ref{algo:basic}. Here, we first load the corresponding first and fifth input
+elements into $iTemp$ before passing it to Algorithm \ref{algo:basic}. Then, we pack two 32-bit elements into a 64-bit variable,
+$exchange$, where $iTemp[4]$ and $iTemp[0]$ are the high and low 32 bits, respectively (Line 2). As threads $t0$ and $t1$ will provide the
+fifth element of the data they load, which are the high 32 bits of $exchange$, we right shift $exchange$ for both threads by an offset of
+32 to place $iTemp[4]$ in the low 32 bits. Now turning our attention to threads $t2$ and $t3$ that will provide the first element of the
+data they load. Since the elements are the low 32 bits of $exchange$, we right shift $exchange$ in both threads by an offset of 0. The
+number of places to be shifted for each thread is calculated based on the thread ID (Line 3). Next, we unpack $exchange$ into $iTemp[2]$
+(high 32 bits) and $iTemp[1]$ (low 32 bits) (Line 5). By doing so, we can retrieve the element a thread needs to supply from a fixed
+location, $iTemp[1]$. Finally, we use the shuffle instruction to exchange the elements among threads (Line 6).
 
 \begin{algorithm}[t!]
 \small
@@ -102,15 +101,16 @@ $iTemp[1]$. Finally, we use the shuffle instruction to exchange the elements amo
 	
 \end{algorithm}
 
-Using Algorithm \ref{algo:basic}, we can replace the compile-time undecidable dynamic index $i$ in $shfl\_xor(iTemp[i],2)$ with static
-indexing $1$ in $shfl\_xor(iTemp[1],2)$ of our working example. By doing so, we promote register allocation by allowing the compiler to put
-all the thread-local variables into the fast GPU registers (that have access latency of 1 to 2 cycles as opposed to 500 cycles when the
-data are stored in the local memory). \RV{Note that this approach will not improve the register usage.} Since steps 4 and 5 of our implementation (Fig. \ref{fig:optalgo2}) adopt a similar procedure as
-step 3 in Fig. \ref{fig:optalgo1}, we can adapt Algorithm \ref{algo:basic} to obtain Algorithm \ref{algo:basic2} with minor
-modifications. The main distinction between the two algorithms comes from how we process steps 3-5 shown in Fig. \ref{fig:optalgo2}.
-Specifically, we use four threads to exchange the elements in step 3 for Algorithm \ref{algo:basic}, but use only two adjacent threads in
-steps 4 and 5 for Algorithm \ref{algo:basic2}. To adapt to the change of the number of threads used, we recalculate the shift offset for
-each thread (Line 3 of both algorithms) and change the arguments of the shuffle instruction (Line 6 in both algorithms).
+Using Algorithm \ref{algo:basic}, we can replace dynamic index $i$ in $shfl\_xor(iTemp[i],2)$ (whose value is unknown at compile time)
+ with a static index, $1$ in $shfl\_xor(iTemp[1],2)$, in
+our working example. By doing so, we promote register allocation by allowing the compiler to put all the thread-local variables into the
+fast GPU registers (that have access latency of 1 to 2 cycles as opposed to 500 cycles when the data are stored in the local memory).
+\RV{Note that this approach will not improve the register usage.} Since steps 4 and 5 of our implementation (Fig. \ref{fig:optalgo2}) adopt
+a similar procedure as step 3 in Fig. \ref{fig:optalgo1}, we can adapt Algorithm \ref{algo:basic} to derive Algorithm \ref{algo:basic2}
+with minor modifications. The main distinction between the two algorithms comes from how we process steps 3-5 shown in Fig.
+\ref{fig:optalgo2}. Specifically, we use four threads to exchange the elements in step 3 for Algorithm \ref{algo:basic}, but use only two
+adjacent threads in steps 4 and 5 for Algorithm \ref{algo:basic2}. To adapt to the change of the number of threads used, we recalculate the
+shift offset for each thread (Line 3 of both algorithms) and change the arguments of the shuffle instruction (Line 6 in both algorithms).
 
 For our working example, Algorithms \ref{algo:basic} and \ref{algo:basic2} respectively reduce the number of memory accesses from 5 to 2
 and 25 to 10 when 5 and 25 input elements are loaded. This reduction greatly improves the performance of the depthwise convolution.
@@ -119,7 +119,7 @@ and 25 to 10 when 5 and 25 input elements are loaded. This reduction greatly imp
 So far we have described our approach using a concrete working example with a pre-defined
 filter size, but our algorithms can be generalized to filters with an arbitrary size. To apply our approach to a filter of size $n \times
 n$, we will first divide the filter into several $n \times 5$ sub-filters. Next, we divide the remaining columns into several $n \times 3$
-sub-filters with some overlap columns. 
+sub-filters with some overlap columns.
 Each $n \times 5$ and $n \times 3$ filters can then be directly processed by Algorithm \ref{algo:basic} and Algorithm \ref{algo:basic2}.
 
 
@@ -171,7 +171,7 @@ As can be seen from the above equations, $row_{i1}$ and $row_{i3}$ are loaded tw
 
 \subsubsection{Our optimization}
 To remove redundant loads to the same row, we redesign the execution flow of the standard depthwise convolution. Specifically, after
-fetching a row from the input, we compute the number of output elements that depend on the loaded row.  
+fetching a row from the input, we compute the number of output elements that depend on the loaded row.
 With this information in place, we use the loaded row to perform inner products with corresponding rows of the filter to
 calculate the output elements whose outcomes depending on the loaded row. Our approach translates the execution flow of the working example
 presented in Fig. \ref {fig:rowreuse} to:

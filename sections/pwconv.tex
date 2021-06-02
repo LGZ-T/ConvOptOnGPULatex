@@ -1,5 +1,5 @@
 \section{Optimizing Pointwise Convolution}
-\label{sec:pwconv} 
+\label{sec:pwconv}
 In this section, we explain the workflow of our dynamic tile size scheme for pointwise convolution. \RV{This approach
 extends the optimization for convolution operations in our prior work \cite{lu2020optimizing} to pointwise convolution}. Our approach
 consists of three stages, described as follows.
@@ -24,7 +24,7 @@ Each thread block processes one block tile and each warp processes one warp tile
 The height dimension of the warp tile is shared among 32 threads of a warp and the width dimension of the warp tile is distributed across 32 threads of a warp.
 Hence, we have two input dependent parameters, namely the height and width of the warp tile, denoted as $Warp_H$ and $Warp_W$ respectively.
 Now we introduce how to use the 2-level tiling scheme to determine candidate values for $Warp_H$ and $Warp_W$.
-\subsubsection{2-level tiling scheme}
+\subsubsection{A two-level tiling scheme}
 To divide the output into block tiles, we utilize two logical layouts of the output, \textbf{\emph{L1}} and \textbf{\emph{L2}}, as shown in Fig. \ref{fig:pwworkflow}.
 $F_N$ and $I_N \times I_H \times I_W$ represent the filter and input dimensions of the output respectively. \RV{Notice that our 2-level tiling can handle arbitrary input sizes since we do not require $I_H = I_W$.}
 Before partitioning the output, we first select the layout of the output based on the size of the filter dimension.
